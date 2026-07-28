@@ -34,7 +34,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 169 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 180 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -131,10 +131,11 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **169 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **180 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
+| `capacity_frs.py` | capacity moved to folded RS — and buys ~0%, not 50% |
 | `interleaved_proximity.py` | the interleaved/Ligero case resolved: `a = 1`, sharp |
 | `merkle_extraction.py` | ε_MT expanded; the 3.5 constant derived; 256 bits ≠ 128 |
 | `bcs_composition.py` | BCS composes by sum; the hash term's QROM loss is 3, not 2 |
@@ -164,6 +165,11 @@ rate is the main reason to trust what survived.
 1. **The RS up-to-capacity conjecture is not open — it was disproved in late
    2025** (Crites–Stewart 2025/2046; Diamond–Gruen 2025/2010). An early revision
    called proving it "the highest-leverage open problem in the field."
+   *Refined iteration 29:* the disproof is specific to **plain RS over prime
+   fields** (and Kambiré 2026 sharpens it to `O(1/log n)` *below* capacity).
+   Capacity-radius gaps are **proved** for folded RS, subspace-design codes and
+   random-evaluation RS. The route is open — it just needs a different code, and
+   it turns out to be worth almost nothing anyway (`capacity_frs.py`).
 2. **BCIKS20's `(m+½)⁷n²` bound is superseded by BCHKS25's `(2m'⁵+…)n`** —
    exponent 7→5 and `n²→n`, worth +29 bits. Parts I and II were built on the
    older bound.
@@ -203,7 +209,8 @@ derivations would have found.
 ## Open, and not closeable from here
 
 - **Q2** (action-orbit, eprint 2026/861) would give `a = 0` on a code layer,
-  worth ~22 bits. Conditional on an unproven sparse-dominance conjecture.
+  worth ~22 bits. Conditional on an unproven sparse-dominance conjecture. Note
+  that capacity-radius FRS gaps do **not** deliver this: they keep `a = 1`.
 - **Diamond–Posen Conjecture 1**: does the interleaved test reach the
   unique-decoding radius `(d−1)/2` while keeping the sharp `(e+1)/q`, instead of
   stopping at `(d−1)/3`? Worth a **37–40%** query cut, rising with blowup

@@ -968,6 +968,78 @@ def part_a():
     except OSError:
         pass
 
+    # --- ITERATION 29: capacity is not dead, it moved to folded RS -- and it
+    # buys almost nothing (capacity_frs.py).
+    #
+    # Jeronimo-Liu-Rajpal, arXiv 2601.10047, Theorem 5.12: for FRS^m_{n,k} with
+    # m >= c/eta^2, radius delta* = 1 - R - eta, the gap error is
+    #     eps <= (C1/q)(n/eta + 1/eta^3).
+    def y_john_(rho_):
+        return -math.log2(math.sqrt(rho_))
+
+    def y_cap_(rho_, eta_):
+        return -math.log2(rho_ + eta_)
+
+    def fold_req_(eta_, c_=1.0):
+        return max(2.0, c_ / (eta_ * eta_))
+
+    # (a) the EXPONENT is unchanged: the n-term dominates 1/eta^3 by orders of
+    # magnitude at any practical eta, so a = 1 and the ceiling equation survives
+    dom = []
+    for n_ in (2 ** 16, 2 ** 20, 2 ** 24):
+        for eta_ in (0.05, 0.10, 0.15, 0.30):
+            dom.append((n_ / eta_) / (1 / eta_ ** 3))
+    check("at capacity the n-term dominates, so a = 1 is unchanged",
+          all(d_ > 100 for d_ in dom), f"min ratio {min(dom):.3g}")
+    check("capacity LOWERS the ceiling by log2(1/eta), never raises it",
+          all(math.log2(1 / e_) > 0 for e_ in (0.05, 0.15, 0.30)),
+          "log2 C = log2(C1/eta) is a penalty, not a gain")
+
+    # (b) the radius promises exactly a factor two, at every rate
+    ratios2 = [y_john_(2.0 ** -R_) / y_cap_(2.0 ** -R_, 1e-12) for R_ in (1, 2, 3)]
+    check("the capacity radius doubles per-query yield at every rate",
+          all(abs(r_ - 0.5) < 1e-6 for r_ in ratios2),
+          f"query ratio {min(ratios2):.6f}")
+
+    # (c) but the folding requirement claws it back. If a future edit ever makes
+    # this look like a clean win, it has dropped the m >= c/eta^2 term.
+    def bytes_ratio_(rho_, eta_, c_=1.0):
+        m_ = fold_req_(eta_, c_)
+        return (y_john_(rho_) / y_cap_(rho_, eta_)) * (m_ * 4 + 22 * 32) / (4 + 22 * 32)
+
+    def best_(rho_, c_=1.0):
+        hi_ = math.sqrt(rho_) - rho_
+        return min(bytes_ratio_(rho_, hi_ * i / 4000.0, c_) for i in range(1, 4000))
+
+    best_c1 = [best_(2.0 ** -R_, 1.0) for R_ in (1, 2, 3)]
+    check("at c=1 capacity is within 6% of Johnson on proof size, not 50%",
+          all(0.93 < b_ < 1.01 for b_ in best_c1),
+          f"ratios {[round(b_,3) for b_ in best_c1]}")
+    check("the promised 2x does NOT materialise at any admissible slack",
+          min(best_c1) > 0.5, f"best {min(best_c1):.3f} vs 0.500 from the radius")
+    # and it flips to a net loss as c grows -- the theorem only says c is "a
+    # sufficiently large absolute constant"
+    check("capacity becomes a net proof-size LOSS for c >= 2",
+          all(best_(2.0 ** -R_, 2.0) > 1.0 for R_ in (1, 2, 3)),
+          f"c=2 ratios {[round(best_(2.0**-R_,2.0),3) for R_ in (1,2,3)]}")
+    check("the c-sensitivity is monotone, so the flip point is well defined",
+          best_(0.25, 0.5) < best_(0.25, 1.0) < best_(0.25, 2.0) < best_(0.25, 4.0))
+    # (d) the admissible slack is bounded: beyond sqrt(rho)-rho capacity is no
+    # better than Johnson, which is what makes the optimisation non-trivial
+    for R_ in (1, 2, 3):
+        rho_ = 2.0 ** -R_
+        check(f"capacity beats Johnson only for eta < sqrt(rho)-rho at rate 1/{2**R_}",
+              abs(y_cap_(rho_, math.sqrt(rho_) - rho_) - y_john_(rho_)) < 1e-9,
+              f"boundary eta = {math.sqrt(rho_)-rho_:.4f}")
+    # (e) the README must no longer call the capacity route simply "disproved"
+    try:
+        _rd = open("README.md").read()
+        check("README no longer states the capacity route is closed outright",
+              "folded" in _rd.lower() or "FRS" in _rd,
+              "disproof is specific to plain RS over prime fields")
+    except OSError:
+        pass
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

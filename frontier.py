@@ -237,6 +237,21 @@ def section_c():
       enough error implies list decoding, so a gap beyond capacity would imply
       impossibly good list-decoding bounds.
 
+      REFINEMENT (iteration 29). "It is not open" is right about PLAIN Reed-
+      Solomon and wrong as a general statement. The disproof is specific to RS
+      over prime fields, and Kambire (arXiv 2604.09724, 2026) sharpens it to
+      radii O(1/log n) BELOW capacity. But capacity-radius proximity gaps are
+      PROVED for other families: folded RS and subspace-design codes
+      (Jeronimo-Liu-Rajpal arXiv 2601.10047 Thm 5.12; Goyal-Guruswami,
+      concurrent), and random-evaluation-point RS, random linear codes and
+      Gallager LDPC (Goyal-Guruswami-Sun-Wootters arXiv 2607.08516, 2026-07-09).
+
+      So the capacity route is open -- it requires changing the code, not
+      proving the RS conjecture. capacity_frs.py prices it and finds it worth
+      almost nothing: the theorem needs folding m >= c/eta^2, so each query
+      returns m field elements, which cancels the doubled per-query yield. And
+      a stays 1, so the ceiling does not move.
+
       WHAT SURVIVES. Johnson-bound soundness is untouched. The counterexamples
       live in the regime rho -> 0, gamma -> 1, whereas deployed rates are
       rho in [1/16, 1/2], so no known counterexample attacks a deployed

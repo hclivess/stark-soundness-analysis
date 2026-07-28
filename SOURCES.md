@@ -528,3 +528,35 @@ carry `a = 1`** — closing the case `ceiling_anatomy.py §5` had held open sinc
 iteration 6. The `n/q` quote also settles that Reed–Solomon's `n`-dependence at
 the unique-decoding radius is intrinsic to the **bare proximity gap**, not
 imported from the multi-point quotient structure.
+
+## Capacity-radius proximity gaps (iteration 29)
+
+The 2026 arXiv literature, all fetched and read directly (arXiv is not behind
+the eprint Cloudflare challenge):
+
+**Jeronimo, Liu, Rajpal, "Optimal Proximity Gap for Folded Reed–Solomon Codes
+via Subspace Designs"** — arXiv:2601.10047v1, Theorem 5.12 verbatim:
+
+> Let `C = FRS^m_{n,k}` be an m-folded Reed–Solomon code of block length `n` and
+> rate `R := k/(nm)`. Fix `η ∈ (0, 1−R)` and set the target radius
+> `δ* := 1 − R − η`. Assume that **`m ≥ c/η²`** and that `q` is at least a fixed
+> polynomial in `n` and `1/η`, where `c > 0` is a sufficiently large absolute
+> constant. Then there exists an absolute constant `C1 > 0` such that `C` has a
+> line proximity gap with parameters `ε ≤ (C1/q)(n/η + 1/η³)`, `κ = 1`.
+
+**Kambiré, "Proximity Gaps Conjecture Fails Near Capacity over Prime Fields"** —
+arXiv:2604.09724: gaps fail "at radii that are `O(1/log n)` below the capacity
+rate of the code."
+
+**Goyal, Guruswami, Sun, Wootters, "Locality of Curve-Decoding and Improved
+Proximity Gaps"** — arXiv:2607.08516 (2026-07-09): extends near-optimal gaps to
+random linear codes, random-evaluation-point RS and Gallager LDPC, matching the
+subspace-design parameters.
+
+**Yuan, Zhu** — arXiv:2605.07595: syndrome-space route to the same families.
+
+Consequences for this repo: the `n/η` term dominates `1/η³` at every practical
+`η`, so **`a = 1` is unchanged at capacity** and the ceiling equation survives
+verbatim with `log₂C = log₂(C1/η)` — a penalty, so capacity *lowers* the ceiling.
+The `m ≥ c/η²` folding requirement means each query returns `m` field elements,
+which cancels the doubled per-query yield.
