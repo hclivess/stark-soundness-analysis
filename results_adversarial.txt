@@ -35,6 +35,11 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  five-term ceiling reproduces published UDR commit round 1 EXACTLY   [Pico +0.0; Airbender +0.0]
   PASS  g_commit is confirmed: Airbender's +5 is exactly its declared grinding
   PASS  the Pico/Airbender gap decomposes as -2 (domain) + 5 (grinding) = +3
+  PASS  commit grinding alone buys NADO zero bits (DEEP binds first)   [47 either way]
+  PASS  GF(p^2) is worth +64 classical / +32 PQ to NADO   [47 -> 111]
+  PASS  GF(p^3) is worth +104 classical / +52 PQ to NADO   [47 -> 151]
+  PASS  at GF(p^2) NADO needs ~225 queries, so 320 over-provisions by ~95   [225 needed]
+  PASS  at GF(p^3) the query phase becomes binding, so 320 UNDER-provisions   [379 needed vs 320 configured]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -106,8 +111,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 98, suite has 98]
+  PASS  README's stated check count matches the suite   [README says 103, suite has 103]
 
 ========================================================================================
-98/98 PASS   no property broken
+103/103 PASS   no property broken
 ========================================================================================

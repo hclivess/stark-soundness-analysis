@@ -486,6 +486,35 @@ def part_a():
           abs((106 - 103) - ((udr_commit_5term(124, 25, 1, 0)
                               - udr_commit_5term(124, 23, 1, 0)) + 5)) < 1e-9)
 
+    # --- ITERATION 18: NADO's levers priced with the validated formula.
+    # Goldilocks base, rho=1/2, nu=18, query grinding 18, 320 queries, no commit
+    # grinding. y_UDR(1) = 0.415 bits/query.
+    NU_N, GQ_N, S_N = 18, 18, 320
+    def nado_total(E, gc=0, s=S_N):
+        commit = E - NU_N - math.log2((1 - 0.5) / 2) + gc
+        query = s * yield_udr(1) + GQ_N
+        dp = E - 17                                   # DEEP at max trace 2^17
+        return min(commit, query, dp)
+    # commit grinding alone must be WORTH NOTHING, because DEEP binds below it
+    check("commit grinding alone buys NADO zero bits (DEEP binds first)",
+          abs(nado_total(64, 16) - nado_total(64, 0)) < 1e-9,
+          f"{nado_total(64,0):.0f} either way")
+    # the extension is what moves it
+    check("GF(p^2) is worth +64 classical / +32 PQ to NADO",
+          abs((nado_total(128) - nado_total(64)) - 64) < 1.0,
+          f"{nado_total(64):.0f} -> {nado_total(128):.0f}")
+    check("GF(p^3) is worth +104 classical / +52 PQ to NADO",
+          abs((nado_total(192) - nado_total(64)) - 104) < 1.0,
+          f"{nado_total(64):.0f} -> {nado_total(192):.0f}")
+    # query budget must be matched to the extension, not left at 320
+    def queries_needed(E):
+        cap = min(E - NU_N - math.log2(0.25), E - 17)
+        return math.ceil((cap - GQ_N) / yield_udr(1))
+    check("at GF(p^2) NADO needs ~225 queries, so 320 over-provisions by ~95",
+          220 <= queries_needed(128) <= 230, f"{queries_needed(128)} needed")
+    check("at GF(p^3) the query phase becomes binding, so 320 UNDER-provisions",
+          queries_needed(192) > S_N, f"{queries_needed(192)} needed vs {S_N} configured")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
