@@ -1,0 +1,183 @@
+====================================================================================================
+A. QUANTUM ADJUSTMENT  (Grover halves grinding; BHT caps hash security)
+====================================================================================================
+Under the ethSTARK conjecture, 256-bit Merkle hashes.
+
+system                      g  classical   quantum   lost     binder                     fix
+--------------------------------------------------------------------------------------------
+Stwo (StarkWare)           20       90.0      80.0   10.0   grinding             +10 queries
+Plonky3 (KoalaBear)        16       96.0      85.3   10.7   hash cap    wider hash (512-bit)
+Plonky3 (BabyBear)         16      100.0      85.3   14.7   hash cap    wider hash (512-bit)
+RISC Zero                   0      100.0      85.3   14.7   hash cap    wider hash (512-bit)
+Plonky2                    16      100.0      85.3   14.7   hash cap    wider hash (512-bit)
+Winterfell / Miden         16       97.0      85.3   11.7   hash cap    wider hash (512-bit)
+Boojum (zkSync)            20      102.0      85.3   16.7   hash cap    wider hash (512-bit)
+ethSTARK doc params         0       34.0      34.0    0.0   grinding             none needed
+Cairo / StarkNet            0      120.0      85.3   34.7   hash cap    wider hash (512-bit)
+
+  CAVEAT: the 85.3-bit hash cap is 256/3, the BHT bound, which requires
+  quantum RAM at a scale most cryptographers consider implausible. The
+  defensible figure is 256/2 = 128, which binds nothing here. It is in
+  the table because if you are designing for a 30-year horizon you should
+  see which systems it would bite first -- not because it bites today.
+
+  Grinding is the cheapest classical security in the whole design --
+  it costs the verifier nothing. Against a quantum adversary it is the
+  most expensive: half of it evaporates, and the only way to buy it
+  back is queries, which the verifier does pay for.
+
+  A system claiming 100 post-quantum bits while leaning on 20+ bits of
+  grinding is claiming ~90. This is the single most common overstatement
+  in deployed STARK parameter sets.
+
+====================================================================================================
+B. THE FRONTIER -- who already beats FRI, on what axis, paying with what
+====================================================================================================
+
+  FRI (baseline)  (2018) -- Ben-Sasson, Bentov, Horesh, Riabzev
+    queries   : O(lambda * log d / log(1/rho))
+    prover    : O(n log n)
+    verifier  : O(lambda log d)
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : baseline
+
+  DEEP-FRI  (2019) -- Ben-Sasson, Goldberg, Kopparty, Saraf
+    queries   : O(lambda * log d / log(1/rho))
+    prover    : O(n log n)
+    verifier  : O(lambda log d)
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : soundness up to the Johnson bound, not just unique decoding
+
+  Proximity Gaps  (2020) -- Ben-Sasson, Carmon, Ishai, Kopparty, Saraf
+    queries   : O(lambda * log d / log(1/rho))
+    prover    : O(n log n)
+    verifier  : O(lambda log d)
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : batching many polys at the cost of one; the modern soundness bound
+
+  STIR  (2024) -- Arnon, Chiesa, Fenzi, Yogev
+    queries   : O(log d + lambda * log log d)
+    prover    : O(n log n)
+    verifier  : O(lambda log log d)
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : FRI on query count -- shrinks the RATE each round instead of holding it fixed; ~1.25-2.4x smaller proofs in practice
+
+  WHIR  (2024) -- Arnon, Chiesa, Fenzi, Yogev
+    queries   : O(log d + lambda * log log d)
+    prover    : O(n log n)
+    verifier  : ~100 microseconds concrete
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : verifier time by orders of magnitude; native multilinear (sumcheck) queries, so it drops the univariate encoding tax
+
+  BaseFold  (2024) -- Zeilberger, Chen, Fisch
+    queries   : O(lambda log d)
+    prover    : O(n log n)
+    verifier  : O(log^2 d)
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : field-agnostic -- works over ANY sufficiently large field, no FFT-friendly structure needed; foldable linear codes
+
+  Binius  (2023) -- Diamond, Posen
+    queries   : O(lambda log d)
+    prover    : O(n) field ops in GF(2^k)
+    verifier  : O(lambda log d)
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : prover cost on bit-level witnesses -- binary tower fields mean a 1-bit value costs 1 bit, not 31
+
+  Blaze  (2024) -- Branco, Chiesa, Fenzi, et al.
+    queries   : O(lambda)
+    prover    : O(n) LINEAR
+    verifier  : polylog
+    assumption: CRHF + ROM   post-quantum: yes
+    beats FRI : linear-time prover via interleaved RAA codes; no FFT at all
+
+  LaBRADOR  (2023) -- Beullens, Seiler
+    queries   : n/a (not an IOP)
+    prover    : O(n)
+    verifier  : O(n) -- NOT succinct
+    assumption: M-SIS (lattice)   post-quantum: yes
+    beats FRI : proof SIZE massively -- ~50KB for huge R1CS, vs 100s of KB; but verification is linear, so it does not scale as a rollup
+
+  Greyhound  (2024) -- Nguyen, Seiler
+    queries   : n/a
+    prover    : O(n)
+    verifier  : O(sqrt(n))
+    assumption: M-SIS (lattice)   post-quantum: yes
+    beats FRI : sqrt verifier lattice PCS, ~50KB proofs; first practical lattice PCS competitive with hash-based on size
+
+----------------------------------------------------------------------------------------------------
+  READ THIS AS A PARETO FRONTIER, NOT A RANKING.
+----------------------------------------------------------------------------------------------------
+
+  Your three requirements -- post-quantum, scaling, resilient -- cannot be
+  jointly maximised. They trade against each other:
+
+    RESILIENT (minimal assumptions)
+        Hash-based IOPs rest on collision resistance + the random oracle model.
+        That is the weakest assumption anyone knows how to build succinct
+        arguments from. Nothing on this list is MORE resilient than FRI/STIR/
+        WHIR; they are already at the floor.
+
+    SCALING (proof size / verifier cost)
+        Lattice systems (LaBRADOR, Greyhound) produce dramatically smaller
+        proofs. They pay with M-SIS -- a structured assumption with a live
+        cryptanalytic literature and parameter estimates that have moved
+        before. Post-quantum, yes. As resilient as a hash? No.
+
+    So "surpass STARKs, post-quantum, scaling, resilient" resolves to one of:
+      (a) stay hash-based and take STIR/WHIR's query-complexity win  <- free lunch, take it
+      (b) move to lattices and accept a structured assumption        <- size win, resilience loss
+      (c) attack the conjecture gap itself                           <- see section C
+
+====================================================================================================
+C. WHERE THE SLACK IS -- decomposition of the FRI security budget
+====================================================================================================
+
+  Any claim to "surpass" has to name which of these terms it improves.
+
+  TERM 1: per-query yield -- log2(1/rho) conjectured vs (1/2)log2(1/rho) proven
+      STATUS: CONJECTURE-BOUND, factor 2.
+      The entire gap is whether Reed-Solomon codes are list-decodable up to
+      capacity with polynomially-bounded list size. Proving the capacity
+      conjecture for RS codes is worth exactly 2x in query count across every
+      deployed STARK simultaneously. It is a pure-mathematics target with a
+      known, precise statement -- the single highest-leverage open problem
+      in the entire field.
+      This is the one place where "run some math" and "improve every zkSTARK
+      at once" are literally the same act.
+
+  TERM 2: commit-phase / field-size term -- E - 2*nu - 7*log2(m+1/2) - 1.5R
+      STATUS: IMPROVABLE, and demonstrably loose.
+      The (m+1/2)^7 factor in BCIKS20 is an artifact of the proof technique,
+      not a lower bound. Nobody believes the exponent 7 is tight. Shaving it
+      to, say, (m+1/2)^3 would hand every 31-bit-field system ~11 free bits
+      (see stark_soundness.py section 5) and is a proof-engineering exercise
+      on an existing theorem, not a new assumption.
+      HIGHEST RATIO OF (impact) TO (difficulty) ON THIS LIST.
+
+  TERM 3: number of queries s
+      STATUS: FLOORED for FRI, IMPROVED by STIR/WHIR.
+      Fixed-rate folding forces s = lambda/log(1/rho). STIR escapes by
+      shrinking rho each round. This is already solved -- it is adoption lag,
+      not an open problem. Any deployed system still on vanilla FRI is
+      leaving 1.25-2.4x on the table today.
+
+  TERM 4: grinding g
+      STATUS: HALVED BY GROVER. See section A.
+      Free classically, half-price quantum. Systems that lean on it are
+      overstating post-quantum security.
+
+  TERM 5: the arithmetization (AIR/PLONKish -> polynomial)
+      STATUS: WIDE OPEN, and underexplored relative to the proximity test.
+      Everyone optimises the PCS; the encoding of computation into constraints
+      is where Binius found its win (bit-level witnesses) and where WHIR found
+      its (skip the univariate detour entirely). More slack here than in FRI.
+
+  WHAT IS *NOT* SLACK:
+      Query complexity of an IOPP for a rate-rho code has an information-
+      theoretic floor of ~lambda/log(1/rho) queries in the correlated-agreement
+      framework. You do not beat that by tuning FRI. You beat it by changing
+      the CODE (Binius, Blaze, BaseFold) or the PROXIMITY TEST (STIR, WHIR).
+      Any proposal that claims to beat it while still testing proximity to a
+      rate-rho RS code by sampling is wrong, and that is a cheap filter to
+      apply to anyone pitching you one.
+

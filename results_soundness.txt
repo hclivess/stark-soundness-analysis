@@ -1,0 +1,114 @@
+
+====================================================================================================
+1. PER-QUERY YIELD  (bits of security per FRI query, m=16 for Johnson)
+====================================================================================================
+  blowup    R     unique    johnson   conjectured   conj/john
+       2    1      0.415      0.456         1.000       2.19x
+       4    2      0.678      0.956         2.000       2.09x
+       8    3      0.830      1.456         3.000       2.06x
+      16    4      0.913      1.956         4.000       2.05x
+      32    5      0.956      2.456         5.000       2.04x
+
+  The conjecture is worth a consistent ~2x in query count. That is the
+  entire headline benefit, and it is uniform across blowup factors.
+
+====================================================================================================
+2. QUERIES NEEDED FOR 100-BIT QUERY-PHASE SECURITY
+====================================================================================================
+  blowup  grind     unique    johnson   conjectured   j-c saved
+       2      0        241        220           100         120
+       2     20        193        176            80          96
+       4      0        148        105            50          55
+       4     20        118         84            40          44
+       8      0        121         69            34          35
+       8     20         97         55            27          28
+      16      0        110         52            25          27
+      16     20         88         41            20          21
+
+====================================================================================================
+3. LANDSCAPE  (trace 2^20, 32-byte hashes, arity 2)
+====================================================================================================
+Representative params per system; 'binder' = which term limits security.
+
+system                       E  blowup    s    g   unique   johnson     conj  binder(john/conj)
+-----------------------------------------------------------------------------------------------
+Stwo (StarkWare)           124       2   70   20     49.1      52.2     90.0  query/query
+Plonky3 (KoalaBear)        124       2   80   16     49.2      52.7     96.0  query/query
+Plonky3 (BabyBear)         124       4   42   16     44.5      54.8    100.0  commit/commit
+RISC Zero                  124       4   50    0     33.9      48.1    100.0  query/commit
+Plonky2                    128       8   28   16     39.2      55.8    100.0  query/query
+Winterfell / Miden         192       8   27   16     38.4      56.3     97.0  query/query
+Boojum (zkSync)            128       8   28   20     43.2      58.8    102.0  query/commit
+ethSTARK doc params         62      16   30    0    -18.7       5.5     34.0  commit/commit
+Cairo / StarkNet           251      16   30    0     27.4      59.8    120.0  query/query
+
+====================================================================================================
+4. THE CEILING: max provable bits, unlimited queries
+====================================================================================================
+Even with s -> infinity, the commit-phase term caps proven soundness.
+
+system                       E  proven ceiling   conj ceiling  E needed for 100
+--------------------------------------------------------------------------------
+Stwo (StarkWare)           124            78.0          102.0               147
+Plonky3 (KoalaBear)        124            78.0          102.0               147
+Plonky3 (BabyBear)         124            74.5          100.0               150
+RISC Zero                  124            74.5          100.0               150
+Plonky2                    128            75.0          102.0               154
+Winterfell / Miden         192           139.0          166.0               154
+Boojum (zkSync)            128            75.0          102.0               154
+ethSTARK doc params         62             5.5           34.0               157
+Cairo / StarkNet           251           194.5          223.0               157
+
+  Every 31-bit-field system sits far below 100 provable bits. Reaching
+  100 unconditionally needs a substantially larger extension -- i.e. the
+  small-field performance win is paid for in assumption strength.
+
+====================================================================================================
+5. THE UNTUNED KNOB: Johnson parameter m
+====================================================================================================
+m trades per-query yield against commit-phase bits (penalty 7*log2(m+1/2)).
+Almost no implementation exposes it. Optimal m for each system:
+
+system                     m*  bits at m*  bits at m=16   delta
+----------------------------------------------------------------
+Stwo (StarkWare)           18        52.2          51.9    +0.3
+Plonky3 (KoalaBear)        17        52.7          52.4    +0.2
+Plonky3 (BabyBear)         10        54.8          50.3    +4.6
+RISC Zero                  19        48.1          47.8    +0.3
+Plonky2                     9        55.8          50.8    +5.0
+Winterfell / Miden        128        56.3          55.3    +1.0
+Boojum (zkSync)             6        58.8          50.8    +8.0
+ethSTARK doc params         1         5.5         -18.7   +24.2
+Cairo / StarkNet          128        59.8          58.7    +1.2
+
+====================================================================================================
+6. OPTIMIZATION: cheapest 100-bit config, trace 2^20, E = 2^124
+====================================================================================================
+
+  regime = conjectured
+     blowup    g     s  proof KiB   v-hashes  prover FFT cost
+          2    0   100      850.0     27,200               2x
+          2   16    84      714.0     22,848               2x
+          2   20    80      680.0     21,760               2x
+          2   24    76      646.0     20,672               2x
+          4    0    50      459.4     14,700               4x
+          4   16    42      385.9     12,348               4x
+          4   20    40      367.5     11,760               4x
+          4   24    38      349.1     11,172               4x
+    -> min proof: blowup 4, g=24, s=38, 349.1 KiB
+
+  regime = johnson
+     blowup    g     s  proof KiB   v-hashes  prover FFT cost
+    NO FEASIBLE CONFIG -- ceiling is 78.0 bits at E=2^124.
+    100-bit johnson security is unreachable at this field size,
+    at any query count or grinding level.
+
+====================================================================================================
+7. OUT OF MODEL SCOPE
+====================================================================================================
+
+  Binius  [binary tower fields GF(2^k)]
+    Uses small-field binary towers with a different proximity analysis (Reed-Solomon over towers + packing). The RS-over-prime-field model here does not apply directly.
+
+  STIR / WHIR  [improved FRI successors]
+    Achieve better query complexity per bit by reducing rate each round (STIR) or via super-efficient sumcheck-based proximity (WHIR). Would shift the query-phase column, not the commit-phase ceiling.
