@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 589 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 601 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -210,7 +210,7 @@ circuit, not an aggregate, and that Venus differs from ZisK in one circuit.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **589 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **601 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |

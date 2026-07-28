@@ -3990,6 +3990,77 @@ def part_a():
           f"797 vs {_f_lo} KiB -- wrong derivation, closer than iterations 72 "
           f"and 73 each had it")
 
+    # --- ITERATION 75: the design equation applied to NADO, the one live system.
+    from nado_pq_path import (E_bits, logup_term, commit_udr as _c_udr,
+                              query_udr, yield_udr as _y_udr, provable,
+                              knee_degree, queries_for, degree_for_target,
+                              proof_kib as _n_kib, NADO, NADO_REPORTED,
+                              LOGUP_OFFSET, SATURATION_QUERIES, TARGET_CLASSICAL)
+
+    # (a) NADO MUST BE THE EXCEPTION. If its query phase bound like the seven
+    # zkVMs', the whole "field is the lever" argument collapses.
+    check("NADO is bound by a commit-side term, not the query phase",
+          NADO_REPORTED["logup"] < NADO_REPORTED["query"]
+          and NADO_REPORTED["provable"] == NADO_REPORTED["logup"],
+          f"LogUp {NADO_REPORTED['logup']} binds below query "
+          f"{NADO_REPORTED['query']} -- the exception to finding 2")
+    check("and the model reproduces its reported provable figure",
+          abs(provable(NADO["ext_degree"]) - NADO_REPORTED["provable"]) < 0.5,
+          f"model {provable(NADO['ext_degree']):.1f} vs its own report "
+          f"{NADO_REPORTED['provable']}")
+    # the structural reason: degree 2 over a 64-bit base, not 4-5 over 31
+    check("NADO's split is degree 2 over 64 bits, unlike the seven zkVMs",
+          NADO["ext_degree"] == 2 and NADO["base_bits"] == 64,
+          "the seven run degree 4-5 over a 31-bit base at the same field size")
+
+    # (b) THE KNEE. There must BE one, and it must be at degree 3 -- if raising
+    # the degree helped without limit, "GF(p^3) is the knee" is wrong.
+    _k = knee_degree()
+    check("there is a knee in extension degree, and it is at 3",
+          _k == 3, f"knee at GF(p^{_k})")
+    _ladder = [provable(d_) for d_ in (2, 3, 4, 5, 6)]
+    check("raising the degree past the knee buys exactly nothing",
+          len({round(v, 6) for v in _ladder[1:]}) == 1,
+          f"degrees 3-6 all sit at {_ladder[1]:.1f}")
+    check("but reaching the knee is worth over 20 post-quantum bits",
+          (_ladder[1] - _ladder[0]) / 2 > 20,
+          f"+{(_ladder[1]-_ladder[0])/2:.1f} PQ bits from one extension degree")
+    # and queries alone must NOT be able to substitute while LogUp binds
+    check("raising queries alone cannot pass the LogUp bound",
+          provable(2, s=10 ** 6) == provable(2),
+          f"a million queries still gives {provable(2, s=10**6):.1f} at GF(p^2)")
+
+    # (c) THE COST. The step must be cheap -- if it doubled the proof it would
+    # not be the recommendation.
+    _growth = [_n_kib(3, NADO["queries"], NADO["blowup_exp"], b_)
+               / _n_kib(2, NADO["queries"], NADO["blowup_exp"], b_)
+               for b_ in (32, 100, 300, 1000)]
+    check("the GF(p^3) step costs under 1.5x in proof size",
+          max(_growth) < 1.5,
+          f"{min(_growth):.2f}x to {max(_growth):.2f}x across trace widths")
+    check("and it is cheaper than the field widening alone would suggest",
+          max(_growth) < 192 / 128,
+          f"elements widen 1.50x but the proof grows at most {max(_growth):.2f}x, "
+          f"because Merkle paths are hash-sized and unchanged")
+
+    # (d) THE 128-PQ TARGET. Both commit-side terms must need the SAME degree,
+    # and the query count must exceed today's saturation point.
+    _dt = degree_for_target()
+    check("128 PQ needs GF(p^5) for NADO's commit-side terms",
+          _dt == 5 and logup_term(E_bits(_dt)) >= TARGET_CLASSICAL,
+          f"GF(p^{_dt}) = {E_bits(_dt)} bits; LogUp reaches "
+          f"{logup_term(E_bits(_dt)):.0f}")
+    check("and more queries than the current config's saturation point",
+          queries_for(TARGET_CLASSICAL, 2) > SATURATION_QUERIES,
+          f"{queries_for(TARGET_CLASSICAL, 2)} at blowup 4 vs saturation at "
+          f"{SATURATION_QUERIES} -- the real increase is {SATURATION_QUERIES} -> "
+          f"{queries_for(TARGET_CLASSICAL, 2)}, not from 320")
+    check("higher blowup reduces the queries 128 PQ needs",
+          all(queries_for(TARGET_CLASSICAL, R_) > queries_for(TARGET_CLASSICAL, R_ + 1)
+              for R_ in (1, 2, 3)),
+          f"{[queries_for(TARGET_CLASSICAL, R_) for R_ in (1,2,3,4)]} at "
+          f"blowups 2/4/8/16")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")
