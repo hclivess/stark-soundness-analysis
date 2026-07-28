@@ -65,19 +65,32 @@ places (README.md:133, EFFICIENCY.md:48, EFFICIENCY.md:106). No code reads them.
 So the correction is presentational: the qualitative claim is verified and
 stands, and the percentages should not be stated as though they were.
 
-THE PATTERN, WHICH IS THE ACTUAL FINDING
-------------------------------------------
-Two of EFFICIENCY.md's three headline figures now have sourcing problems:
+THE PATTERN, SHARPENED IN ITERATION 54
+----------------------------------------
+The sweep is now complete -- all three of EFFICIENCY.md's cited claims audited:
 
-    NTT share 90-91%          measured on MSM-paired systems (iteration 52)
-    front-end 20-30% / 90%    not locatable in the cited paper (this iteration)
-    lookup singularity        Jolt/Lasso, not audited here
+    NTT share 90-91%        MIS-SCOPED: measured on MSM-paired systems (it 52)
+    front-end 20-30% / 90%  UNLOCATABLE in the cited paper           (it 53)
+    lookup singularity      CLEAN: every clause verbatim in Jolt's abstract
 
-Both survived because the ARGUMENTS they support rest on orderings rather than
-magnitudes -- T_encode and T_commit dominate, T_open is small, and the front end
-is rising. That is a reassuring result about the argument and an unflattering one
-about the citation discipline, which was noticeably looser in EFFICIENCY.md than
-in SOURCES.md, where every parameter carries a verbatim quote.
+Iteration 53 called this "unflattering about the citation discipline". With the
+third audited that is too broad, and the accurate diagnosis is narrower and more
+useful: THE QUALITATIVE CLAIM WAS SOURCED PRECISELY; BOTH QUANTITATIVE ONES WERE
+NOT.
+
+Section 3's every clause tracks Jolt's abstract word for word -- "circuits that
+only perform lookups into pre-determined lookup tables", "of size more than
+2^128, that depends only on the ISA", "structured, avoiding costs that grow
+linearly with the table size". Nothing there is loose.
+
+So the failure mode was specific: prose was quoted carefully and numbers were
+not. Both numeric claims survived anyway because the arguments they support rest
+on ORDERINGS rather than magnitudes -- T_encode and T_commit dominate, T_open is
+small, the front end is rising -- which is why the document's conclusions held
+while two of its three figures did not.
+
+The fix is to give EFFICIENCY.md's numbers the treatment SOURCES.md gives every
+parameter: a verbatim quote next to each. Iteration 54 adds that block.
 """
 
 import math

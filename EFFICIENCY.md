@@ -14,8 +14,11 @@ time** — NADO's own `fri.py` comment states this correctly:
 > The prover's dominant cost (the LDE + Merkle tree) is UNCHANGED by query
 > count; only the opening set grows.
 
-That is right. So the finding that 247 of NADO's 320 queries buy zero security
-is a **proof-size** finding, not a prover finding. Soundness parameters are
+That is right. So the finding that 93 of NADO's 320 queries buy zero security
+is a **proof-size** finding, not a prover finding. *(Iteration 54: this said 247,
+a figure predating NADO's GF(p²) migration. Its own `soundness.py` now reports
+saturation at 227 queries, so 93 are surplus — the migration raised the ceiling
+and absorbed the rest.)* Soundness parameters are
 close to free on the prover side. If the goal is "better and more efficient
 systems," the soundness analysis is necessary — you have to know what you're
 allowed to spend — but it is not where efficiency lives.
@@ -126,8 +129,8 @@ Goldilocks base field, Python prover with Rust hot paths.
   1/2 means the LDE is only 2× the trace, so `T_encode` is as small as FRI
   allows. Every other system paying blowup 4–16 is spending 2–8× more NTT.
 - **320 queries cost the prover essentially nothing** — the comment is correct.
-  They cost proof size and verifier time, and ~247 of them buy no security
-  (`soundness.py`).
+  They cost proof size and verifier time, and **93** of them buy no security
+  (`soundness.py`; was 247 before the GF(p²) migration raised the ceiling).
 - **The real prover lever is `T_encode`**: Goldilocks NTT over a 2× LDE. Moving
   to GF(p²) for folding challenges — the soundness fix — raises fold arithmetic
   cost but leaves the layer-0 LDE, the dominant term, untouched. **The soundness
@@ -156,6 +159,38 @@ time, and the thing that would actually speed NADO up is unrelated to FRI.
   now approaching, and it is not a cryptographic one.
 
 ---
+
+## Sources — verbatim, with audit status
+
+Added iteration 54, after two of the three cited claims turned out to be
+mis-sourced. Every claim this document rests on, with what the source actually
+says and whether it was verified.
+
+**ZKProphet** ([arXiv 2509.22684](https://arxiv.org/abs/2509.22684)) — ⚠️ **scope
+error, corrected in §1.** Verbatim: *"Following massive speedups of MSM, we find
+that ZKPs are bottlenecked by kernels like Number-Theoretic Transform (NTT), as
+they account for up to 90% of the proof generation latency on GPUs **when paired
+with optimized MSM implementations**."* MSM is an elliptic-curve operation; a
+hash-based STARK has none, so the 90% does not transfer. See
+`ntt_share_scope.py`.
+
+**ZK-Tracer** ([arXiv 2605.25493](https://arxiv.org/abs/2605.25493)) — ⚠️
+**percentages withdrawn, §1.** Verified verbatim: *"While current hardware
+acceleration research has exclusively focused on backend proving, we identify
+that the frontend execution and trace generation phase is rapidly emerging as the
+new system bottleneck."* The previously-quoted "20–30%" and "to over 90%" are
+**not locatable** in the paper. See `efficiency_sources.py`.
+
+**Jolt** ([eprint 2023/1217](https://eprint.iacr.org/2023/1217)) — ✅ **clean.**
+Every clause of §3 tracks the abstract: *"seeks to produce circuits that only
+perform lookups into pre-determined lookup tables"*; *"a gigantic lookup table, of
+size more than 2^128, that depends only on the ISA"*; *"the tables arising in Jolt
+are structured, avoiding costs that grow linearly with the table size"*.
+
+**The lesson**: prose was quoted carefully here and numbers were not. Both numeric
+claims survived only because this document's arguments rest on *orderings* —
+`T_encode` and `T_commit` dominate, `T_open` is small, the front end is rising —
+rather than on magnitudes.
 
 ## Sources
 

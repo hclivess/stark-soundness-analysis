@@ -17,6 +17,7 @@ Every check prints PASS only if the attack FAILED to break the property.
 """
 
 import math
+import re
 import random
 import copy
 import sys
@@ -1988,16 +1989,56 @@ def part_a():
             check("the withdrawn percentages are gone from README's prose",
                   "20–30% today" not in _rd3 and "exceed 90%" not in _rd3,
                   "replaced by the sourced qualitative claim")
-            check("EFFICIENCY.md mentions them only inside the retraction",
-                  _eff2.count("20–30") == 1
-                  and "Sourcing correction, iteration 53" in _eff2,
-                  "one occurrence, and it is the correction itself")
+            # markdown line-wraps, so check a whitespace-normalised WINDOW around
+            # each occurrence rather than the line -- the same proximity approach
+            # staleness_guard.py needed for exactly this reason (iteration 35).
+            _flat2 = re.sub(r"\s+", " ", _eff2)
+            _MARK = ("correction", "withdrawn", "audit status", "not locatable")
+            _occ, _ok, _pos = 0, 0, 0
+            while True:
+                _i = _flat2.find("20–30", _pos)
+                if _i < 0:
+                    break
+                _occ += 1
+                _ctx = _flat2[max(0, _i - 300):_i + 300]
+                if any(m in _ctx for m in _MARK):
+                    _ok += 1
+                _pos = _i + 5
+            check("every mention of the withdrawn figure sits in a correction",
+                  _occ > 0 and _ok == _occ,
+                  f"{_ok}/{_occ} occurrences carry a correction marker nearby")
             check("the verified verbatim quote replaced them",
                   "rapidly emerging as the new system bottleneck" in _eff2,
                   "the qualitative claim IS sourced and stands")
         except OSError:
             pass
     except ImportError:
+        pass
+
+    # --- ITERATION 54: the third claim is clean, and a stale NADO figure.
+    try:
+        _eff3 = open("EFFICIENCY.md").read()
+        _flat3 = re.sub(r"\s+", " ", _eff3)      # the markdown line-wraps phrases
+        # (a) the Jolt section's claims must match the abstract's wording
+        for phrase in ("2^128", "depend only on the ISA",
+                       "never grows linearly in table size"):
+            check(f"EFFICIENCY.md's Jolt claim tracks the abstract: {phrase[:32]}",
+                  phrase in _flat3,
+                  "verbatim in eprint 2023/1217's abstract")
+        # (b) the audit block must record all three with their status
+        check("EFFICIENCY.md now carries a verbatim source block for all three",
+              "Sources — verbatim, with audit status" in _eff3
+              and _eff3.count("ZKProphet") >= 2 and "Jolt" in _eff3,
+              "the SOURCES.md treatment, applied where numbers were loose")
+        # (c) the stale NADO query figure must be gone from the assertions
+        check("EFFICIENCY.md's NADO surplus-query figure matches the live tree",
+              "93 of NADO's 320" in _eff3 and "~247 of them buy no security" not in _eff3,
+              "soundness.py reports saturation at 227, so 93 surplus, not 247")
+        # and the correction must say WHY it changed, not just change it
+        check("...and records why it changed",
+              "predating NADO's GF(p" in _eff3 or "before the GF(p" in _eff3,
+              "the GF(p^2) migration raised the ceiling and absorbed the rest")
+    except OSError:
         pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
