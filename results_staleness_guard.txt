@@ -1,0 +1,20 @@
+============================================================================================
+STALENESS GUARD -- retracted claims asserted without a retraction marker
+============================================================================================
+
+  6 retracted claims registered, scanning .py, .md files
+
+  iteration  retracted claim                              replaced by
+  ----------------------------------------------------------------------------------------
+         33  the RS-proximity family is a >= 1            a is a staircase in the radius: 0 at U
+         33  the only a = 0 code test is conditional      BCHKS25 result 1 gives an UNCONDITIONA
+         33  nothing known forbids a = 0                  BCHKS25 results 3-4 forbid it above Jo
+          9  highest-leverage open problem                the RS capacity conjecture was disprov
+          7  exactly three levers                         there are five levers
+         24  conservative LOWER bound                     classical/2 bounds provable PQ from AB
+
+  self-test (does the guard actually fail?): PASS
+
+  no stale assertions: every occurrence sits in a file that also carries
+  a retraction marker, which is the documenting case.
+

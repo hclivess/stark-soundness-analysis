@@ -1210,7 +1210,9 @@ def part_a():
           abs(il_(2 ** 21, 0.25) / il_(2 ** 20, 0.25) - 2.0) < 1e-3
           and jl_(8.24) == jl_(8.24),
           "Theta(n) vs Theta(1) -- proved floor vs observed track record")
-    # so nothing known forbids a = 0 for RS at the Johnson radius
+    # so the MCA floor does not forbid a = 0 for RS at the Johnson radius.
+    # SCOPED IN ITERATION 33: this says nothing about ABOVE Johnson, where
+    # BCHKS25 results 3-4 do forbid it for some RS codes.
     check("the strongest known lower bound does NOT forbid a = 0 for RS",
           math.log2(jl_(8.24) + 1) < 10,
           f"MCA floor numerator is {jl_(8.24)+1:.0f}, not Theta(n)")
@@ -1405,6 +1407,39 @@ def part_a():
           math.log2(math.exp(1 / 0.02)) > thr34
           and math.log2(math.exp(1 / 0.20)) < thr34,
           "exp(1/eps*) fails below eps* ~ 0.07 -- useful range bounded BELOW")
+
+    # --- ITERATION 35: a mechanical guard against the repo's own stale claims.
+    #
+    # This repo has overturned itself ~10 times, and each overturn has left the
+    # retracted statement asserted in OTHER files. Iteration 35 found two such
+    # spots in ceiling_anatomy.py two iterations after the retraction, by hand.
+    # staleness_guard.py registers retracted claims and scans for assertions of
+    # them without a nearby retraction marker.
+    try:
+        import staleness_guard as _sg
+        # the guard must be able to FAIL -- its first version could not, because
+        # it matched markers anywhere in the file rather than near the phrase
+        check("the staleness guard can actually fail (teeth self-test)",
+              _sg.self_test(),
+              "flags a bare stale assertion, clears a marked one")
+        _stale = _sg.scan(".")
+        check("no file asserts a claim this repo has retracted",
+              not _stale,
+              "; ".join(f"{n}: {p[:34]}" for n, p, _, _ in _stale)
+              if _stale else f"{len(_sg.RETRACTED)} retracted claims registered")
+        # the registry must be non-trivial, or the guard is decorative
+        check("the retraction registry covers several iterations",
+              len({it for _, _, it in _sg.RETRACTED}) >= 4,
+              f"iterations {sorted({it for _, _, it in _sg.RETRACTED})}")
+        # proximity matching must be what gives it teeth: a marker far away in
+        # the same text must NOT exempt a bare assertion
+        _far = ("RETRACTED: something unrelated. " + ("x" * 3000)
+                + " the RS-proximity family is a >= 1.")
+        check("a distant marker does not exempt a stale assertion",
+              bool(_sg.scan_text(_far)),
+              "proximity window, not file-wide matching")
+    except ImportError:
+        pass
 
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265

@@ -36,9 +36,18 @@ extension degree buys per unit of proof size.
 HISTORICAL MOVEMENT OF a
 ------------------------
   a = 2   BCIKS20                (m+1/2)^7 n^2 / (3 rho^{3/2} |F|)
-  a = 1   BCHKS25, UDR           (2m'^5 + ...) n / (3 rho^{3/2} |F|),  (gamma n + 1)/|F|
+  a = 1   BCHKS25 Johnson        (2m'^5 + ...) n / (3 rho^{3/2} |F|)
+  a = 1   soundcalc's UDR        (gamma n + 1)/|F|            [SUPERSEDED, see below]
+  a = 0   BCHKS25 unique-decoding O_{eps*}(1)/|F|             [2025/2055 result 1, PROVED]
   a = 1   threshold halving      n*r/|F|                      [2026/858]
   a = 0   action-orbit           O(1)/|F|, above Johnson      [2026/861, conditional on Q2]
+
+ITERATION 33: `a` IS A STAIRCASE IN THE RADIUS, NOT ONE NUMBER. BCHKS25 proves
+a = 0 at the unique-decoding radius (result 1, all RS codes, proximity loss
+eps* > 0), a = 1 at Johnson (result 2), and a >= 1.99 -- indeed n^tau for every
+constant tau -- at or beyond Johnson for some RS codes (results 3-4). soundcalc,
+which this repo transcribed, still implements the superseded O(n) UDR bound.
+See radius_staircase.py and udr_a0.py.
 
 Each decrement is worth nu bits at no cost in proof size, prover time, or
 assumption strength -- it is pure proof engineering on the same protocol.
@@ -167,9 +176,14 @@ def scope_and_open_questions():
     a = 2   BCIKS20                               (m+1/2)^7 n^2/(3 rho^{3/2}|F|)
     a = 0   action-orbit, CONDITIONAL on Q2       O(1)/|F|           [2026/861]
 
-  So on everything whose formula I have actually read, the split holds: the
+  SUPERSEDED IN ITERATION 33. The line this section used to draw -- "the
   sumcheck family is a = 0, the RS-proximity family is a >= 1, and the only
-  a = 0 code test is conditional.
+  a = 0 code test is conditional" -- is wrong in both of its last two clauses.
+  BCHKS25 result 1 proves a = 0 for RS proximity at the UNIQUE-DECODING radius,
+  unconditionally and for all RS codes. So there is an unconditional a = 0 code
+  test, and the RS-proximity family is not uniformly a >= 1: it is a staircase
+  in the radius (a = 0 at UDR, 1 at Johnson, unbounded above it). The list above
+  is a list of BOUNDS, not of families. See radius_staircase.py.
 
   RESOLVED IN ITERATION 28 -- Brakedown / Ligero interleaved codes are a = 1.
 
