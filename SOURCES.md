@@ -731,9 +731,16 @@ EFFICIENCY.md.
 | Airbender | **machine-readable** | `Ref/airbender.toml`, 4 fields + `R` confirmed by exact commit-round reproduction |
 | Miden | quoted | `miden.toml` cited with parameters above |
 | RISC Zero | quoted | best-documented of the rest |
-| OpenVM 1.5.0 | total only | reported bits recorded; parameters not quoted |
-| Pico | total only | " |
-| ZisK 0.16.1 | total only | " |
+| OpenVM 1.5.0 | **machine-readable** | `openvm.toml` — BabyBear⁴, blowup 2, 2²³, 193q, grind 20 |
+| Pico | **machine-readable** | `pico.toml` — KoalaBear⁴, blowup 2, 2²², 84q, grind 16 |
+| ZisK 0.16.1 | **machine-readable** | `zisk.toml` — Goldilocks³, ρ=0.5, 2²¹, 229q, grind 16 |
+
+**Upgraded, iteration 59.** Cloning `ethereum/soundcalc` itself provides a
+`soundcalc/zkvms/<vm>/<vm>.toml` for *every* system, not just the two
+soundcalc-lean ships. **All 35 parameters (7 systems × E, R, T, s, g) verified,
+zero mismatches.** The three "total only" rows above are closed, and Airbender's
+blowup — inferred in iteration 56 from exact commit-round reproduction — is now
+stated directly as `rho = 0.5`.
 
 All **10** checkable parameters for SP1 and Airbender agree exactly with
 `systems.py`. The exposure from the rest is narrow: the repo validates against

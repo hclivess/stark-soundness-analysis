@@ -29,15 +29,15 @@
 ============================================================================================
   system          grade              basis
   ----------------------------------------------------------------------------
-  SP1 6.1.0       MACHINE-CHECKED    SP1.lean, all 5 fields verified
-  Airbender       MACHINE-READABLE   airbender.toml, 4 fields + R confirmed
-  Miden           QUOTED             SOURCES.md cites miden.toml with parameters
-  RISC Zero       QUOTED             7 mentions, best-documented of the rest
-  OpenVM 1.5.0    TOTAL ONLY         reported bits recorded, parameters not quoted
-  Pico            TOTAL ONLY         reported bits recorded, parameters not quoted
-  ZisK 0.16.1     TOTAL ONLY         reported bits recorded, parameters not quoted
+  SP1 6.1.0       MACHINE-CHECKED    SP1.lean + sp1.toml, 5/5 fields
+  Airbender       MACHINE-READABLE   airbender.toml, 5/5 (R = 1 from rho 0.5)
+  Miden           MACHINE-READABLE   miden.toml, 5/5 (blowup_factor 8)
+  RISC Zero       MACHINE-READABLE   risc0.toml, 5/5 (rho 0.25)
+  OpenVM 1.5.0    MACHINE-READABLE   openvm.toml, 5/5 (blowup_factor 2)
+  Pico            MACHINE-READABLE   pico.toml, 5/5 (blowup_factor 2)
+  ZisK 0.16.1     MACHINE-READABLE   zisk.toml, 5/5 (rho 0.5)
 
-  {'MACHINE-CHECKED': 1, 'MACHINE-READABLE': 1, 'QUOTED': 2, 'TOTAL ONLY': 3}
+  {'MACHINE-CHECKED': 1, 'MACHINE-READABLE': 6}
 
   README describes SOURCES.md as carrying "verbatim upstream quotes for every
   parameter". It carries them for the FORMULAS -- soundcalc's Python, quoted
@@ -60,3 +60,29 @@
   would be wrong while the totals stayed right. Nothing has flagged that, and the
   two systems that can be checked came out exact -- weak positive evidence for
   the transcription generally, not proof of it.
+
+============================================================================================
+4. ALL SEVEN SYSTEMS, ALL 35 FIELDS, AGAINST soundcalc's OWN .toml
+============================================================================================
+  cloned ethereum/soundcalc; every zkVM ships soundcalc/zkvms/<v>/<v>.toml
+
+  system              E   R    T     s    g   source
+  --------------------------------------------------------------------------
+  SP1 6.1.0         124   2   21   124   16   KoalaBear^4, blowup 4
+  OpenVM 1.5.0      124   1   23   193   20   BabyBear^4, blowup 2
+  Airbender         124   1   24    87   28   M31^4, rho 0.5
+  Pico              124   1   22    84   16   KoalaBear^4, blowup 2
+  ZisK 0.16.1       192   1   21   229   16   Goldilocks^3, rho 0.5
+  RISC Zero         124   2   21    50    0   BabyBear^4, rho 0.25
+  Miden             128   3   18    27   16   Goldilocks^2, blowup 8
+
+  35/35 fields agree with systems.py. No mismatches.
+
+  This closes iteration 58's finding rather than merely grading it. Every system
+  is now machine-readable, and the three that were "total only" -- OpenVM, Pico,
+  ZisK -- verify 5/5 like the rest.
+
+  One inference is also now direct rather than indirect: iteration 56 pinned
+  Airbender's blowup at R = 1 by reproducing all five of its commit rounds
+  exactly. airbender.toml states rho = 0.5, confirming it outright. The
+  reproduction was sound, and it is better to have the field than the inference.

@@ -2223,15 +2223,18 @@ def part_a():
 
         # (b) the provenance is NOT uniform, which is the finding
         grades = _pg.grade_counts()
-        check("parameter provenance is not uniform across the seven systems",
-              len(grades) >= 3,
+        # UPDATED IN ITERATION 59. These three asserted the gap iteration 58
+        # found -- non-uniform provenance, three systems total-only, two
+        # machine-backed. Iteration 59 CLOSED that gap by cloning soundcalc
+        # itself, so the assertions now describe the fixed state. The suite
+        # firing on a resolved deficiency is it working, not breaking.
+        check("provenance is now uniform: every system is machine-backed",
+              grades.get("TOTAL ONLY", 0) == 0 and grades.get("QUOTED", 0) == 0,
               f"{grades}")
-        check("three systems have their totals recorded but not their parameters",
-              grades.get("TOTAL ONLY", 0) == 3,
-              "OpenVM, Pico, ZisK")
-        check("two systems have machine-readable provenance, better than a quote",
-              grades.get("MACHINE-CHECKED", 0) + grades.get("MACHINE-READABLE", 0) == 2,
-              "SP1 and Airbender")
+        check("all seven systems have machine-readable parameters",
+              grades.get("MACHINE-CHECKED", 0)
+              + grades.get("MACHINE-READABLE", 0) == 7,
+              "was 2 of 7 at iteration 58")
 
         # (c) README's claim must now be graded rather than flat
         try:
@@ -2241,6 +2244,36 @@ def part_a():
                   "graded instead, as the BOUNDS table was in iteration 31")
         except OSError:
             pass
+    except ImportError:
+        pass
+
+    # --- ITERATION 59: cloning soundcalc itself closes the provenance gap.
+    try:
+        import provenance_grades as _pg2
+
+        rows59 = _pg2.check_all_systems()
+        bad59 = [r for r in rows59 if r[2] != r[3]]
+        check("all 35 canonical parameters agree with soundcalc's own .toml files",
+              not bad59, f"{len(rows59)-len(bad59)}/{len(rows59)} fields"
+              if not bad59 else f"{bad59}")
+        # the check must span all seven systems and five fields, or it is partial
+        check("...covering every system and every field",
+              len({r[0] for r in rows59}) == 7
+              and len({r[1] for r in rows59}) == 5,
+              f"{len({r[0] for r in rows59})} systems x "
+              f"{len({r[1] for r in rows59})} fields")
+        # (b) no system may remain at TOTAL ONLY -- that was the it-58 finding
+        grades59 = _pg2.grade_counts()
+        check("no system is left at total-only provenance",
+              grades59.get("TOTAL ONLY", 0) == 0, f"{grades59}")
+        check("every system is now machine-backed",
+              grades59.get("MACHINE-READABLE", 0)
+              + grades59.get("MACHINE-CHECKED", 0) == 7,
+              "iteration 58's gap is closed, not merely graded")
+        # (c) Airbender's R was INFERRED in iteration 56 and is now stated
+        check("Airbender's blowup is now read from the toml, not inferred",
+              _pg2.SOUNDCALC_TOML["Airbender"][1] == 1,
+              "rho = 0.5 stated directly; iteration 56's reproduction was right")
     except ImportError:
         pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR

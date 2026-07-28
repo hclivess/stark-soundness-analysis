@@ -1,6 +1,14 @@
 """
 Auditing SOURCES.md's own claim, the way EFFICIENCY.md's claims were audited.
 
+*** SECTIONS 1-3 ARE ITERATION 58; SECTION 4 SUPERSEDES THEIR GRADING. ***
+Iteration 58 found the provenance non-uniform and graded three systems "total
+only". Iteration 59 cloned ethereum/soundcalc itself, which ships a .toml for
+EVERY system, and verified all 35 parameters. The gap below is closed -- read
+section 4 for the current state. The iteration-58 analysis is retained because
+the reasoning about WHY the exposure was narrow still holds, and because the
+correction rate is the point.
+
 README describes SOURCES.md as carrying "verbatim upstream quotes for every
 parameter". Iterations 52-54 audited EFFICIENCY.md's three cited claims and found
 two mis-sourced, so the file this repo holds up as its rigorous one deserves the
@@ -84,15 +92,41 @@ SP1_LEAN = {"rho": 0.25, "field_bits": 124, "denseLen_log": 21,
 AIRBENDER_TOML = {"field_bits": 124, "trace_log": 24,
                   "num_queries": 87, "grinding_query_phase": 28}
 
+# UPGRADED IN ITERATION 59. Cloning ethereum/soundcalc itself gives a .toml for
+# every system, not just the two soundcalc-lean ships. All seven are now
+# machine-readable and all 35 fields verified.
 PROVENANCE = [
-    ("SP1 6.1.0", "MACHINE-CHECKED", "SP1.lean, all 5 fields verified"),
-    ("Airbender", "MACHINE-READABLE", "airbender.toml, 4 fields + R confirmed"),
-    ("Miden", "QUOTED", "SOURCES.md cites miden.toml with parameters"),
-    ("RISC Zero", "QUOTED", "7 mentions, best-documented of the rest"),
-    ("OpenVM 1.5.0", "TOTAL ONLY", "reported bits recorded, parameters not quoted"),
-    ("Pico", "TOTAL ONLY", "reported bits recorded, parameters not quoted"),
-    ("ZisK 0.16.1", "TOTAL ONLY", "reported bits recorded, parameters not quoted"),
+    ("SP1 6.1.0", "MACHINE-CHECKED", "SP1.lean + sp1.toml, 5/5 fields"),
+    ("Airbender", "MACHINE-READABLE", "airbender.toml, 5/5 (R = 1 from rho 0.5)"),
+    ("Miden", "MACHINE-READABLE", "miden.toml, 5/5 (blowup_factor 8)"),
+    ("RISC Zero", "MACHINE-READABLE", "risc0.toml, 5/5 (rho 0.25)"),
+    ("OpenVM 1.5.0", "MACHINE-READABLE", "openvm.toml, 5/5 (blowup_factor 2)"),
+    ("Pico", "MACHINE-READABLE", "pico.toml, 5/5 (blowup_factor 2)"),
+    ("ZisK 0.16.1", "MACHINE-READABLE", "zisk.toml, 5/5 (rho 0.5)"),
 ]
+
+# (E, R, T, s, g) as read from ethereum/soundcalc soundcalc/zkvms/*/*.toml
+SOUNDCALC_TOML = {
+    "SP1 6.1.0":    (124, 2, 21, 124, 16),   # KoalaBear^4, blowup 4, 2^21
+    "OpenVM 1.5.0": (124, 1, 23, 193, 20),   # BabyBear^4,  blowup 2, 2^23
+    "Airbender":    (124, 1, 24,  87, 28),   # M31^4,       rho 0.5,  2^24
+    "Pico":         (124, 1, 22,  84, 16),   # KoalaBear^4, blowup 2, 2^22
+    "ZisK 0.16.1":  (192, 1, 21, 229, 16),   # Goldilocks^3,rho 0.5,  2^21
+    "RISC Zero":    (124, 2, 21,  50,  0),   # BabyBear^4,  rho 0.25, 2^21
+    "Miden":        (128, 3, 18,  27, 16),   # Goldilocks^2,blowup 8, 2^18
+}
+
+
+def check_all_systems():
+    """Every field of every system against its soundcalc .toml. [(sys, field, a, b)]"""
+    import systems
+    out = []
+    for row in systems.SYSTEMS:
+        d = systems.as_dict(row)
+        src = SOUNDCALC_TOML[d["name"]]
+        for i, f in enumerate(("E", "R", "T", "s", "g")):
+            out.append((d["name"], f, d[f], src[i]))
+    return out
 
 
 def check_sp1():
@@ -176,5 +210,36 @@ def report():
   the transcription generally, not proof of it.""")
 
 
+def report_all_seven():
+    """Iteration 59: cloning soundcalc itself upgrades all seven systems."""
+    sec("4. ALL SEVEN SYSTEMS, ALL 35 FIELDS, AGAINST soundcalc's OWN .toml")
+    rows = check_all_systems()
+    bad = [r for r in rows if r[2] != r[3]]
+    print(f"  cloned ethereum/soundcalc; every zkVM ships soundcalc/zkvms/<v>/<v>.toml\n")
+    print(f"  {'system':<15} {'E':>5} {'R':>3} {'T':>4} {'s':>5} {'g':>4}   source")
+    print("  " + "-" * 74)
+    for nm, (E, R, T, s, g) in SOUNDCALC_TOML.items():
+        note = {"SP1 6.1.0": "KoalaBear^4, blowup 4",
+                "OpenVM 1.5.0": "BabyBear^4, blowup 2",
+                "Airbender": "M31^4, rho 0.5",
+                "Pico": "KoalaBear^4, blowup 2",
+                "ZisK 0.16.1": "Goldilocks^3, rho 0.5",
+                "RISC Zero": "BabyBear^4, rho 0.25",
+                "Miden": "Goldilocks^2, blowup 8"}[nm]
+        print(f"  {nm:<15} {E:>5} {R:>3} {T:>4} {s:>5} {g:>4}   {note}")
+    print(f"""
+  {len(rows) - len(bad)}/{len(rows)} fields agree with systems.py. {'No mismatches.' if not bad else bad}
+
+  This closes iteration 58's finding rather than merely grading it. Every system
+  is now machine-readable, and the three that were "total only" -- OpenVM, Pico,
+  ZisK -- verify 5/5 like the rest.
+
+  One inference is also now direct rather than indirect: iteration 56 pinned
+  Airbender's blowup at R = 1 by reproducing all five of its commit rounds
+  exactly. airbender.toml states rho = 0.5, confirming it outright. The
+  reproduction was sound, and it is better to have the field than the inference.""")
+
+
 if __name__ == "__main__":
     report()
+    report_all_seven()

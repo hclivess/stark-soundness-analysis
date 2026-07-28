@@ -290,10 +290,14 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the sum-vs-min bias is unaffected by the m convention   [max 0.343 at jbrM, same as at m_eq -- it is a UDR effect]
   PASS  systems.py matches the machine-readable configs exactly   [9/9 fields]
   PASS  ...across enough fields to be a real check   [9 parameters from two systems]
-  PASS  parameter provenance is not uniform across the seven systems   [{'MACHINE-CHECKED': 1, 'MACHINE-READABLE': 1, 'QUOTED': 2, 'TOTAL ONLY': 3}]
-  PASS  three systems have their totals recorded but not their parameters   [OpenVM, Pico, ZisK]
-  PASS  two systems have machine-readable provenance, better than a quote   [SP1 and Airbender]
+  PASS  provenance is now uniform: every system is machine-backed   [{'MACHINE-CHECKED': 1, 'MACHINE-READABLE': 6}]
+  PASS  all seven systems have machine-readable parameters   [was 2 of 7 at iteration 58]
   PASS  README no longer claims uniform verbatim parameter coverage   [graded instead, as the BOUNDS table was in iteration 31]
+  PASS  all 35 canonical parameters agree with soundcalc's own .toml files   [35/35 fields]
+  PASS  ...covering every system and every field   [7 systems x 5 fields]
+  PASS  no system is left at total-only provenance   [{'MACHINE-CHECKED': 1, 'MACHINE-READABLE': 6}]
+  PASS  every system is now machine-backed   [iteration 58's gap is closed, not merely graded]
+  PASS  Airbender's blowup is now read from the toml, not inferred   [rho = 0.5 stated directly; iteration 56's reproduction was right]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -423,8 +427,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 415, suite has 415]
+  PASS  README's stated check count matches the suite   [README says 419, suite has 419]
 
 ========================================================================================
-415/415 PASS   no property broken
+419/419 PASS   no property broken
 ========================================================================================
