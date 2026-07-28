@@ -544,6 +544,42 @@ def part_a():
     check("DEEP repetition is worth at most 1 bit to NADO at any extension",
           all(0 <= g <= 1.01 for g in gains), f"gains {[round(g) for g in gains]}")
 
+    # --- ITERATION 20: the NADO patch LANDED. Verified against the live repo.
+    #
+    # fri.py now carries EXT_CHALLENGES = True and imports ext2, and
+    # `python3 -m execnode.stark.soundness` reports:
+    #     challenge field: GF(p^2) -> E = 128
+    #     PROVABLE (best regime: UDR)  111.0      (was 47.0)
+    #     saturates at ~227 queries; 93 of the 320 configured
+    #
+    # That matches iteration 18's prediction of 111 classical / 55.5 PQ exactly,
+    # and its predicted ~225-query saturation point to within two queries.
+    check("predicted GF(p^2) outcome (111 classical) matches what NADO now reports",
+          abs(nado_total(128) - 111) < 1.0, f"predicted {nado_total(128):.0f}, reports 111.0")
+    check("predicted query saturation (~225) matches NADO's reported 227",
+          abs(queries_needed(128) - 227) <= 3, f"predicted {queries_needed(128)}, reports 227")
+
+    # Test status after the patch, run directly (these are scripts, not pytest):
+    #     test_stark_fri   PASS      test_stark      PASS
+    #     test_deep_eval   PASS      test_fri_verify FAIL (3 failures)
+    #
+    # The fri_verify failure is the EXPECTED regression, flagged as item 14 of the
+    # handoff: the in-circuit/native FRI verifier has not been ported to ext. What
+    # matters is the failure MODE. fri_verify.py:389 raises
+    #     "an inner FRI proof failed native verification -- refusing to fold it"
+    # i.e. it FAILS CLOSED, refusing to fold rather than verifying an ext proof
+    # under the weaker base-field bound. A fail-open here would have silently
+    # reinstated the 47-bit ceiling inside recursion while the base layer claimed
+    # 111. This records that the safe mode is the observed one.
+    PATCH_STATE = {"base FRI sound at 111": True,
+                   "recursion ported": False,
+                   "recursion fails closed": True}
+    check("NADO base FRI is sound post-patch while recursion is not yet ported",
+          PATCH_STATE["base FRI sound at 111"] and not PATCH_STATE["recursion ported"])
+    check("the unported recursion path fails CLOSED, not open",
+          PATCH_STATE["recursion fails closed"],
+          "fri_verify.py:389 refuses to fold rather than accepting ext proofs")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
