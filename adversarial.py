@@ -358,6 +358,25 @@ def part_a():
     check("measured untuned-m gap sits inside Part I's predicted <=8 bit envelope",
           max(untuned) <= 8.0, f"max measured {max(untuned)} bits")
 
+    # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
+    CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
+    ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
+    check("quantum sieving retains far more than Grover-on-Fiat-Shamir",
+          ratio > 0.5, f"M-SIS retains {ratio:.3f} vs FS 0.500")
+    check("sieving ratio is a genuine degradation (0.5 < ratio < 1)",
+          0.5 < ratio < 1.0, f"{ratio:.4f}")
+    # Thm 2's PQ ceiling must reproduce quantum.py's independently-computed figures
+    for nm, E, nu, expect in (("NADO", 64, 18, 23.0), ("31-bit^4", 124, 22, 51.0),
+                              ("31-bit^10", 310, 22, 144.0)):
+        check(f"Thm 2 PQ ceiling for {nm} = (E-nu)/2",
+              abs((E - nu) / 2 - expect) < 0.01, f"{(E-nu)/2:.1f}")
+    # the PQ design study's degree-10 recommendation must clear 128 by this route too
+    check("31-bit^10 clears 128 PQ bits by the Thm 2 ceiling as well",
+          (310 - 22) / 2 >= 128, f"{(310-22)/2:.0f} bits")
+    # and degree 4 -- the deployed norm -- must NOT
+    check("31-bit^4 (the deployed default) cannot reach 128 PQ at any query count",
+          (124 - 22) / 2 < 128, f"ceiling {(124-22)/2:.0f} PQ bits")
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0

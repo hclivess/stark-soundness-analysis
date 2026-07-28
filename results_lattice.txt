@@ -1,0 +1,73 @@
+
+==========================================================================================
+1. HOW EACH SECURITY COMPONENT DEGRADES UNDER A QUANTUM ADVERSARY
+==========================================================================================
+  component                           classical   quantum  retained
+  ------------------------------------------------------------------
+  Fiat-Shamir soundness (both)              256     128.0     50.0%
+  hash collision resistance                 128     128.0    100.0%
+  M-SIS via lattice sieving                 128     116.2     90.8%
+  M-SIS via lattice sieving                 256     232.3     90.8%
+
+  Fiat-Shamir loses HALF. M-SIS loses about 9%. Collision resistance
+  loses nothing that binds. So the assumption a scheme rests on degrades far
+  less than the Fiat-Shamir layer wrapped around it -- for BOTH families.
+
+==========================================================================================
+2. THE CEILING THAT LATTICES ESCAPE
+==========================================================================================
+  FRI (Thm 2): commit-phase soundness <= ~E - nu, where E is the size of the
+  CHALLENGE FIELD. Unbuyable with queries or grinding at any price.
+
+  system                           E   nu  FRI ceiling  PQ ceiling
+  ----------------------------------------------------------------
+  NADO today (Goldilocks)         64   18           46        23.0
+  31-bit^4 (deployed norm)       124   22          102        51.0
+  Goldilocks^3 (ZisK)            192   22          170        85.0
+  31-bit^10 (PQ design)          310   22          288       144.0
+
+  Lattice folding has NO analogous term. Challenges live in R_q = Z_q[X]/(X^2d+1)
+  with q a 64-bit prime, so the challenge space is q^(2d), not q. Binding is
+  M-SIS at (d, q, beta), bought with DIMENSION rather than field width.
+
+  So the lattice path genuinely escapes Thm 2. HORIZONS.md did not credit it
+  with that, and should have.
+
+==========================================================================================
+3. WHAT 128 PQ BITS COSTS EACH WAY
+==========================================================================================
+  path                             needs classically                  mechanism
+  ------------------------------------------------------------------------------
+  hash-based FRI                    256 (FS halving)     extension degree ~9-10
+  lattice, FS layer                 256 (FS halving)         challenge set size
+  lattice, M-SIS binding               141 (sieving)             BKZ beta ~ 483
+
+  Both families need 256 classical bits of Fiat-Shamir soundness for 128 PQ
+  bits -- that requirement is universal and is the finding of quantum.py. Where
+  they differ is the second term: FRI must buy it with extension degree, running
+  into Thm 2; lattices buy it with BKZ block size, which has no such ceiling.
+
+==========================================================================================
+4. THE RECOMMENDATION, REVISITED HONESTLY
+==========================================================================================
+
+  HORIZONS.md recommended the hash-based multilinear path (a) over the lattice
+  path (b) for NADO, on the grounds that a project declining the FRI capacity
+  conjecture on resilience grounds should not adopt M-SIS to go faster.
+
+  That recommendation STANDS, but one premise was wrong. I implied lattices only
+  trade resilience for speed. They also escape Thm 2's ceiling, which is a real
+  capability the hash-based path does not have at small field width. The correct
+  statement of the trade is:
+
+     lattice   escapes the field-size ceiling; pays a structured assumption
+               whose parameters have MOVED historically, and whose quantum
+               estimate (0.9075 exponent ratio) is a model, not a theorem
+     hash      keeps the weakest assumption known; pays extension degree ~9-10
+               and ~800 KiB proofs to reach the same 128 PQ bits
+
+  For NADO specifically the hash path remains right, because degree-10 over a
+  31-bit base is a KNOWN, bounded cost with no cryptanalytic risk, whereas the
+  M-SIS route trades a cost you can compute for a risk you cannot. But that is a
+  judgement about risk appetite, not a claim that lattices are weaker.
+

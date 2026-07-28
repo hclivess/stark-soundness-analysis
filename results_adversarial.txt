@@ -23,6 +23,13 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  residual is smaller for systems that fix or avoid m   [tuned<=1.8 vs untuned>=3.2]
   PASS  optimising m never LOSES to a fixed m (residuals all >= 0)
   PASS  measured untuned-m gap sits inside Part I's predicted <=8 bit envelope   [max measured 4.8 bits]
+  PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
+  PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
+  PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
+  PASS  Thm 2 PQ ceiling for 31-bit^4 = (E-nu)/2   [51.0]
+  PASS  Thm 2 PQ ceiling for 31-bit^10 = (E-nu)/2   [144.0]
+  PASS  31-bit^10 clears 128 PQ bits by the Thm 2 ceiling as well   [144 bits]
+  PASS  31-bit^4 (the deployed default) cannot reach 128 PQ at any query count   [ceiling 51 PQ bits]
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
   PASS  clustered queries are far cheaper than the model   [clustered 13 vs model 1893]
@@ -62,5 +69,5 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
 
 ========================================================================================
-51/51 PASS   no property broken
+58/58 PASS   no property broken
 ========================================================================================
