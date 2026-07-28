@@ -1,0 +1,70 @@
+
+============================================================================================
+1. OBSTACLE 3 (CERTIFICATION): THE 2/3 WAS A CONVENIENCE FIGURE
+============================================================================================
+
+  GGSW Thm 1.2 (informal):  "with probability at least 2/3 over the choice of C"
+  Yuan-Zhu, formal (l.869): "with probability at least 1 - q^{-Omega(n)}"
+
+  GGSW's body carries bounds of the same shape (1 - q^{r-eta*n}), so its 2/3 is
+  likewise a simplification of an exponentially small failure probability.
+
+  reading of Omega(n)       n_code = 2^14    n_code = 2^15
+  ----------------------------------------------------------
+  Omega(n) = n           2^-     360,448  2^-     720,896
+  n/100                  2^-       3,604  2^-       7,209
+  n/1000                 2^-         360  2^-         721
+
+  Even reading the hidden constant as n/1000, a one-time public sample fails
+  with probability at most 2^-360 -- below every other parameter in the system.
+  The certificate is not needed because the event it would certify essentially
+  cannot happen.
+
+  RESIDUAL, and it is cheap: the code must be sampled HONESTLY, from a public
+  beacon or by hashing a public string. No probability bound survives an
+  adversarially chosen code. That is a standard transparent-setup requirement.
+
+============================================================================================
+2. OBSTACLE 2 (ALPHABET): THE REQUIREMENT IS ON THE CODE LENGTH
+============================================================================================
+  At N = 2^20, t = 200: code length n_enc = 27,842 = 2^14.8
+  Yuan-Zhu needs q = Theta(n_enc), i.e. about 15 bits.
+
+  field already in use       bits   covers it?
+  ----------------------------------------------
+  BabyBear / KoalaBear         31          yes
+  M31                          31          yes
+  Goldilocks                   64          yes
+  BN254 scalar                254          yes
+
+  Met by construction, with 16 bits to spare on the smallest of them. This is
+  not a change to the field; it is a constraint the field already satisfies.
+
+============================================================================================
+3. THE ELEMENT-WIDTH SENSITIVITY RUNS THE OTHER WAY
+============================================================================================
+   element width   before KiB   after KiB   reduction
+  ----------------------------------------------------
+         2 bytes        205.4       109.6      46.7%
+         4 bytes        318.7       182.5      42.7%
+         8 bytes        545.1       328.3      39.8%
+
+  A WIDER element makes the reduction smaller, because it inflates the
+  sqrt-scaling field term against the linear-scaling Merkle term. Iteration 44
+  quoted 42.7% at 4 bytes; a 64-bit system gets 39.8%. The worry was that a
+  larger alphabet would be costly -- the alphabet is free, and the width effect
+  is a couple of percentage points.
+
+============================================================================================
+4. WHERE THAT LEAVES THE PRIZE
+============================================================================================
+
+    obstacle 1  composition beyond unique decoding   OPEN -- and it is the gate
+    obstacle 2  alphabet                             dissolved: 15 bits, already met
+    obstacle 3  certification                        dissolved: 2^-360 or better
+    obstacle 4  queries are not proof size           priced: 40-50%, not 58.5%
+
+  One gate remains: whether a Ligero-style extractor composes with correlated
+  agreement beyond the unique-decoding radius. Iteration 45 showed the portion
+  reachable INSIDE unique decoding is 36.6-40.1% of queries, needs no capacity
+  result at all, and is exactly what Diamond-Posen Conjecture 1 would deliver.

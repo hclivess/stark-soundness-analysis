@@ -2,7 +2,7 @@
 STALENESS GUARD -- retracted claims asserted without a retraction marker
 ============================================================================================
 
-  9 retracted claims registered, scanning .py, .md files
+  10 retracted claims registered, scanning .py, .md files
 
   iteration  retracted claim                              replaced by
   ----------------------------------------------------------------------------------------
@@ -15,6 +15,7 @@ STALENESS GUARD -- retracted claims asserted without a retraction marker
          39  floor binds for exactly one deployed system  it costs zero -- m is Johnson-regime a
          40  headroom exceeds nu everywhere               it fails for the two UDR systems once 
          42  blocked by field size                        Yuan-Zhu give 22-135 bits; they are bl
+         46  no known efficient certificate               not needed: the sampling failure proba
 
   self-test (does the guard actually fail?): PASS
 

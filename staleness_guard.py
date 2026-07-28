@@ -70,6 +70,9 @@ RETRACTED = [
     ("blocked by field size",
      "Yuan-Zhu give 22-135 bits; they are blocked by structure, not field size",
      42),
+    ("no known efficient certificate",
+     "not needed: the sampling failure probability is q^{-Omega(n)} <= 2^-360",
+     46),
 ]
 
 # Extended in iteration 35 after its own first run produced a FALSE POSITIVE:

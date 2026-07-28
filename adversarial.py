@@ -1563,6 +1563,69 @@ def part_a():
               f"{[f'{r_:.1%}' for r_ in rem]} at rates 1/2, 1/4, 1/8")
     except ImportError:
         pass
+
+    # --- ITERATION 46: obstacles 2 and 3 dissolve.
+    try:
+        import ligero_obstacles as _lo
+
+        # (a) CERTIFICATION: the operative failure probability is q^{-Omega(n)},
+        # not GGSW Thm 1.2's convenience figure of 2/3. Even a pessimistic
+        # reading of the hidden constant leaves it below any security parameter.
+        for c_, lbl_ in ((1.0, "n"), (0.01, "n/100"), (0.001, "n/1000")):
+            bits_ = _lo.sampling_failure_bits(22, 2 ** 14, c_)
+            check(f"code-sampling failure is negligible at Omega(n) = {lbl_}",
+                  bits_ > 256, f"2^-{bits_:,.0f}")
+        # the whole point is that this beats 2/3 by an astronomical margin
+        check("the formal bound beats GGSW's informal 2/3 by >100 orders",
+              _lo.sampling_failure_bits(22, 2 ** 14, 0.001) > 300,
+              "2/3 was a convenience figure, not the operative bound")
+        # and it must scale with BOTH q and n, or it is not the right shape
+        check("the failure bound scales in both the field and the code length",
+              _lo.sampling_failure_bits(44, 2 ** 14, 1.0)
+              > _lo.sampling_failure_bits(22, 2 ** 14, 1.0)
+              and _lo.sampling_failure_bits(22, 2 ** 15, 1.0)
+              > _lo.sampling_failure_bits(22, 2 ** 14, 1.0),
+              "q^{-Omega(n)}: doubling either doubles the exponent")
+
+        # (b) ALPHABET: the requirement is on the CODE LENGTH, and every field
+        # these systems already use covers it
+        req_ = _lo.alphabet_bits_required()
+        check("the alphabet requirement is ~15 bits, set by the code length",
+              12 <= req_ <= 18, f"{req_} bits at N=2^20, t=200")
+        check("every field these systems already use covers it",
+              all(b_ >= req_ for _, b_ in _lo.DEPLOYED_FIELDS),
+              f"smallest deployed field is "
+              f"{min(b_ for _, b_ in _lo.DEPLOYED_FIELDS)} bits")
+        # the requirement must be far BELOW the witness size -- that is why it is
+        # cheap, and it is the distinction iteration 43 missed
+        check("the alphabet requirement is far below the witness size",
+              2 ** req_ < 2 ** 20 / 8,
+              f"2^{req_} code length vs 2^20 witness -- q = Theta(n) is on n, not N")
+
+        # (c) the element-width sensitivity must run AGAINST the worry: wider
+        # elements give a SMALLER reduction, not a larger cost to the result
+        import ligero_proof_size as _lps
+        _saved = _lps.F_BYTES
+        try:
+            reds_F = []
+            for F_ in (2, 4, 8):
+                _lps.F_BYTES = F_
+                a_, _ = _lps.best_m_numeric(2 ** 20, 0.25, 200)
+                b_, _ = _lps.best_m_numeric(2 ** 20, 0.25, 83)
+                reds_F.append(1 - b_ / a_)
+        finally:
+            _lps.F_BYTES = _saved
+        check("wider field elements give a SMALLER size reduction",
+              reds_F == sorted(reds_F, reverse=True),
+              f"{[f'{x_:.1%}' for x_ in reds_F]} at 2, 4, 8 bytes")
+        check("even a 64-bit system keeps a ~40% reduction",
+              reds_F[-1] > 0.38, f"{reds_F[-1]:.1%} at 8 bytes")
+        # and iteration 44's headline must be the middle of that range
+        check("iteration 44's 42.7% is the 4-byte case, between the two extremes",
+              reds_F[0] > reds_F[1] > reds_F[2] and abs(reds_F[1] - 0.427) < 0.01,
+              f"{reds_F[1]:.1%}")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

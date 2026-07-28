@@ -193,6 +193,17 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  ...and that figure is the 36-40% band iteration 28 reported   [36.6 / 38.8 / 40.1 percent]
   PASS  the inside-UD part is a real but minority share of the prize   [60% to 77% of the total cut]
   PASS  the beyond-UD remainder grows as the rate falls   [['10.8%', '19.7%', '26.8%'] at rates 1/2, 1/4, 1/8]
+  PASS  code-sampling failure is negligible at Omega(n) = n   [2^-360,448]
+  PASS  code-sampling failure is negligible at Omega(n) = n/100   [2^-3,604]
+  PASS  code-sampling failure is negligible at Omega(n) = n/1000   [2^-360]
+  PASS  the formal bound beats GGSW's informal 2/3 by >100 orders   [2/3 was a convenience figure, not the operative bound]
+  PASS  the failure bound scales in both the field and the code length   [q^{-Omega(n)}: doubling either doubles the exponent]
+  PASS  the alphabet requirement is ~15 bits, set by the code length   [15 bits at N=2^20, t=200]
+  PASS  every field these systems already use covers it   [smallest deployed field is 31 bits]
+  PASS  the alphabet requirement is far below the witness size   [2^15 code length vs 2^20 witness -- q = Theta(n) is on n, not N]
+  PASS  wider field elements give a SMALLER size reduction   [['46.7%', '42.7%', '39.8%'] at 2, 4, 8 bytes]
+  PASS  even a 64-bit system keeps a ~40% reduction   [39.8% at 8 bytes]
+  PASS  iteration 44's 42.7% is the 4-byte case, between the two extremes   [42.7%]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -217,8 +228,8 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  polynomial C(eps*) is harmless at every useful eps*   [1/eps*^2 stays far below the threshold]
   PASS  an exponential C(eps*) FAILS at small eps*, inverting the intuition   [exp(1/eps*) fails below eps* ~ 0.07 -- useful range bounded BELOW]
   PASS  the staleness guard can actually fail (teeth self-test)   [flags a bare stale assertion, clears a marked one]
-  PASS  no file asserts a claim this repo has retracted   [9 retracted claims registered]
-  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39, 40, 42]]
+  PASS  no file asserts a claim this repo has retracted   [10 retracted claims registered]
+  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39, 40, 42, 46]]
   PASS  a distant marker does not exempt a stale assertion   [proximity window, not file-wide matching]
   PASS  BCIKS20 gives blowup 4 exactly   [R* = 2.000000]
   PASS  BCHKS25 gives blowup 4 exactly   [R* = 2.000000]
@@ -322,8 +333,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 314, suite has 314]
+  PASS  README's stated check count matches the suite   [README says 325, suite has 325]
 
 ========================================================================================
-314/314 PASS   no property broken
+325/325 PASS   no property broken
 ========================================================================================

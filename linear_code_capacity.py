@@ -62,15 +62,13 @@ HONEST LIMITS -- THIS IS A PRICE, NOT A PROTOCOL
    Ligero-style soundness also involves the interleaved structure, the linear
    check, and the opening argument. I have not verified those compose at the
    capacity radius, and Yuan-Zhu do not claim it.
-2. The near-MDS assumption (relative distance ~ 1-R) needs a large alphabet,
-   which q = Theta(n) supplies -- but Ligero and Brakedown are often deployed
-   over SMALL fields precisely to make encoding cheap. Moving to a 22-bit
-   alphabet is a real change to those systems, and its encoding cost is not
-   modelled here.
-3. The guarantee holds "with high probability over the choice of C". A deployed
-   system samples one code and publishes it, and there is no known efficient
-   certificate that a particular sample has the property (noted in iteration 30,
-   still unresolved).
+2. The near-MDS assumption (relative distance ~ 1-R) needs a large alphabet.
+   RESOLVED in iteration 46: q = Theta(n) is on the CODE LENGTH (2^15 here),
+   not the witness, so ~15 bits -- already covered by every field these systems
+   use (M31 31, Goldilocks 64, BN254 254). It is not a change to the field.
+3. The guarantee holds "with high probability over the choice of C". RESOLVED
+   in iteration 46: that probability is 1 - q^{-Omega(n)} <= 2^-360 at these
+   parameters, so no certificate is needed; only honest sampling is.
 4. Query count is not proof size for these systems: Ligero/Brakedown proofs are
    dominated by the O(sqrt(n)) column openings, so a 60% query cut is not a 60%
    proof-size cut. Pricing that needs their proof-size model, which this repo
@@ -170,15 +168,17 @@ def report():
      opening argument. Whether those compose at the capacity radius is not
      something Yuan-Zhu claim, and not something checked here.
 
-  2. ALPHABET. The near-MDS assumption needs a large alphabet, and q = Theta(n)
-     supplies it -- but Ligero and Brakedown are often deployed over SMALL fields
-     precisely to make encoding cheap. A 22-bit alphabet is a real change whose
-     encoding cost this file does not model.
+  2. ALPHABET -- RESOLVED IN ITERATION 46, so this obstacle is WRONG as written.
+     q = Theta(n) is on the CODE LENGTH (2^15 at these parameters), not the
+     witness size, so it needs ~15 bits -- already met by every field these
+     systems use. See ligero_obstacles.py.
 
-  3. CERTIFICATION. The guarantee holds with high probability over the choice of
-     C. A deployed system samples one code and publishes it, and no efficient
-     certificate for a particular sample is known. Flagged in iteration 30 and
-     still unresolved.
+  3. CERTIFICATION -- RESOLVED IN ITERATION 46, so this obstacle is WRONG as
+     written. It said no efficient certificate for a particular sample is known,
+     which is true and irrelevant: Yuan-Zhu's formal theorems give a sampling
+     failure probability of 1 - q^{-Omega(n)}, at most 2^-360 at these
+     parameters. The certificate is not needed. The residual is only that the
+     code be sampled honestly from public randomness.
 
   4. QUERIES ARE NOT PROOF SIZE for these systems. Ligero/Brakedown proofs are
      dominated by O(sqrt(n)) column openings, so a 60% query cut is not a 60%

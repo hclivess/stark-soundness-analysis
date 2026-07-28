@@ -113,6 +113,14 @@ sampled code has the property, so the guarantee does not transfer to a fixed
 deployed instance the way an explicit-family theorem does. This matters less
 than the field size, and is noted rather than modelled.
 
+*** RETRACTED IN ITERATION 46. *** The 2/3 is a convenience figure in an
+informal statement. Yuan-Zhu's formal theorems give 1 - q^{-Omega(n)}, which at
+Ligero parameters is at most 2^-360 even reading the hidden constant as n/1000.
+No certificate is needed, because the event it would certify essentially cannot
+happen. The one residual requirement is that the code be sampled HONESTLY --
+from a public beacon or by hashing a public string -- which is a standard
+transparent-setup condition. See ligero_obstacles.py.
+
 HONEST LIMITS
 -------------
 1. Omega and O hide constants. Every figure below takes the hidden constant to

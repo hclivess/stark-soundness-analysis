@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 314 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 325 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -147,7 +147,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **314 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **325 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
@@ -161,6 +161,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `radius_staircase.py` | `a` is a staircase in the radius: 0 at UDR, 1 at Johnson, unbounded above |
 | `a_floor_scope.py` | what `a ≥ 1` is *proved* for; 20.6–37.3 bits of unclosed headroom (regime-corrected, it 40) |
 | `open_zone.py` | evidence tiers of the BOUNDS table; what room is left above Johnson |
+| `ligero_obstacles.py` | two of the four obstacles dissolve: alphabet already met, sampling `2^-360` |
 | `ligero_composition.py` | where the capacity gain sits vs unique decoding; splits the prize |
 | `ligero_proof_size.py` | Ligero/Brakedown size model: the field term scales as `√t` |
 | `linear_code_capacity.py` | pricing the one open capacity route: 2.4–4.6× yield for linear-code systems |
