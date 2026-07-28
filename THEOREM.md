@@ -248,6 +248,29 @@ constant evaluation-domain size", which compares systems with different trace
 lengths. Blowup 4 is deployed today (RISC Zero, Plonky3/BabyBear); those systems
 sit exactly at the Johnson-regime optimum.
 
+> **Scope added in iteration 36 (Theorem 8, `blowup_theorem.py`).** The proof
+> above runs on BCIKS20, which Part III.1 later records as superseded — without
+> asking whether `R* = 2` survives. It does. For any bound of the shape
+> `ε·|F| = const·(m+½)^c·n^a/ρ^b`, deployment (`ν = T+R`) and `m → m_min` give
+> `Λ(R) = (E − aT) − A·R + c·log₂(2^{R/2}−1) + const` with `A = a + c/2 + b`,
+> hence `R* = 2·log₂(2A/(2A−c))` and
+>
+> ```
+> R* = 2  (blowup 4)   ⟺   c = 2(a + b)
+> ```
+>
+> BCIKS20 (`a=2, c=7, b=3/2`) and BCHKS25 (`a=1, c=5, b=3/2`) **both sit exactly
+> on that line** — the 2020→2025 improvement moved `a` and `c` together along it,
+> which is why the optimum did not move when the foundation was replaced.
+> Confirmed by brute-force argmax of the full non-asymptotic BCHKS25 expression:
+> `R* = 2.0000` at every `(T, E)` tested.
+>
+> **It is a Johnson-regime result.** The unique-decoding bound `(γn+1)/|F|` has
+> no proximity parameter (`c = 0`), so the trade-off does not exist and
+> `Λ(R) = (E−T) − R − log₂(1−2^{−R}) + 1` is strictly decreasing: the
+> ceiling-optimal blowup under UDR is *minimal*, not 4. Under BCHKS25 result 1
+> (`a = 0` at UDR) the ceiling has no `ν` term and blowup is irrelevant to it.
+
 ### Corollary 3.1 (practical reading, fixed ν — superseded by 3′)
 
 | blowup | R | f(R) | bits below optimum |

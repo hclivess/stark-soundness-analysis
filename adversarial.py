@@ -1441,6 +1441,80 @@ def part_a():
     except ImportError:
         pass
 
+    # --- ITERATION 36: Theorem 8 -- why blowup 4 survived the bound update.
+    #
+    # THEOREM.md Theorem 3' proves R* = 2 from BCIKS20, and Part III.1 records
+    # that BCIKS20 is superseded without asking whether R* = 2 survives. For a
+    # bound eps*|F| = const*(m+1/2)^c * n^a / rho^b, with nu = T+R and m->m_min,
+    #     Lambda(R) = (E - a*T) - A*R + c*log2(2^{R/2}-1) + const,  A = a+c/2+b
+    # so R* = 2*log2(2A/(2A-c)), and R* = 2 exactly when c = 2(a+b).
+    def A_of_(a_, c_, b_=1.5):
+        return a_ + c_ / 2.0 + b_
+
+    def r_star_(a_, c_, b_=1.5):
+        A_ = A_of_(a_, c_, b_)
+        if c_ <= 0 or 2 * A_ - c_ <= 0:
+            return None
+        u_ = 2 * A_ / (2 * A_ - c_)
+        return 2 * math.log2(u_) if u_ > 1 else None
+
+    # (a) both real bounds must give exactly R* = 2
+    for nm_, a_, c_ in (("BCIKS20", 2, 7), ("BCHKS25", 1, 5)):
+        check(f"{nm_} gives blowup 4 exactly",
+              abs(r_star_(a_, c_) - 2.0) < 1e-12,
+              f"R* = {r_star_(a_, c_):.6f}")
+    # (b) and both must sit on the line c = 2(a+b) -- the structural reason
+    for nm_, a_, c_ in (("BCIKS20", 2, 7), ("BCHKS25", 1, 5)):
+        check(f"{nm_} sits exactly on c = 2(a+b)",
+              abs(c_ - 2 * (a_ + 1.5)) < 1e-12, f"c={c_}, 2(a+b)={2*(a_+1.5)}")
+    # (c) the condition must have teeth: bounds off the line must NOT give 4
+    for a_, c_ in ((1, 4), (1, 6), (2, 5)):
+        check(f"a={a_}, c={c_} (off the line) does NOT give blowup 4",
+              abs(r_star_(a_, c_) - 2.0) > 0.05,
+              f"R* = {r_star_(a_, c_):.4f}")
+
+    # (d) INDEPENDENT VERIFICATION: brute-force argmax of the FULL BCHKS25
+    # expression must agree with the closed form. An algebra slip in the
+    # derivation would show up here.
+    def _mmin(R_):
+        u_ = 2 ** (R_ / 2.0)
+        return 1.0 / (2 * (u_ - 1)) if u_ > 1 else float("inf")
+
+    def _K_full(R_, T_, E_):
+        m_ = _mmin(R_) * (1 + 1e-9) + 1e-9
+        rho_ = 2.0 ** -R_
+        sr_ = math.sqrt(rho_)
+        mm_ = m_ + 0.5
+        gam_ = 1 - sr_ * (1 + 0.5 / m_)
+        n_ = 2.0 ** (T_ + R_)
+        val_ = (2 * mm_ ** 5 + 3 * mm_ * gam_ * rho_) * n_ / (3 * rho_ * sr_) + mm_ / sr_
+        return E_ - math.log2(val_)
+
+    for T_, E_ in ((20, 124), (22, 124), (20, 192)):
+        best_, bestR_ = -1e18, None
+        R_ = 0.05
+        while R_ < 8.0:
+            v_ = _K_full(R_, T_, E_)
+            if v_ > best_:
+                best_, bestR_ = v_, R_
+            R_ += 0.002
+        check(f"full BCHKS25 argmax is blowup 4 at T={T_}, E={E_}",
+              abs(bestR_ - 2.0) < 0.01, f"numeric R* = {bestR_:.4f}")
+
+    # (e) THE SCOPE: the UDR bound has no proximity parameter, so the trade-off
+    # does not exist and the ceiling is strictly DECREASING in R.
+    def _K_udr(R_, T_, E_):
+        rho_ = 2.0 ** -R_
+        return E_ - math.log2(((1 - rho_) / 2.0) * 2.0 ** (T_ + R_) + 1)
+
+    udr_vals = [_K_udr(R_, 20, 124) for R_ in (0.5, 1, 2, 3, 4, 5)]
+    check("the UDR ceiling is strictly decreasing in blowup, so 4 is NOT optimal",
+          udr_vals == sorted(udr_vals, reverse=True),
+          f"{[round(v_, 2) for v_ in udr_vals]}")
+    check("blowup 4 is a Johnson-regime result, not a universal one",
+          abs(r_star_(1, 5) - 2.0) < 1e-12 and udr_vals[0] > udr_vals[2],
+          "holds under BCHKS25 Johnson; fails under the UDR bound")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

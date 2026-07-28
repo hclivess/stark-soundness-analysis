@@ -173,6 +173,18 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  no file asserts a claim this repo has retracted   [6 retracted claims registered]
   PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33]]
   PASS  a distant marker does not exempt a stale assertion   [proximity window, not file-wide matching]
+  PASS  BCIKS20 gives blowup 4 exactly   [R* = 2.000000]
+  PASS  BCHKS25 gives blowup 4 exactly   [R* = 2.000000]
+  PASS  BCIKS20 sits exactly on c = 2(a+b)   [c=7, 2(a+b)=7.0]
+  PASS  BCHKS25 sits exactly on c = 2(a+b)   [c=5, 2(a+b)=5.0]
+  PASS  a=1, c=4 (off the line) does NOT give blowup 4   [R* = 1.6960]
+  PASS  a=1, c=6 (off the line) does NOT give blowup 4   [R* = 2.2750]
+  PASS  a=2, c=5 (off the line) does NOT give blowup 4   [R* = 1.5552]
+  PASS  full BCHKS25 argmax is blowup 4 at T=20, E=124   [numeric R* = 2.0000]
+  PASS  full BCHKS25 argmax is blowup 4 at T=22, E=124   [numeric R* = 2.0000]
+  PASS  full BCHKS25 argmax is blowup 4 at T=20, E=192   [numeric R* = 2.0000]
+  PASS  the UDR ceiling is strictly decreasing in blowup, so 4 is NOT optimal   [[106.27, 105.0, 103.42, 102.19, 101.09, 100.05]]
+  PASS  blowup 4 is a Johnson-regime result, not a universal one   [holds under BCHKS25 Johnson; fails under the UDR bound]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -244,8 +256,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 236, suite has 236]
+  PASS  README's stated check count matches the suite   [README says 248, suite has 248]
 
 ========================================================================================
-236/236 PASS   no property broken
+248/248 PASS   no property broken
 ========================================================================================

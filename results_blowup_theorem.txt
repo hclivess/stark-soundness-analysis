@@ -1,0 +1,64 @@
+
+============================================================================================
+1. THEOREM 8: R* = 2 log2(2A/(2A-c)),  A = a + c/2 + b
+============================================================================================
+  bound                        a   c     b      A       R*   blowup   c = 2(a+b)?
+  --------------------------------------------------------------------------------
+  BCIKS20 (2020)               2   7   1.5    7.0   2.0000    4.000           yes
+  BCHKS25 Johnson (2025)       1   5   1.5    5.0   2.0000    4.000           yes
+  hypothetical a=1, c=4        1   4   1.5    4.5   1.6960    3.240        no (5)
+  hypothetical a=1, c=6        1   6   1.5    5.5   2.2750    4.840        no (5)
+  hypothetical a=0, c=3        0   3   1.5    3.0   2.0000    4.000           yes
+
+  Both deployed-relevant bounds sit exactly on c = 2(a+b). The 2020 -> 2025
+  improvement moved a: 2 -> 1 and c: 7 -> 5 together along that line, which is
+  why Theorem 3's optimum did not move when its foundation was replaced.
+
+============================================================================================
+2. VERIFIED AGAINST THE FULL NON-ASYMPTOTIC BOUND
+============================================================================================
+  T=20, E=124:  numeric argmax R* = 2.0000 (blowup 4.0000), ceiling 99.58
+  T=22, E=124:  numeric argmax R* = 2.0000 (blowup 4.0000), ceiling 97.58
+  T=20, E=192:  numeric argmax R* = 2.0000 (blowup 4.0000), ceiling 167.58
+
+  The asymptotic derivation assumes m -> m_min; the sweep above uses the full
+  expression including the 3m'*gamma*rho and m'/sqrt(rho) terms. It lands on
+  2.0000 regardless of trace length or field size, as Corollary 2.1's separation
+  of variables predicts.
+
+============================================================================================
+3. WHERE IT FAILS: THE UNIQUE-DECODING REGIME HAS NO m
+============================================================================================
+  UDR bound is (gamma*n + 1)/|F| -- no proximity parameter, so c = 0
+
+      R   blowup   Lambda - (E-T)
+  ----------------------------------
+    0.5     1.41           2.2716
+    1.0     2.00           1.0000
+    2.0     4.00          -0.5850
+    3.0     8.00          -1.8074
+    4.0    16.00          -2.9069
+    5.0    32.00          -3.9542
+
+  Strictly decreasing: d/dR = -1 - 2^-R/(1 - 2^-R) < 0 for all R > 0. The sweep
+  bottoms out at the low end of its range (R = 0.05), i.e. the ceiling-optimal
+  blowup under UDR is as small as possible -- not 4.
+
+  And under BCHKS25 result 1 (a = 0 at the unique-decoding radius) the ceiling
+  is E - log2(C), with no nu term at all, so it does not depend on blowup in
+  either direction.
+
+============================================================================================
+4. WHAT THIS CHANGES, AND WHAT IT DOES NOT
+============================================================================================
+
+  THEOREM.md states Theorem 3' -- "blowup exactly 4" -- without scoping it to
+  the Johnson regime. That scope is now explicit: it holds for bounds satisfying
+  c = 2(a+b), which BCIKS20 and BCHKS25 both do, and fails where there is no
+  proximity parameter to trade against the domain.
+
+  No deployed recommendation changes. The five JBR systems sit in the regime
+  where blowup 4 is optimal. The two UDR systems are QUERY-bound, not
+  ceiling-bound (iteration 24), so the ceiling-optimal blowup was never what
+  selected their parameters -- SP1 uses blowup 4 and OpenVM blowup 2, and
+  neither choice is explained or contradicted by this theorem.
