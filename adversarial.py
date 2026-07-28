@@ -627,22 +627,91 @@ def part_a():
     check("migrating the alphas lifts that term by exactly 64 bits",
           abs(alphas_term(128, 100) - alphas_term(64, 100) - 64) < 1e-9)
 
-    # --- ITERATION 23: the PQ halving is UNVERIFIED, and the claim is sensitive to it.
-    # soundcalc is classical-only and points to Chiesa-Di-Hu-Zheng (eprint 2025/2166)
-    # for the QROM correspondence. That paper proves classical round-by-round security
-    # implies post-quantum state-restoration security and describes itself as a
-    # "post-quantum analogue of the classical security" -- hinting the loss may be
-    # smaller than halving. Could not extract the quantitative statement (403).
+    # --- ITERATION 23: the PQ halving is UNVERIFIED against eprint 2025/2166.
+    # soundcalc is classical-only and points to Chiesa-Di-Hu-Zheng for the QROM
+    # correspondence. Iteration 23 read that paper's abstract as HINTING the loss
+    # might be smaller than halving, and concluded the headline could invert.
+    # ITERATION 24 RETRACTS THAT CONCLUSION -- see the bracket checks below. The
+    # quantitative constant is still unfetched; only its DIRECTION is now settled.
     E_deg4, nu_deg4 = 124, 22
     classical_deg4 = E_deg4 - nu_deg4
-    check("the headline claim flips sign depending on the QROM loss",
-          (classical_deg4 / 2) < 100 <= classical_deg4,
-          f"halving {classical_deg4/2:.0f} PQ vs negligible {classical_deg4} PQ")
-    check("PQ figures in this repo are LOWER bounds, not measurements",
-          classical_deg4 / 2 <= classical_deg4)
+    check("the QROM constant is still unfetched (no open-access mirror exists)",
+          True, "eprint behind Cloudflare; OpenAlex reports oa_status=closed")
     # soundcalc genuinely does not model PQ -- verified by inspection
     check("no consulted calculator publishes a post-quantum column",
           True, "soundcalc classical-only; risc0 soundness.rs has no quantum term")
+
+    # --- ITERATION 24: the bracket k/c <= PQ <= k/2 (qrom_bracket.py).
+    #
+    # Iteration 23 wrote "every PQ figure here is a conservative LOWER bound" and
+    # allowed a "negligible loss" branch in which the headline inverts. Both are
+    # wrong, and these checks are written to catch the reversal if I regress.
+    #
+    # Grinding Fiat-Shamir nonces is unstructured search over a marked set of
+    # density 2^-k. Grover ACHIEVES 2^(k/2) and BBBV forbids beating it, so where
+    # the classical bound is attained the halving is exact in both directions and
+    # `classical/2` is a CEILING on what any QROM proof can establish.
+    def pq_bracket(k, c):
+        return k / float(c)
+    check("no QROM loss exponent below 2 is admissible (Grover attack bounds it)",
+          all(pq_bracket(classical_deg4, c) <= classical_deg4 / 2 + 1e-9
+              for c in (2.0, 2.5, 3.0, 4.0)),
+          "c < 2 would prove past the attack")
+    check("the 'negligible loss' branch of iteration 23 is unreachable",
+          pq_bracket(classical_deg4, 2.0) < 100 <= classical_deg4,
+          f"best case {pq_bracket(classical_deg4, 2.0):.0f} PQ, never {classical_deg4}")
+    check("PQ figures in this repo are optimistic UPPER bounds, not lower ones",
+          all(pq_bracket(classical_deg4, c) <= classical_deg4 / 2 + 1e-9
+              for c in (2, 3, 4)) and pq_bracket(classical_deg4, 3) < classical_deg4 / 2,
+          "iteration 23 had this backwards")
+
+    # The headline must survive with the commit term granted FULL classical value,
+    # i.e. even if 2025/2166 turns out to impose no commit-phase loss at all. The
+    # query term binds for all seven and is the attained one, so the total is
+    # capped at query/2 regardless.
+    def y_udr_(R):
+        return -math.log2((1 + 2.0 ** -R) / 2)
+
+    def y_jbr_(R, m):
+        a = math.sqrt(2.0 ** -R) * (1 + 0.5 / m)
+        return -math.log2(a) if a < 1 else float("-inf")
+
+    caps = []
+    for nm, Ez, Rz, Tz, sz, gz, repbits, repreg in ZKVMS:
+        y = y_udr_(Rz) if repreg == "UDR" else y_jbr_(Rz, 1000.0)
+        caps.append((nm, min(sz * y + gz, repbits) / 2.0))
+    check("no deployed zkVM clears 100 PQ bits even with a LOSSLESS commit term",
+          all(v < 100 for _, v in caps), f"max {max(v for _, v in caps):.1f}")
+    check("the unconditional deployed cap is 64 PQ bits (ZisK), not 100",
+          abs(max(v for _, v in caps) - 64.0) < 0.6,
+          f"{max(caps, key=lambda x: x[1])[0]} at {max(v for _, v in caps):.1f}")
+    # the query term must actually reproduce each reported total, else "the query
+    # phase binds" is not something this model can assert
+    devs = []
+    for nm, Ez, Rz, Tz, sz, gz, repbits, repreg in ZKVMS:
+        y = y_udr_(Rz) if repreg == "UDR" else y_jbr_(Rz, 1000.0)
+        devs.append((nm, sz * y + gz - repbits))
+    check("the query term reproduces every reported total from above",
+          all(0 <= d < 6 for _, d in devs),
+          f"deviations {min(d for _, d in devs):+.1f} to {max(d for _, d in devs):+.1f}")
+
+    # The FRAGILE claim: the degree-10 recommendation is a COMMIT-phase ceiling,
+    # so it moves with c. This check exists to stop pq_design.py's headline from
+    # being restated as unconditional.
+    E10, nu10 = 310, 22
+    check("the degree-10 recommendation clears 128 PQ only at c = 2",
+          (E10 - nu10) / 2 >= 128 > (E10 - nu10) / 3,
+          f"c=2 -> {(E10-nu10)/2:.0f}, c=3 -> {(E10-nu10)/3:.0f}")
+    check("at c = 3 the 128-PQ target needs degree 14 over a 31-bit base",
+          math.ceil((128 * 3 + nu10) / 31) == 14, f"{math.ceil((128*3+nu10)/31)}")
+    # and the asymmetry itself: the negative claim must be c-invariant while the
+    # positive one must not be
+    neg = [min(sz * (y_udr_(Rz) if repreg == "UDR" else y_jbr_(Rz, 1000.0)) + gz,
+               repbits) / 2.0
+           for _, Ez, Rz, Tz, sz, gz, repbits, repreg in ZKVMS]
+    check("the negative claim is c-invariant and the positive one is not",
+          max(neg) < 100 and (E10 - nu10) / 2 != (E10 - nu10) / 3,
+          "attained vs unattained terms behave differently under the QROM loss")
 
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265

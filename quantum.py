@@ -44,36 +44,45 @@ Formal grounding for the round-by-round framework and the FS compilation of FRI:
 For round-by-round sound protocols the classical FS loss is LINEAR in Q rather
 than Q^mu, which is why the classical accounting above is just `bits_rbr`.
 
-UNVERIFIED AGAINST THE AUTHORITATIVE TREATMENT -- READ THIS FIRST
+STATUS OF THE HALVING -- READ THIS FIRST (rewritten iteration 24)
 -----------------------------------------------------------------
-The halving below is the standard ENGINEERING rule ("for lambda post-quantum
-bits, target 2*lambda classical"), derived here from Grover-over-transcripts.
-It is NOT verified against the paper that actually settles the question:
+Iteration 23 flagged the halving as unverified against
 
     Chiesa, Di, Hu, Zheng, "How to Prove Post-Quantum Security for Succinct
     Non-Interactive Reductions", eprint 2025/2166
 
-which is the reference Ethereum's own soundcalc points to for exactly this
-("this correspondence holds for classical adversaries, but is different for
-quantum adversaries in the QROM"). That work proves classical round-by-round
-security IMPLIES post-quantum state-restoration security, and describes itself
-as achieving "a post-quantum analogue of the classical security" via a framework
-that "mirrors classical security analyses". Both phrasings hint the concrete
-loss may be SMALLER than a full halving. I could not extract the quantitative
-statement -- eprint PDFs return HTTP 403 to this session and the abstract does
-not quantify it.
+the reference Ethereum's own soundcalc points to for the QROM correspondence,
+and warned that if the true loss were negligible the repository's headline would
+INVERT. Iteration 24 shows that warning pointed the WRONG WAY. See
+qrom_bracket.py; the short version:
 
-THE SENSITIVITY IS NOT A DETAIL. At degree 4 the classical ceiling is 102 bits:
+    k/c  <=  PQ_provable  <=  k/2,      c >= 2.
 
-    full halving (assumed here)  ->  51 PQ  -> nothing clears 100
-    ~10-bit loss                 ->  92 PQ  -> nothing clears 100
-    negligible loss              -> 102 PQ  -> most systems clear it
+The UPPER bound is an ATTACK, not an assumption: grinding Fiat-Shamir nonces is
+unstructured search of density 2^-k, Grover costs 2^(k/2), and BBBV forbids
+better. A negligible loss is therefore IMPOSSIBLE -- classical/2 is the best
+case, and every PQ figure in this file is an optimistic UPPER bound, not the
+"conservative lower bound" iteration 23 called it. The open question is whether
+the truth is WORSE (c > 2), not whether it is better.
 
-So the repository's headline -- "no deployed system reaches 100 provable
-post-quantum bits" -- is TRUE under the halving and FALSE under a negligible
-loss. Every PQ figure in this file and in pq_design.py should be read as a
-conservative LOWER BOUND, not a measurement. Settling it requires reading
-2025/2166 directly.
+That sorts this repository's two PQ claims into opposite boxes:
+
+  UNCONDITIONAL. "No deployed system reaches 100 provable PQ bits." The query
+    phase binds for all seven verified zkVMs, and its classical bound is
+    ATTAINED -- a prover at the decoding radius plus a nonce grind realizes it --
+    so the halving there is exact in both directions. The largest deployed query
+    term is ZisK's 128 bits, hence nothing exceeds 64 PQ bits. Sharper than the
+    original claim, and independent of 2025/2166.
+
+  FRAGILE. "Degree 10 over a 31-bit base reaches 128 PQ bits" (pq_design.py).
+    That is a commit-phase CEILING, and the commit bound is NOT known to be
+    attained -- its constant C is a proof artifact. At c = 2 degree 10 clears
+    128; at c = 3 it delivers 96 and 128 needs degree 14 instead.
+
+So the negative results here are established; the positive design target is
+conditional on c = 2. eprint PDFs sit behind a Cloudflare challenge this session
+cannot solve, and OpenAlex confirms no open-access mirror exists for either
+2025/2166 or CMS19 (eprint 2019/834), so c stays unpinned.
 
 WHERE THIS IS CONSERVATIVE (stated so it is not oversold)
 ---------------------------------------------------------

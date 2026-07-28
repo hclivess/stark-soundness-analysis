@@ -1,0 +1,88 @@
+
+==============================================================================================
+1. THE BRACKET:  k/c <= PQ_provable <= k/2,  with c >= 2
+==============================================================================================
+
+  UPPER: Grover over Fiat-Shamir nonces is an unstructured search of density
+         eps = 2^-k. It costs 2^(k/2), and BBBV forbids doing better. Where the
+         classical bound is ATTAINED, PQ = k/2 exactly.
+  LOWER: QROM reductions lose t -> t^c in the query budget, giving k/c. And
+         c >= 2, because c < 2 would prove past the Grover attack.
+
+  Consequence: `PQ = classical/2` is the CEILING on provable post-quantum
+  soundness, not a conservative floor. Iteration 23 had the direction wrong.
+
+==============================================================================================
+2. THE QUERY TERM BINDS, AND IT IS THE ATTAINED ONE
+==============================================================================================
+  system           regime  reported  query term   binds  PQ <= q/2
+  ------------------------------------------------------------------
+  SP1 6.1.0           UDR       100       100.1   query       50.0
+  OpenVM 1.5.0        UDR       100       100.1   query       50.0
+  Airbender           JBR        67        71.4   query       33.5
+  Pico                JBR        53        57.9   query       26.5
+  ZisK 0.16.1         JBR       128       130.3   query       64.0
+  RISC Zero           JBR        48        50.0   query       24.0
+  Miden               JBR        55        56.5   query       27.5
+
+  The query term reproduces each reported total, and soundcalc's own
+  per-component column says it is the binding one. Since the total is a MINIMUM,
+
+      PQ_total <= query_term / 2 = 64 bits at worst across all seven,
+
+  and that inequality holds whatever eprint 2025/2166's constant turns out to
+  be. The headline is unconditional -- and sharper than previously stated:
+  not "nothing reaches 100", but NOTHING EXCEEDS 64.
+
+==============================================================================================
+3. WHAT 2025/2166 CAN AND CANNOT MOVE
+==============================================================================================
+  quantity                              c = 2    c = 3    c = 4  fragile?
+  --------------------------------------------------------------------------
+  deployed max (query, attained)         64.0     64.0     64.0  no -- attained
+  31-bit^4 ceiling (commit)              51.0     34.0     25.5  YES
+  31-bit^10 ceiling (commit)            144.0     96.0     72.0  YES
+  Goldilocks^3 ceiling (commit)          85.0     56.7     42.5  YES
+
+  The attained row does not move: Grover both achieves and cannot beat the
+  square root. Every commit-phase ceiling does move, linearly in 1/c.
+
+==============================================================================================
+4. THE RECOMMENDATION IS THE FRAGILE CLAIM, NOT THE HEADLINE
+==============================================================================================
+  extension degree needed for 128 provable PQ bits over a 31-bit base, nu = 22:
+
+    c  classical needed  E needed  degree   note
+  --------------------------------------------------------------
+    2               256       278       9   pq_design.py's recommendation
+    3               384       406      14   recommendation FAILS
+    4               512       534      18   recommendation FAILS
+
+  At c = 2, degree 10 gives (310 - 22)/2 = 144 PQ bits and clears 128.
+  At c = 3 the same configuration gives 96, and 128 needs degree 14.
+
+  That is the claim whose truth depends on the constant in 2025/2166. Iteration
+  23 hedged the wrong one.
+
+==============================================================================================
+5. HONEST LIMITS OF THIS ARGUMENT
+==============================================================================================
+
+  1. The Grover accounting is in ITERATIONS, not gate cost. Each iteration must
+     evaluate the whole predicate coherently -- for a commit-phase grind that is
+     a full Merkle recommitment. Classical bit-security ignores that same work
+     factor W, so the comparison is symmetric and k/2 stands; but a cost-based
+     accounting would read k/2 + log2(W) on both sides.
+  2. Grover with an unknown number of solutions needs exponential search, worth
+     a small constant factor -- under a bit.
+  3. "Attained" is unconditional at the unique-decoding radius. In the Johnson
+     regime it presumes a word exists at the Johnson radius with the assumed
+     list structure -- the same premise the classical bound is stated against,
+     so the two sides remain comparable.
+  4. Grover parallelises poorly (k machines buy only sqrt(k)), so a realistic
+     adversary does worse than 2^(k/2). That direction only helps the defender
+     and is deliberately not credited.
+  5. c is still unpinned. eprint PDFs sit behind a Cloudflare challenge this
+     session cannot solve; OpenAlex confirms no open-access mirror exists for
+     either 2025/2166 or CMS19 (eprint 2019/834). The bracket is what can be
+     established without them.

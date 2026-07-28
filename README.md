@@ -32,7 +32,7 @@ fitting. `a = 2` would double every step.
 Total soundness is a **minimum** over all terms, so **the code layer always
 binds**. That single fact explains the rest of this repo.
 
-Run `python3 adversarial.py` — 121 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 129 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -42,22 +42,27 @@ confirm them. It has caught two real errors in my own work.
 **1. Extension degree 4 is a universal default, and it caps every deployed
 system near 50 post-quantum bits.** RISC Zero, SP1, OpenVM, OpenVM2, Pico,
 Airbender all use it. Degree 9–10 over a 31-bit base reaches 128 PQ bits for
-~800 KiB, resting on collision resistance plus the random oracle — no conjecture,
-no lattice. It is a configuration choice nobody has revisited.
+~800 KiB *(at `c = 2`; see finding 2 — at `c = 3` it needs degree 14)*, resting
+on collision resistance plus the random oracle — no conjecture, no lattice. It is a configuration choice nobody has revisited.
 → `pq_design.py`, `quantum.py`
 
-**2. Under a quantum adversary, everything halves — not just grinding.**
-*(Caveat added iteration 23: the halving is the standard engineering rule, not
-verified against [eprint 2025/2166](https://eprint.iacr.org/2025/2166), the
-treatment soundcalc itself defers to. If the real QROM loss is small rather than
-a square root, degree-4 systems sit at ~102 PQ bits and this finding inverts.
-Treat every PQ number here as a conservative lower bound.)*
-Fiat–Shamir hands the adversary transcript control, so finding a favourable
-challenge is Grover-able. `PQ bits = classical / 2`, applied to commit phase,
-query phase, DEEP and grinding alike. **No deployed system reaches 100 bits of
-provable post-quantum soundness.** The quantum weakness of a hash-based STARK is
-not the hash — it is Fiat–Shamir.
-→ `quantum.py`
+**2. Under a quantum adversary, everything halves — not just grinding, and
+`classical/2` is the *ceiling*, not the conservative floor.** Fiat–Shamir hands
+the adversary transcript control, so finding a favourable challenge is Grover-able.
+Grinding nonces is unstructured search of density `2^−k`: Grover achieves `2^{k/2}`
+and BBBV forbids better, so the provable range is
+
+```
+k/c ≤ PQ ≤ k/2,   c ≥ 2   (c = the QROM reduction's query-loss exponent)
+```
+
+Every PQ figure here is an optimistic **upper** bound. That splits the PQ claims
+in two: **no deployed system reaches 100 provable PQ bits** is *unconditional* —
+the query phase binds for all seven verified zkVMs and its bound is *attained*,
+so its halving is exact, and the largest deployed query term (ZisK, 128) caps the
+whole field at **64 PQ bits**. The *design target* (finding 1) is the conditional
+one: it is a commit-phase ceiling, and the commit bound is not known attained.
+→ `qrom_bracket.py`, `quantum.py`
 
 **3. The regime crossover predicts real engineering decisions, 7/7.**
 Unique decoding beats the Johnson bound above `s* = (K_J(m_eq) − g)/y_UDR`, where
@@ -109,9 +114,10 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **121 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **129 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
+| `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
 | `pq_design.py` | what 128 PQ bits actually costs to build |
 | `regime_crossover.py` | Thm 7, the UDR/JBR crossover, 5/5 prediction |
 | `real_configs.py` | source-verified configs; BCHKS25 vs BCIKS20 |
@@ -146,6 +152,11 @@ rate is the main reason to trust what survived.
    moved in the literature without anyone changing a config.
 5. **Per-system parameters were recalled, not read**, until `SOURCES.md`. Only
    RISC Zero shipped a production config; Plonky3 and Stwo ship none.
+6. **Iteration 23 hedged the wrong PQ claim.** It called the halving a
+   "conservative lower bound" and warned the headline could invert if the QROM
+   loss were negligible. Grover on Fiat–Shamir is an *attack*, so a negligible
+   loss is impossible: `classical/2` is the best case. The negative headline is
+   unconditional; the *design recommendation* is what depends on the constant.
 
 The adversarial suite additionally caught two numerical errors in my own math —
 a catastrophic-cancellation instability in Theorem 4's closed form, and a

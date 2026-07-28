@@ -55,9 +55,17 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  a 100-constraint NADO circuit sits near 57 bits, not 63   [57.4]
   PASS  base-field alphas cap NADO below the migrated FRI commit term at any nc
   PASS  migrating the alphas lifts that term by exactly 64 bits
-  PASS  the headline claim flips sign depending on the QROM loss   [halving 51 PQ vs negligible 102 PQ]
-  PASS  PQ figures in this repo are LOWER bounds, not measurements
+  PASS  the QROM constant is still unfetched (no open-access mirror exists)   [eprint behind Cloudflare; OpenAlex reports oa_status=closed]
   PASS  no consulted calculator publishes a post-quantum column   [soundcalc classical-only; risc0 soundness.rs has no quantum term]
+  PASS  no QROM loss exponent below 2 is admissible (Grover attack bounds it)   [c < 2 would prove past the attack]
+  PASS  the 'negligible loss' branch of iteration 23 is unreachable   [best case 51 PQ, never 102]
+  PASS  PQ figures in this repo are optimistic UPPER bounds, not lower ones   [iteration 23 had this backwards]
+  PASS  no deployed zkVM clears 100 PQ bits even with a LOSSLESS commit term   [max 64.0]
+  PASS  the unconditional deployed cap is 64 PQ bits (ZisK), not 100   [ZisK 0.16.1 at 64.0]
+  PASS  the query term reproduces every reported total from above   [deviations +0.1 to +4.9]
+  PASS  the degree-10 recommendation clears 128 PQ only at c = 2   [c=2 -> 144, c=3 -> 96]
+  PASS  at c = 3 the 128-PQ target needs degree 14 over a 31-bit base   [14]
+  PASS  the negative claim is c-invariant and the positive one is not   [attained vs unattained terms behave differently under the QROM loss]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -129,8 +137,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 121, suite has 121]
+  PASS  README's stated check count matches the suite   [README says 129, suite has 129]
 
 ========================================================================================
-121/121 PASS   no property broken
+129/129 PASS   no property broken
 ========================================================================================
