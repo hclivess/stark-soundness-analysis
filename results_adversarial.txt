@@ -40,6 +40,9 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  a=0 would make the ceiling independent of domain size
   PASS  commit-phase grinding is additive on the ceiling
   PASS  no zero-grinding ceiling exceeds the field size itself   [max excess 0.00]
+  PASS  all Jagged sumcheck terms sit ABOVE SP1's code layer   [weakest 112.2 vs code 100.1]
+  PASS  the minimum over Jagged + code equals the code layer
+  PASS  a=0 sumcheck terms barely move with trace size; a=1 code term moves linearly   [sumcheck 0.01 vs code 4.00 bits]
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
   PASS  clustered queries are far cheaper than the model   [clustered 13 vs model 1893]
@@ -79,5 +82,5 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
 
 ========================================================================================
-68/68 PASS   no property broken
+71/71 PASS   no property broken
 ========================================================================================

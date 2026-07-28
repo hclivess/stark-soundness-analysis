@@ -434,6 +434,42 @@ def part_a():
     check("no zero-grinding ceiling exceeds the field size itself",
           worst5 <= 1e-9, f"max excess {worst5:.2f}")
 
+    # --- WHY THE MULTILINEAR TURN CANNOT LIFT THE CEILING (the mechanism).
+    #
+    # soundcalc/circuits/jagged.py: every sumcheck-family error term has a
+    # LOGARITHMIC numerator, not a polynomial one --
+    #     eps_RLC        = log2(width)/F
+    #     eps_sumcheck   = 2*log_trace/F
+    #     eps_eval_sc    = 2*(2*log_trace+2)/F
+    #     zerocheck      = (num_constraints + (deg+2)*log_height)/F
+    # so in ceiling = E - a*nu - log2(C), the whole sumcheck family sits at a = 0.
+    # The CODE-proximity layer underneath contributes the a >= 1 term, and since
+    # the total is a MINIMUM, the code layer always binds. That is the mechanism
+    # behind iteration 6's observation that WHIR/Jagged/SWIRL leave the ceiling
+    # untouched: they are a=0 machinery bolted onto an a>=1 code test.
+    def jagged_terms(E, log_dense, batch, width, nc, deg):
+        F = 2.0 ** E
+        lt = math.ceil(math.log2(2 ** log_dense)) + math.ceil(math.log2(batch))
+        lh = math.ceil(math.log2(2 ** log_dense))
+        return {"RLC": math.ceil(math.log2(width)) / F,
+                "sumcheck": (2 * lt) / F,
+                "eval_sc": (2 * (2 * lt + 2)) / F,
+                "zerocheck": (nc + (deg + 2) * lh) / F}
+    t21 = jagged_terms(124, 21, 193, 3741, 3412, 3)
+    fri_q = 124 * yield_udr(2) + 16
+    check("all Jagged sumcheck terms sit ABOVE SP1's code layer",
+          all(-math.log2(v) > fri_q for v in t21.values()),
+          f"weakest {min(-math.log2(v) for v in t21.values()):.1f} vs code {fri_q:.1f}")
+    check("the minimum over Jagged + code equals the code layer",
+          abs(min(min(-math.log2(v) for v in t21.values()), fri_q) - fri_q) < 1e-9)
+    # discriminating test: a=0 terms are ~invariant to trace size, a=1 terms are not
+    t25 = jagged_terms(124, 25, 193, 3741, 3412, 3)
+    d_sum = abs(min(-math.log2(v) for v in t21.values())
+                - min(-math.log2(v) for v in t25.values()))
+    d_code = abs(commit_udr(2, 21 + 2, 124) - commit_udr(2, 25 + 2, 124))
+    check("a=0 sumcheck terms barely move with trace size; a=1 code term moves linearly",
+          d_sum < 0.5 and d_code > 3.5, f"sumcheck {d_sum:.2f} vs code {d_code:.2f} bits")
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0
