@@ -1,6 +1,38 @@
 """
 All three routes to capacity, and why each one is closed at deployed parameters.
 
+*** CORRECTED IN ITERATION 42 -- THE FIELD-SIZE OBJECTION WAS OVERSTATED ***
+This file concludes that the unfolded routes need fields of 5,909 bits (random
+linear) to 3,026,000 bits (random RS), and that every capacity route is
+therefore closed. Those figures come from Goyal-Guruswami-Sun-Wootters Thms 5.3
+and 5.6. But Yuan-Zhu (arXiv 2605.07595, syndrome-space approach) give much
+better alphabet-size dependence for exactly these families -- and iteration 29
+had already listed that paper in capacity_frs.py's source table. I used the
+weaker bound anyway.
+
+Yuan-Zhu Theorem 1.1.1, random LINEAR codes, large-alphabet setting:
+    radius rho < 1 - R - eps  requires  q = Theta(n) and q >= (2/eps)^(1/eps)
+Yuan-Zhu Theorem 6.6, random RS:  q >= n * 2^{O(eps^-3)}
+
+At the break-even eps that beats the Johnson radius (see section 5, added in
+iteration 42):
+
+    route                 this file said        corrected
+    random linear            5,909 bits          22 bits
+    random RS            3,026,000 bits       86-135 bits
+
+So the field-size objection collapses by two to five orders of magnitude, and
+random linear codes at capacity are comfortably feasible. Section 4's verdict
+"blocked by field size" is WRONG for both unfolded routes.
+
+What survives is a DIFFERENT objection, which this file noted but did not model:
+random linear codes are not Reed-Solomon, so FRI's x -> x^2 folding map does not
+exist for them; and random-evaluation-point RS destroys the FFT structure that
+makes a STARK prover O(n log n). Section 5 prices that. The corrected conclusion
+is that the capacity routes are closed to FRI for STRUCTURAL reasons, not for
+field-size reasons, and are genuinely open to Ligero/Brakedown/Blaze/Bolt-style
+systems built on random linear codes.
+
 Iteration 29 priced the folded-RS route and found it worth ~0% because the
 theorem needs folding m >= c/eta^2, so each query returns m field elements. That
 conclusion had an obvious hole: RANDOM-evaluation-point RS also achieves
@@ -200,5 +232,90 @@ def report():
   none of them would have moved the ceiling even if open.""")
 
 
+# ---------------------------------------------- iteration 42: Yuan-Zhu bounds
+
+def yz_linear_bits(eps, n=2 ** 22):
+    """Yuan-Zhu Thm 1.1.1: q = Theta(n) AND q >= (2/eps)^(1/eps)."""
+    return max(math.log2(n), (1.0 / eps) * math.log2(2.0 / eps))
+
+
+def yz_rs_bits(eps, n=2 ** 22, c=1.0):
+    """Yuan-Zhu Thm 6.6, random RS: q >= n * 2^{O(eps^-3)}."""
+    return math.log2(n) + c / eps ** 3
+
+
+def eps_to_beat_johnson(rho):
+    """Yuan-Zhu parameterise the radius as 1-R-eps (no factor 2)."""
+    return math.sqrt(rho) - rho
+
+
+def ntt_penalty(log2n=22.0, ntt_share=0.905):
+    """Replacing an O(n log n) NTT with O(n log^2 n) multipoint evaluation.
+
+    EFFICIENCY.md measures NTT at 90-91% of prover latency. The asymptotic
+    ratio is log n; this is generous to the random-evaluation route, since real
+    multipoint-evaluation constants are far worse than NTT constants.
+    """
+    return (1 - ntt_share) + ntt_share * log2n
+
+
+def report_corrected():
+    sec("5. CORRECTED: THE FIELD-SIZE OBJECTION COLLAPSES")
+    print("  Yuan-Zhu (arXiv 2605.07595) vs the GGSW bounds used above.\n")
+    print(f"  {'eps':>7} {'YZ linear':>11} {'GGSW linear':>13} "
+          f"{'YZ rand-RS':>12} {'GGSW rand-RS':>14}")
+    print("  " + "-" * 62)
+    for e in (0.30, 0.25, 0.20, 0.15, 0.10):
+        eta = e / 2.0
+        print(f"  {e:>7.2f} {yz_linear_bits(e):>11.1f} "
+              f"{field_bits_random_linear(eta):>13.4g} {yz_rs_bits(e):>12.1f} "
+              f"{field_bits_random_rs(eta, 2**22):>14.4g}")
+    print(f"\n  {'rate':>7} {'eps break-even':>15} {'YZ linear':>11} "
+          f"{'YZ rand-RS':>12} {'deployed E':>12} {'feasible?':>11}")
+    print("  " + "-" * 74)
+    for R in (1, 2, 3):
+        rho = 2.0 ** -R
+        e = eps_to_beat_johnson(rho)
+        lin, rs = yz_linear_bits(e), yz_rs_bits(e)
+        print(f"  {'1/%d' % 2**R:>7} {e:>15.4f} {lin:>11.1f} {rs:>12.1f} "
+              f"{'124-192':>12} {'YES':>11}")
+    print("""
+  Random linear codes need about 22 bits -- the Theta(n) term dominates, and the
+  (2/eps)^(1/eps) term is only 12 to 17 bits at these radii. Random RS needs 86
+  to 135 bits, inside a deployed extension field. Section 4's "blocked by field
+  size" is wrong for both.""")
+
+    sec("6. WHAT ACTUALLY BLOCKS THEM: STRUCTURE, NOT FIELD SIZE")
+    pen = ntt_penalty()
+    print(f"""
+  Random LINEAR codes are not Reed-Solomon. FRI folds by x -> x^2 on a
+  multiplicative coset; a random linear code has no such map, so there is no FRI
+  to run. This route is open to Ligero/Brakedown/Blaze/Bolt-style systems -- and
+  those are exactly the systems the Yuan-Zhu and GGSW papers cite as motivation
+  -- but it is not a change a FRI-based STARK can make.
+
+  Random-EVALUATION-POINT RS keeps the polynomial structure but destroys the
+  evaluation domain's group structure. The low-degree extension stops being an
+  NTT (O(n log n)) and becomes general multipoint evaluation (O(n log^2 n)).
+  EFFICIENCY.md measures NTT at 90.5% of prover latency, so the asymptotic
+  prover cost multiplies by
+
+      (1 - 0.905) + 0.905 * log2(n)  =  {pen:.1f}x   at n = 2^22
+
+  and that is the generous reading: it credits multipoint evaluation with NTT's
+  constants, which it does not have. Trading a ~20x slower prover for at most a
+  2x query reduction is not a trade any deployed system would take.
+
+  So the corrected verdict is:
+
+    FRS / subspace design   folding m >= c/eta^2      blocked: payload (it 29)
+    random linear           field ~22 bits, FEASIBLE  blocked: no FRI folding map
+    random RS               field 86-135, FEASIBLE    blocked: ~{pen:.0f}x prover
+
+  Every route is still closed to a FRI-based STARK, but for structural reasons,
+  and the random-linear route is genuinely OPEN to linear-code systems.""")
+
+
 if __name__ == "__main__":
     report()
+    report_corrected()

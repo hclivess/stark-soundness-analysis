@@ -155,6 +155,19 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  and leaves every JBR system bit-identical   [the accessor is a no-op where the regime already matched]
   PASS  the UDR list size is 1 and the JBR list size is 2m+1   [unique decoding admits at most one codeword in the radius]
   PASS  the canonical table splits 2 UDR / 5 JBR as Theorem 7 predicts   [regime field matches what soundcalc reports]
+  PASS  random linear at capacity is FEASIBLE at rate 1/2   [22.0 bits, well inside a deployed field]
+  PASS  random RS at capacity is feasible at rate 1/2   [134.6 bits vs 124-192 deployed]
+  PASS  random linear at capacity is FEASIBLE at rate 1/4   [22.0 bits, well inside a deployed field]
+  PASS  random RS at capacity is feasible at rate 1/4   [86.0 bits vs 124-192 deployed]
+  PASS  random linear at capacity is FEASIBLE at rate 1/8   [22.0 bits, well inside a deployed field]
+  PASS  random RS at capacity is feasible at rate 1/8   [105.8 bits vs 124-192 deployed]
+  PASS  Yuan-Zhu improves the random-linear field bound by >100x   [269x to 570x smaller]
+  PASS  the two papers' radii coincide at the comparison point (1/2)   [eps_YZ = 2*eta_GGSW, so 1-R-eps = 1-R-2eta]
+  PASS  the two papers' radii coincide at the comparison point (1/4)   [eps_YZ = 2*eta_GGSW, so 1-R-eps = 1-R-2eta]
+  PASS  the two papers' radii coincide at the comparison point (1/8)   [eps_YZ = 2*eta_GGSW, so 1-R-eps = 1-R-2eta]
+  PASS  the random-evaluation route costs ~20x prover for at most 2x queries   [20.0x prover vs 2x query reduction at best]
+  PASS  the prover penalty is driven by NTT's share of latency   [at 0% NTT share there is no penalty; at 90.5% there is 20x]
+  PASS  iteration 30's 'blocked by field size' verdict is retracted   [blocked by structure instead: no x->x^2 map, and ~20x prover]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -179,8 +192,8 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  polynomial C(eps*) is harmless at every useful eps*   [1/eps*^2 stays far below the threshold]
   PASS  an exponential C(eps*) FAILS at small eps*, inverting the intuition   [exp(1/eps*) fails below eps* ~ 0.07 -- useful range bounded BELOW]
   PASS  the staleness guard can actually fail (teeth self-test)   [flags a bare stale assertion, clears a marked one]
-  PASS  no file asserts a claim this repo has retracted   [8 retracted claims registered]
-  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39, 40]]
+  PASS  no file asserts a claim this repo has retracted   [9 retracted claims registered]
+  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39, 40, 42]]
   PASS  a distant marker does not exempt a stale assertion   [proximity window, not file-wide matching]
   PASS  BCIKS20 gives blowup 4 exactly   [R* = 2.000000]
   PASS  BCHKS25 gives blowup 4 exactly   [R* = 2.000000]
@@ -284,8 +297,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 276, suite has 276]
+  PASS  README's stated check count matches the suite   [README says 289, suite has 289]
 
 ========================================================================================
-276/276 PASS   no property broken
+289/289 PASS   no property broken
 ========================================================================================

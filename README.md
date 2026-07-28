@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 276 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 289 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -147,7 +147,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **276 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **289 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
@@ -161,7 +161,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `radius_staircase.py` | `a` is a staircase in the radius: 0 at UDR, 1 at Johnson, unbounded above |
 | `a_floor_scope.py` | what `a ≥ 1` is *proved* for; 20.6–37.3 bits of unclosed headroom (regime-corrected, it 40) |
 | `open_zone.py` | evidence tiers of the BOUNDS table; what room is left above Johnson |
-| `capacity_routes.py` | all three capacity routes; each closed, for two different reasons |
+| `capacity_routes.py` | all three capacity routes; closed by **structure**, not field size (it 42 corrects it 30) |
 | `interleaved_proximity.py` | the interleaved/Ligero case resolved: `a = 1`, sharp |
 | `merkle_extraction.py` | ε_MT expanded; the 3.5 constant derived; 256 bits ≠ 128 |
 | `bcs_composition.py` | BCS composes by sum; the hash term's QROM loss is 3, not 2 |
@@ -202,10 +202,12 @@ caught after the fact.
    fields** (and Kambiré 2026 sharpens it to `O(1/log n)` *below* capacity).
    Capacity-radius gaps are **proved** for folded RS, subspace-design codes and
    random-evaluation RS. But *(iteration 30)* **every one of those routes is
-   closed at deployed parameters**: folded RS pays `m ≥ c/η²` in payload, and the
-   unfolded random ensembles need fields of `exp(Ω(1/η⁴))` to `exp(Ω(1/η⁷))` —
-   thousands to millions of bits. Folding is exactly what trades payload for a
-   polynomial field. (`capacity_frs.py`, `capacity_routes.py`)
+   closed to FRI-based STARKs** — but for *structural* reasons, not field size.
+   Folded RS pays `m ≥ c/η²` in payload; the unfolded routes are field-feasible
+   (Yuan–Zhu: **22 bits** for random linear, 86–135 for random RS) but random
+   linear codes have no `x → x²` folding map and random evaluation points cost
+   ~20× prover. The random-linear route is genuinely **open** to
+   Ligero/Brakedown-style systems. (`capacity_frs.py`, `capacity_routes.py`)
 2. **BCIKS20's `(m+½)⁷n²` bound is superseded by BCHKS25's `(2m'⁵+…)n`** —
    exponent 7→5 and `n²→n`, worth +29 bits. Parts I and II were built on the
    older bound.

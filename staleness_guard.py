@@ -67,6 +67,9 @@ RETRACTED = [
     ("headroom exceeds nu everywhere",
      "it fails for the two UDR systems once the right regime is used",
      40),
+    ("blocked by field size",
+     "Yuan-Zhu give 22-135 bits; they are blocked by structure, not field size",
+     42),
 ]
 
 # Extended in iteration 35 after its own first run produced a FALSE POSITIVE:

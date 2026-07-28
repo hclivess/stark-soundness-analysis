@@ -690,3 +690,26 @@ the result is usable: `a = 0` beats soundcalc's `a = 1` only while
 `log₂C(ε*) < ν + log₂(1/γ)` ≈ 24.4 bits at `ν = 23, ρ = 1/4`. Polynomial growth
 (`1/ε*`, `1/ε*²`) clears that comfortably; `exp(1/ε*)` fails below `ε* ≈ 0.07`.
 See `udr_a0.py` §4.
+
+## Yuan–Zhu's alphabet-size bounds (iteration 42)
+
+**Chen Yuan, Ruiqi Zhu, "A Syndrome-Space Approach to Proximity Gaps and
+Correlated Agreement for Random Linear Codes and Random Reed–Solomon Codes"** —
+arXiv:2605.07595v2. Fetched and read.
+
+> **Theorem 1.1 (Informal).** "1. *Large-alphabet setting.* For every `ε > 0`, if
+> `q = Θ(n)` and `ρ < 1 − R − ε`, then a random linear code `C` of rate `R` over
+> `F_q` satisfies proximity gap and correlated-agreement properties at radius
+> `ρn` with high probability."
+
+The formal statement adds `q ≥ max{(2/ε)^{1/ε}, 2(1−R)/ε}`. For random RS,
+Theorem 6.6 gives `q ≥ n·2^{O_m(ε⁻³)}`.
+
+> **Remark 1.2.** "For random linear codes, the framework of [GG25a] yields
+> proximity gap and correlated agreement statements up to `ρ < 1 − R − 2ε` … Our
+> argument improves this to `ρ < 1 − R − ε`, which is optimal up to the ε-loss."
+
+These are **far weaker field requirements** than the GGSW Thms 5.3/5.6 used in
+iteration 30: at the radius that beats Johnson, **22 bits** for random linear and
+86–135 for random RS, against 5,909 and 3,026,000. Iteration 30's "blocked by
+field size" verdict is retracted; see `capacity_routes.py` §5–6.

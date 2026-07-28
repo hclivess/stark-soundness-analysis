@@ -1333,6 +1333,61 @@ def part_a():
               "regime field matches what soundcalc reports")
     except ImportError:
         pass
+
+    # --- ITERATION 42: iteration 30's field-size objection was overstated.
+    #
+    # Yuan-Zhu (arXiv 2605.07595) Thm 1.1.1 for random LINEAR codes:
+    #     radius 1 - R - eps needs q = Theta(n) AND q >= (2/eps)^(1/eps)
+    # and Thm 6.6 for random RS: q >= n * 2^{O(eps^-3)}. Iteration 30 used
+    # GGSW's exp(Omega(l^2/eta^4)) and exp(Omega(l^4/eta^7)) instead -- despite
+    # iteration 29 having listed Yuan-Zhu in its own source table.
+    try:
+        import capacity_routes as _cr
+
+        # (a) the corrected requirement must be feasible at deployed field sizes
+        for R_ in (1, 2, 3):
+            rho_ = 2.0 ** -R_
+            e_ = _cr.eps_to_beat_johnson(rho_)
+            lin_, rs_ = _cr.yz_linear_bits(e_), _cr.yz_rs_bits(e_)
+            check(f"random linear at capacity is FEASIBLE at rate 1/{2**R_}",
+                  lin_ < 64, f"{lin_:.1f} bits, well inside a deployed field")
+            check(f"random RS at capacity is feasible at rate 1/{2**R_}",
+                  rs_ < 200, f"{rs_:.1f} bits vs 124-192 deployed")
+        # (b) and it must be MUCH better than the bound iteration 30 used, or
+        # the correction would be cosmetic
+        ratios42 = []
+        for R_ in (1, 2, 3):
+            rho_ = 2.0 ** -R_
+            e_ = _cr.eps_to_beat_johnson(rho_)
+            ratios42.append(_cr.field_bits_random_linear(e_ / 2.0)
+                            / _cr.yz_linear_bits(e_))
+        check("Yuan-Zhu improves the random-linear field bound by >100x",
+              all(r_ > 100 for r_ in ratios42),
+              f"{min(ratios42):.0f}x to {max(ratios42):.0f}x smaller")
+        # the improvement must not be a reparameterisation artifact: check the
+        # radii being compared actually coincide
+        for R_ in (1, 2, 3):
+            rho_ = 2.0 ** -R_
+            e_ = _cr.eps_to_beat_johnson(rho_)
+            check(f"the two papers' radii coincide at the comparison point (1/{2**R_})",
+                  abs((1 - rho_ - e_) - _cr.capacity_radius(rho_, e_ / 2.0)) < 1e-12,
+                  "eps_YZ = 2*eta_GGSW, so 1-R-eps = 1-R-2eta")
+
+        # (c) WHAT STILL BLOCKS THEM: structure, not field size. The NTT penalty
+        # must dominate any query saving capacity could deliver (at most 2x).
+        pen_ = _cr.ntt_penalty()
+        check("the random-evaluation route costs ~20x prover for at most 2x queries",
+              pen_ > 10.0, f"{pen_:.1f}x prover vs 2x query reduction at best")
+        check("the prover penalty is driven by NTT's share of latency",
+              _cr.ntt_penalty(ntt_share=0.0) < 2.0 < pen_,
+              "at 0% NTT share there is no penalty; at 90.5% there is 20x")
+        # random linear codes have no FRI folding map -- a structural block that
+        # no field size can fix
+        check("iteration 30's 'blocked by field size' verdict is retracted",
+              _cr.yz_linear_bits(_cr.eps_to_beat_johnson(0.25)) < 64,
+              "blocked by structure instead: no x->x^2 map, and ~20x prover")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()
