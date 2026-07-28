@@ -34,7 +34,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 158 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 169 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -98,13 +98,16 @@ buys per unit of proof size.
 → `ceiling_anatomy.py`
 
 **5. The `a ≥ 1` floor is provably tight, not a proof artifact.** For the
-interleaved linear-code test (Ligero, and hence Brakedown), Roth–Zémor give
-false-witness probability `(e+1)/q`, and Diamond–Posen Remark 2 proves it
-**cannot be decreased**, with an explicit counterexample attaining it. So the
-`2 → 1` improvement was real proof engineering; `1 → 0` is not available for this
-class of test. The only `a = 0` code route known is conditional on an unproven
-conjecture.
-→ `THEOREM.md`, `adversarial.py`
+interleaved linear-code test (Ligero, and hence Brakedown), Roth–Zémor's
+Theorem 1 gives false-witness probability `(e+1)/q` for `e ≤ (d−1)/3`. Since
+`d = Θ(n)`, the numerator is `Θ(n)` — **`a = 1`, not the `O(1)` of folklore**,
+which conflates independence of the *interleaving width* (true, and the point of
+the lemma) with independence of the *block length* (false). Diamond–Posen
+Remark 2 records it as sharp via an explicit Ben-Sasson et al. construction
+attaining `(e+1)/q` exactly. So the `2 → 1` improvement was real proof
+engineering; `1 → 0` is not available for this class of test. The only `a = 0`
+code route known is conditional on an unproven conjecture.
+→ `interleaved_proximity.py`, `THEOREM.md`
 
 ---
 
@@ -128,10 +131,11 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **158 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **169 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
+| `interleaved_proximity.py` | the interleaved/Ligero case resolved: `a = 1`, sharp |
 | `merkle_extraction.py` | ε_MT expanded; the 3.5 constant derived; 256 bits ≠ 128 |
 | `bcs_composition.py` | BCS composes by sum; the hash term's QROM loss is 3, not 2 |
 | `fs_tightness.py` | Chiesa–Yogev's two-sided FS bound; Grover checked against exact amplitude amplification |
@@ -201,8 +205,9 @@ derivations would have found.
 - **Q2** (action-orbit, eprint 2026/861) would give `a = 0` on a code layer,
   worth ~22 bits. Conditional on an unproven sparse-dominance conjecture.
 - **Diamond–Posen Conjecture 1**: does the interleaved test reach the
-  unique-decoding radius while keeping the sharp `(e+1)/q`? Worth ~37% of
-  queries. Open in the literature.
+  unique-decoding radius `(d−1)/2` while keeping the sharp `(e+1)/q`, instead of
+  stopping at `(d−1)/3`? Worth a **37–40%** query cut, rising with blowup
+  (36.6% at rate ½, 40.1% at rate ⅛). Open in the literature.
 
 Both are genuinely open problems, not gaps in this analysis.
 

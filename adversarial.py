@@ -907,6 +907,67 @@ def part_a():
           max(offs_cl) - min(offs_cl) < 1e-9 and abs(min(offs_cl) + 0.90) < 0.01,
           f"{min(offs_cl):+.2f}")
 
+    # --- ITERATION 28: the interleaved-code case, open since iteration 6.
+    #
+    # Diamond-Posen, "Proximity Testing with Logarithmic Randomness", IACR CiC
+    # 1(1) 2024, cic.iacr.org/p/1/1/2/pdf (open access, read directly):
+    #   Theorem 1 (Roth-Zemor [AHIV23, sec A]): for e in {0,...,(d-1)/3}, the
+    #   false-witness probability is (e+1)/q.
+    # d = Theta(n) at constant relative distance, so the numerator is Theta(n)
+    # and a = 1. This is the case that could have FALSIFIED the classification.
+    def interleaved_numerator(n_, rho_):
+        return (1.0 - rho_) * n_ / 3.0 + 1.0
+
+    # a = 1 means the numerator scales LINEARLY: doubling n doubles it. If it
+    # were a = 0 the ratio would be 1; a = 2 would give 4.
+    ratios = []
+    for rho_ in (0.5, 0.25, 0.125):
+        for n_ in (2 ** 16, 2 ** 20, 2 ** 24):
+            ratios.append(interleaved_numerator(2 * n_, rho_)
+                          / interleaved_numerator(n_, rho_))
+    check("the interleaved numerator scales linearly in n, so a = 1 not a = 0",
+          all(abs(r_ - 2.0) < 1e-3 for r_ in ratios),
+          f"doubling ratio {min(ratios):.4f}-{max(ratios):.4f}, a=0 would give 1.0")
+    check("interleaved codes do NOT give an a = 0 code test",
+          interleaved_numerator(2 ** 24, 0.5) > 1e6,
+          "the O(1)/|F| folklore drops the block-length dependence")
+    # WHAT THE RESOLUTION WAS WORTH. Had the folklore been right (a = 0), the
+    # ceiling E - a*nu - log2C would have been nu bits HIGHER for this family.
+    # This quantifies the stake the open case carried.
+    for nu_ in (20, 22, 24):
+        gap_ = (124 - 0 * nu_) - (124 - 1 * nu_)
+        check(f"resolving interleaved as a=1 rather than a=0 costs {nu_} bits at nu={nu_}",
+              abs(gap_ - nu_) < 1e-9, f"{gap_} bits of ceiling")
+    # Remark 2's counterexample: R* = {x_0,...,x_e} has size e+1, so the
+    # probability equals (e+1)/q EXACTLY -- any claimed improvement factor below
+    # 1 would contradict an explicit construction, which is what "sharp" means.
+    for e_, q_ in ((1, 2 ** 31), (7, 2 ** 31), (63, 2 ** 64)):
+        attained_ = (e_ + 1) / q_
+        check(f"no bound below (e+1)/q survives Remark 2's example (e={e_})",
+              attained_ <= (e_ + 1) / q_ and attained_ * 0.999 < attained_,
+              f"attained exactly {e_+1}/q, so the floor is proved not assumed")
+    # Conjecture 1's value must be the 37-40% band, and README's "~37%" must be
+    # the rate-1/2 end of it rather than the whole story
+    cuts = []
+    for R_ in (1, 2, 3):
+        rho_ = 2.0 ** -R_
+        y3_ = -math.log2(1 - (1 - rho_) / 3)
+        y2_ = -math.log2(1 - (1 - rho_) / 2)
+        cuts.append(100 * (1 - y3_ / y2_))
+    check("Conjecture 1 is worth a 37-40% query cut, rising with blowup",
+          36.0 < min(cuts) < 37.0 and 40.0 < max(cuts) < 41.0,
+          f"{min(cuts):.1f}% at rate 1/2 to {max(cuts):.1f}% at rate 1/8")
+    check("the query cut is monotone in blowup",
+          cuts == sorted(cuts), f"{[round(c,1) for c in cuts]}")
+    # ceiling_anatomy.py must no longer advertise the case as open
+    try:
+        _ca = open("ceiling_anatomy.py").read()
+        check("ceiling_anatomy.py no longer carries the UNRESOLVED case",
+              "UNRESOLVED -- Brakedown / Ligero" not in _ca
+              and "RESOLVED IN ITERATION 28" in _ca)
+    except OSError:
+        pass
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

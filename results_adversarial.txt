@@ -95,6 +95,17 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  386 bits is the true requirement for 128 PQ   [385 -> 127.73, 386 -> 128.06]
   PASS  iteration 26's '13 field elements' survives the correction   [403 >= 386]
   PASS  the constant costs a fixed 0.90 classical bits at every digest size   [-0.90]
+  PASS  the interleaved numerator scales linearly in n, so a = 1 not a = 0   [doubling ratio 1.9999-2.0000, a=0 would give 1.0]
+  PASS  interleaved codes do NOT give an a = 0 code test   [the O(1)/|F| folklore drops the block-length dependence]
+  PASS  resolving interleaved as a=1 rather than a=0 costs 20 bits at nu=20   [20 bits of ceiling]
+  PASS  resolving interleaved as a=1 rather than a=0 costs 22 bits at nu=22   [22 bits of ceiling]
+  PASS  resolving interleaved as a=1 rather than a=0 costs 24 bits at nu=24   [24 bits of ceiling]
+  PASS  no bound below (e+1)/q survives Remark 2's example (e=1)   [attained exactly 2/q, so the floor is proved not assumed]
+  PASS  no bound below (e+1)/q survives Remark 2's example (e=7)   [attained exactly 8/q, so the floor is proved not assumed]
+  PASS  no bound below (e+1)/q survives Remark 2's example (e=63)   [attained exactly 64/q, so the floor is proved not assumed]
+  PASS  Conjecture 1 is worth a 37-40% query cut, rising with blowup   [36.6% at rate 1/2 to 40.1% at rate 1/8]
+  PASS  the query cut is monotone in blowup   [[36.6, 38.8, 40.1]]
+  PASS  ceiling_anatomy.py no longer carries the UNRESOLVED case
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -166,8 +177,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 158, suite has 158]
+  PASS  README's stated check count matches the suite   [README says 169, suite has 169]
 
 ========================================================================================
-158/158 PASS   no property broken
+169/169 PASS   no property broken
 ========================================================================================

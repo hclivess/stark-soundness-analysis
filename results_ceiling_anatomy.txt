@@ -73,7 +73,7 @@
   repository, and it is not ours to claim: it depends on someone settling Q2.
 
 ============================================================================================
-5. SCOPE OF THE a-CLASSIFICATION -- AND ONE UNRESOLVED CASE
+5. SCOPE OF THE a-CLASSIFICATION -- THE LAST CASE, NOW RESOLVED
 ============================================================================================
 
   VERIFIED, by reading the formula in each case:
@@ -91,33 +91,39 @@
   sumcheck family is a = 0, the RS-proximity family is a >= 1, and the only
   a = 0 code test is conditional.
 
-  UNRESOLVED -- Brakedown / Ligero interleaved codes.
+  RESOLVED IN ITERATION 28 -- Brakedown / Ligero interleaved codes are a = 1.
 
-  This is the case that could break the classification, and I could not settle
-  it. Ligero-style proximity testing takes a random linear combination of m rows
-  and applies a proximity test to the combination. The classic interleaved
-  lemma (Ames-Hazay-Ishai-Venkitasubramaniam) is frequently quoted with a
-  soundness term of O(1)/|F|, independent of n. If that is the operative bound
-  for Brakedown at its deployed radius, then Brakedown is an UNCONDITIONAL
-  a = 0 CODE test, and the claim "code-proximity layers have a >= 1" is false
-  as stated -- it would instead be a statement about REED-SOLOMON proximity in
-  the list-decoding regime specifically.
+  This case was open from iteration 6 until iteration 28, and it was the one
+  case that could have FALSIFIED the classification. It does not.
 
-  Evidence pulling the other way: soundcalc's UDR bound for RS is
-  (gamma*n + 1)/|F|, i.e. a = 1, and that IS a unique-decoding-radius bound. So
-  an n-dependence survives at unique-decoding radius for RS. Whether the
-  gamma*n term comes from the bare proximity gap or from the multi-point
-  quotient structure layered on top of it is exactly what I could not determine.
+  Diamond-Posen, "Proximity Testing with Logarithmic Randomness", IACR
+  Communications in Cryptology 1(1), 2024 -- open access at
+  cic.iacr.org/p/1/1/2/pdf, which is NOT behind the eprint Cloudflare
+  challenge -- states the operative bound as Theorem 1, attributed verbatim to
+  Roth-Zemor [AHIV23, section A]:
 
-  WHAT WOULD SETTLE IT: the explicit soundness statement in
-    - Diamond, "Proximity Testing with Logarithmic Randomness", eprint 2023/630
-    - "Proximity Gaps in Interleaved Codes"
-    - the Brakedown paper's proximity lemma
-  read directly rather than from abstracts. eprint PDFs return HTTP 403 to this
-  session's fetcher, so this is a tooling limit, not a reasoning one.
+      for a proximity parameter e in {0, ..., (d-1)/3}, the false-witness
+      probability is (e+1)/q
 
-  UNTIL THEN the classification should be read as scoped:
-      "for the Reed-Solomon proximity bounds whose formulas are recorded above,
-       code layers carry a >= 1 unconditionally, and the sumcheck family carries
-       a = 0"
-  and NOT as a claim about every possible code-based commitment.
+  Since d = Theta(n) for any code of constant relative distance, e = Theta(n)
+  and the numerator is Theta(n). So the interleaved test carries a = 1, and
+  the classification "code-proximity layers carry a >= 1" holds for it
+  unconditionally.
+
+  The "O(1)/|F|" folklore that raised the doubt is a conflation. The bound IS
+  independent of the interleaving width m -- that is the striking part of the
+  lemma and the reason it gets quoted that way -- but it is NOT independent of
+  the block length n. Dropping the second dependence is what produces "O(1)".
+
+  Remark 2 of the same paper proves the bound sharp: an explicit pair
+  u_0 = (x_0,...,x_e,0,...,0), u_1 = (x_0-1,...,x_e-1,0,...,0) attains
+  (e+1)/q exactly. So a = 0 is provably unavailable for this family.
+
+  THE SECOND QUESTION -- whether RS's gamma*n comes from the bare proximity gap
+  or from the multi-point quotient structure -- is answered in the same paper
+  (page 10): Ben-Sasson et al. [BSCI+23, Thm. 1.4] give an upper bound of n/q
+  for Reed-Solomon at the unique-decoding radius. That is the BARE gap, so the
+  n-dependence is intrinsic and not imported from quotienting.
+
+  See interleaved_proximity.py. The classification therefore reads without the
+  scoping caveat this section used to carry.

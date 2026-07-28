@@ -498,3 +498,33 @@ BCS instantiates `n_c = t+1` (macro `BCSMTError`, line 1077), so
 the constant stated independently at line 1084 (`BCSSimplifiedLeadingConstant`).
 Three separately-read macros reproducing a fourth is the check that these terms
 were read correctly.
+
+## Interleaved-code proximity (iteration 28)
+
+**Benjamin E. Diamond and Jim Posen, "Proximity Testing with Logarithmic
+Randomness."** IACR Communications in Cryptology 1(1), 2024 —
+<https://cic.iacr.org/p/1/1/2/pdf>, open access and **not** behind the eprint
+Cloudflare challenge. Fetched and read directly.
+
+> **Theorem 1 (Roth–Zémor [AHIV23, § A]).** Fix an arbitrary `[n,k,d]`-code
+> `C ⊂ F_q^n`, and a proximity parameter `e ∈ {0, …, (d−1)/3}`. If given elements
+> `u_0` and `u_1` of `F_q^n` satisfy
+> `Pr_{r ∈ F_q}[d((1−r)·u_0 + r·u_1, C) ≤ e] > (e+1)/q` …
+
+> **Remark 2.** "Theorem 1 is sharp, in the sense that its false witness
+> probability `(e+1)/q` cannot be decreased. This fact is demonstrated by the
+> following example of Ben-Sasson et al. [BSCI+23, Rem. 1.1]."
+
+> (page 10) "In the Reed–Solomon setting, Ben-Sasson et al. [BSCI+23, Thm. 1.4]
+> achieve an analogue of Theorem 1 for `e` as high as the unique decoding
+> radius, albeit with an upper bound `n/q` on the false witness probability
+> somewhat worse than that of `(e+1)/q` attained by Theorem 1."
+
+> **Conjecture 1.** "We wonder whether Theorem 1 holds even for proximity
+> parameters `e ∈ {0, …, (d−1)/2}`."
+
+`e ≤ (d−1)/3` with `d = Θ(n)` makes the numerator `Θ(n)`, so **interleaved codes
+carry `a = 1`** — closing the case `ceiling_anatomy.py §5` had held open since
+iteration 6. The `n/q` quote also settles that Reed–Solomon's `n`-dependence at
+the unique-decoding radius is intrinsic to the **bare proximity gap**, not
+imported from the multi-point quotient structure.
