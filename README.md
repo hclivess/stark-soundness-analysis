@@ -18,7 +18,7 @@ factor, `g_commit` = commit-phase proof-of-work.
 Total soundness is a **minimum** over all terms, so **the code layer always
 binds**. That single fact explains the rest of this repo.
 
-Run `python3 adversarial.py` — 87 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 88 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -46,8 +46,9 @@ Unique decoding beats the Johnson bound above `s* = (K_J(m_eq) − g)/y_UDR`, wh
 teams chose independently — two above the crossover in UDR, five below in JBR —
 the theorem calls every one. SP1's config literally declares `udr_only = true`
 at `s = 124` against a predicted `s* = 112`. Where soundcalc publishes the UDR
-figure too, the model reproduces it within 1 bit (Pico +0.9, RISC Zero +0.9,
-Miden +0.4). Venus is excluded as a parameter-identical duplicate of ZisK.
+figure too — all seven — the model reproduces it within 1 bit (max deviation
++0.9, never undershooting). Venus is excluded as a parameter-identical
+duplicate of ZisK.
 → `regime_crossover.py`, `THEOREM.md` Thm 7
 
 **4. Two of the five levers are free, and belong to whoever last proved a
@@ -89,7 +90,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **87 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **88 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `pq_design.py` | what 128 PQ bits actually costs to build |
