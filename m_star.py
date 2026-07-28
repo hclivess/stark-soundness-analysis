@@ -163,24 +163,45 @@ def report():
   is exactly what reaching that ceiling costs. Part II's supremum is reached to
   three decimals only past s ~ 20000.""")
 
-    sec("2. THE m >= 3 FLOOR BINDS FOR EXACTLY ONE DEPLOYED SYSTEM")
+    # ITERATION 69: heading and table corrected. This printed "BINDS FOR EXACTLY
+    # ONE DEPLOYED SYSTEM" and attributed 3.46 bits to SP1 -- the phantom figure
+    # iteration 39 retracted, on a system reported in UDR, whose bound contains
+    # no m at all. The docstring above carried the retraction for 30 iterations
+    # while the report kept printing the retracted number as a result.
+    sec("2. THE m >= 3 FLOOR BINDS FOR NO DEPLOYED SYSTEM (CORRECTED, it 39/69)")
     print(f"  {'system':<15} {'s':>5} {'m_min':>8} {'m* free':>10} {'total':>8} "
           f"{'m* >= 3':>9} {'total':>8} {'floor costs':>12}")
     print("  " + "-" * 82)
-    binds = []
+    import systems as _sys
+    _regime = {_sys.as_dict(r)["name"]: _sys.as_dict(r)["regime"]
+               for r in _sys.SYSTEMS}
+    binds, jbr_opts = [], []
     for nm, E, R, T, s, g in ZKVMS:
         nu = T + R
+        if _regime.get(nm) == "UDR":
+            # no proximity parameter exists in the UDR bound, so the m floor
+            # cannot cost anything. Printing a number here was the it-39 error.
+            print(f"  {nm:<15} {s:>5} {'--':>8} {'--':>10} {'--':>8} "
+                  f"{'--':>9} {'--':>8} {'n/a (UDR)':>12}")
+            continue
         mf, vf = best_m(R, nu, E, s, g)
         m3, v3 = best_m(R, nu, E, s, g, lo=3.0)
         cost = vf - v3
+        jbr_opts.append(mf)
         if cost > 0.01:
             binds.append((nm, cost))
         print(f"  {nm:<15} {s:>5} {m_min(R):>8.3f} {mf:>10.3f} {vf:>8.1f} "
               f"{m3:>9.3f} {v3:>8.1f} {cost:>+12.2f}")
+    n_udr = sum(1 for v in _regime.values() if v == "UDR")
     print(f"""
-  Binding for {len(binds)} of 7: {', '.join(f'{n} ({c:.2f} bits)' for n, c in binds)}.
-  For the other six the unconstrained optimum is 4.5 to 846 -- one to three
-  orders of magnitude above the floor, so it is not a constraint at all.""")
+  Binding for {len(binds)} of the {len(jbr_opts)} systems that HAVE an m{':  ' + ', '.join(f'{n} ({c:.2f} bits)' for n, c in binds) if binds else '.'}
+  The other {n_udr} are reported in UDR, whose bound (gamma*n + 1)/|F| contains no
+  proximity parameter, so the floor cannot cost them anything -- it is not that
+  the cost is small, it is that the quantity does not exist.
+
+  Across the {len(jbr_opts)} Johnson-regime systems the unconstrained optimum runs
+  {min(jbr_opts):.0f} to {max(jbr_opts):.0f} -- one to three orders of magnitude above the floor, so
+  m >= 3 is not a constraint on any deployed system.""")
 
     sec("3. NEITHER CONVENTION DESCRIBES DEPLOYMENT")
     print(f"  {'system':<15} {'m_min (Part II)':>16} {'3 (Part III)':>14} "

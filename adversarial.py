@@ -3590,6 +3590,49 @@ def part_a():
           all(_s68.list_size(r) == 1.0 for r in _s68.by_regime("UDR")),
           "unique decoding admits at most one codeword")
 
+    # --- ITERATION 69: staleness_guard reads SOURCE. This reads what the code
+    # PRINTS, which is where iteration 68's bug and one more were hiding.
+    from output_guard import (scan as _og_scan, coverage as _og_cov,
+                              scan_output as _og_scan_text,
+                              self_test as _og_self_test)
+    from staleness_guard import RETRACTED as _RET
+
+    _n_mods, _n_ok = _og_cov()
+    check("no module PRINTS a retracted claim without a marker beside it",
+          not _og_scan(),
+          f"{len(_og_scan())} retracted claims in the output of {_n_ok} reports")
+    check("every module exposing report() runs cleanly under the guard",
+          _n_ok == _n_mods and _n_mods > 40,
+          f"{_n_ok}/{_n_mods} reports ran -- a report that raises is invisible "
+          f"to this guard")
+    check("the output guard FLAGS a planted claim and spares a marked one",
+          _og_self_test(),
+          "bare retracted phrase caught; same phrase beside a marker ignored")
+    # the guard must normalise: m_star's instance was wrapped across a line
+    # break and invisible to a literal search
+    _wrapped = "the m >= 3 floor binds\n     for exactly one deployed system"
+    check("the guard matches across line wrapping, which grep cannot",
+          bool(_og_scan_text(_wrapped)) and "binds for exactly one" not in _wrapped,
+          "wrapped phrase caught after whitespace normalisation")
+    # and it must inherit a non-trivial registry, or it checks nothing
+    check("the output guard runs a non-empty retraction registry",
+          len(_RET) >= 5, f"{len(_RET)} retracted claims inherited from "
+                          f"staleness_guard")
+
+    # m_star's section 2 specifically: the floor must now bind for NOBODY, and
+    # the phantom 3.46 must be gone from what the module prints.
+    import io as _io, contextlib as _ctx, m_star as _ms
+    _buf = _io.StringIO()
+    with _ctx.redirect_stdout(_buf):
+        _ms.report()
+    _mtxt = _buf.getvalue()
+    check("m_star no longer prints the retracted 3.46-bit SP1 figure",
+          "3.46" not in _mtxt,
+          "the phantom attributed an m-floor cost to a UDR system")
+    check("m_star reports the m >= 3 floor binding for zero systems",
+          "Binding for 0 of the 5" in _mtxt,
+          "0 of the 5 systems that have an m; the other 2 are UDR")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")
