@@ -1,0 +1,119 @@
+
+================================================================================================
+1. IS 128-BIT PQ PROVABLE REACHABLE AT ALL? (trace 2^20, grind 32)
+================================================================================================
+  base         deg     E  blowup     s  classical     PQ  proof KiB  prover x
+  ----------------------------------------------------------------------------------
+  Goldilocks     5   320      16   113      257.2  128.0     1371.9     9.14x
+  M31           10   310      16   114      256.9  128.0     1383.1     9.14x
+  BabyBear      10   310      16   114      256.9  128.0     1383.1     9.14x
+  KoalaBear     10   310      16   114      256.9  128.0     1383.1     9.14x
+  M31           11   341      16   113      257.9  128.0     1388.7     9.14x
+  BabyBear      11   341      16   113      257.9  128.0     1388.7     9.14x
+  KoalaBear     11   341      16   113      257.9  128.0     1388.7     9.14x
+  M31           12   372      16   113      257.9  128.0     1406.3     9.14x
+  BabyBear      12   372      16   113      257.9  128.0     1406.3     9.14x
+  KoalaBear     12   372      16   113      257.9  128.0     1406.3     9.14x
+  Goldilocks     6   384      16   113      257.9  128.0     1407.2     9.14x
+  Goldilocks     7   448      16   113      257.9  128.0     1442.5     9.14x
+
+  CHEAPEST BY PROOF SIZE: Goldilocks^5 (E=320), blowup 16, 113 queries -> 1372 KiB
+
+================================================================================================
+2. THE STRUCTURAL POINT: extension degree is cheap, base field is not
+================================================================================================
+
+  The extension carries CHALLENGES, the DEEP point, and post-fold layer values.
+  The trace, the constraint evaluation and the layer-0 LDE -- the prover's
+  dominant cost per EFFICIENCY.md -- stay in the BASE field.
+
+  So M31^9 (E=279) is NOT the same thing as a 279-bit prime field. The former
+  keeps 31-bit machine-word arithmetic everywhere it matters and pays extension
+  cost only on the fold and the openings. The latter pays 279-bit arithmetic on
+  every trace element.
+
+  This is why the small-field turn is not actually in tension with high provable
+  soundness -- the tension was only ever with SMALL EXTENSION DEGREE. Degree 4
+  was the wrong default, not the small base field.
+
+================================================================================================
+3. WHAT EXTENSION DEGREE EACH PQ TARGET NEEDS (31-bit base, trace 2^20)
+================================================================================================
+   target PQ  classical   min E   min deg (31-bit)   deployed today
+  ------------------------------------------------------------------
+          32         64      93                  3    4 (=124 bits)
+          50        100     124                  4    4 (=124 bits)
+          64        128     155                  5    4 (=124 bits)
+          80        160     186                  6    4 (=124 bits)
+         100        200     248                  8    4 (=124 bits)
+         128        256     279                  9    4 (=124 bits)
+
+================================================================================================
+4. THE COST OF THE LAST BITS -- AND THE REAL TRADEOFF
+================================================================================================
+  Two objectives pull in OPPOSITE directions, which the first table in this
+  file obscured by ranking on proof size alone:
+
+    minimise PROOF SIZE  -> raise blowup (better yield/query -> fewer queries)
+    minimise PROVER TIME -> lower blowup (the LDE is 2^R x the trace)
+
+  So there is no single "cheapest" configuration. Both endpoints:
+
+   target |       --- smallest proof ---       |       --- fastest prover ---      
+       PQ | config                  s      KiB | config                  s      KiB
+  ----------------------------------------------------------------------------------------
+       32 | M31^4 bl16             17      190 | M31^4 bl2              65      594
+       50 | M31^5 bl16             35      397 | M31^5 bl2             139     1291
+       64 | M31^6 bl16             49      564 | Goldilocks^3 bl2      193     1824
+       80 | M31^7 bl16             65      758 | M31^7 bl2             259     2487
+      100 | Goldilocks^4 bl16      85     1005 | Goldilocks^4 bl2      341     3330
+      128 | Goldilocks^5 bl16     113     1372 | Goldilocks^5 bl2      450     4535
+
+  The prover-optimal column runs blowup 2 (1.00x, the EFFICIENCY.md choice) and
+  pays for it in queries and proof size. The proof-optimal column runs blowup 16
+  and pays 9.1x on the LDE. Query count grows roughly linearly in the target in
+  both, because every query is Merkle paths and nothing else buys query-phase
+  bits.
+
+================================================================================================
+5. WHY UDR, NOT JOHNSON
+================================================================================================
+
+  At 256 classical bits every configuration sits far past the Theorem 7 crossover
+  s* = (K_J(m_eq) - g)/y_UDR, so unique decoding wins on both axes at once: it
+  has the higher ceiling AND it needs no list-decoding argument.
+
+  That is a pleasant outcome for the resilience requirement. The most demanding
+  soundness target lands on the WEAKEST assumption available -- no Johnson bound,
+  no proximity gaps conjecture, no capacity conjecture (disproved in 2025 anyway),
+  no MSIS. Just collision resistance and the random oracle.
+
+  A 128-bit PQ provable STARK is, in assumption terms, the most conservative
+  object in this entire repository. It is only expensive in queries.
+
+================================================================================================
+6. THE RECOMMENDATION
+================================================================================================
+
+  There is no single answer -- pick the endpoint that matches the constraint.
+
+  PROVER-BOUND (a phone, a light client, anything where proving time dominates):
+      Goldilocks^5  (E = 320), blowup 2, 450 queries, grind 32
+      -> 256 classical / 128 PQ bits, 4535 KiB proof, 1.00x LDE
+
+  BANDWIDTH-BOUND (on-chain verification, where every byte is paid for):
+      Goldilocks^5  (E = 320), blowup 16, 113 queries, grind 32
+      -> 257 classical / 128 PQ bits, 1372 KiB proof, 9.14x LDE
+
+  BEST 31-BIT OPTION (keeps machine-word arithmetic in the base field):
+      M31^10  (E = 310), blowup 16, 114 queries
+      -> 257 classical / 128 PQ bits, 1383 KiB proof
+
+  In every case the extension degree is the load-bearing choice, and in every
+  case it is far above the degree 4 that is deployed everywhere today.
+
+  The whole cost of going from "post-quantum in the Shor sense" to "128 bits of
+  provable post-quantum soundness" is: a larger extension degree, more queries,
+  and a bigger proof. It does NOT require abandoning small fields, adopting a
+  lattice assumption, or believing any conjecture. Proofs in the 1-2 MiB range
+  are the honest price, which is why nobody currently pays it.
