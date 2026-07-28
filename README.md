@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 402 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 409 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -113,7 +113,7 @@ buys per unit of proof size.
 there.** The strongest known lower bound for RS (mutual correlated agreement,
 `err ≥ (L+1)/q`, Gao et al. 2026) has `L = 2m+1`, **independent of `n`**, so it
 permits `a = 0` at the Johnson radius. Between BCHKS25's bound and that floor sit
-**20.6–37.3 bits nobody has closed** (`a_floor_scope.py`). For the
+**20.6–44.5 bits nobody has closed** (`a_floor_scope.py`). For the
 interleaved linear-code test (Ligero, and hence Brakedown), Roth–Zémor's
 Theorem 1 gives false-witness probability `(e+1)/q` for `e ≤ (d−1)/3`. Since
 `d = Θ(n)`, the numerator is `Θ(n)` — **`a = 1`, not the `O(1)` of folklore**,
@@ -150,7 +150,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **402 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **409 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
@@ -167,7 +167,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `staleness_guard.py` | mechanical guard against this repo's own retracted claims |
 | `udr_a0.py` | what BCHKS25's proved `a=0` at UDR is worth, and the constant that decides it |
 | `radius_staircase.py` | `a` is a staircase in the radius: 0 at UDR, 1 at Johnson, unbounded above |
-| `a_floor_scope.py` | what `a ≥ 1` is *proved* for; 20.6–37.3 bits of unclosed headroom (regime-corrected, it 40) |
+| `a_floor_scope.py` | what `a ≥ 1` is *proved* for; 20.6–44.5 bits of unclosed headroom (regime- and m-corrected, it 40/57) |
 | `open_zone.py` | evidence tiers of the BOUNDS table; what room is left above Johnson |
 | `ligero_obstacles.py` | two of the four obstacles dissolve: alphabet already met, sampling `2^-360` |
 | `ligero_composition.py` | where the capacity gain sits vs unique decoding; splits the prize |

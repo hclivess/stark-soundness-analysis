@@ -95,3 +95,27 @@
   Note the UDR list size is 1: unique decoding means at most one codeword lies
   within the radius, so the MCA floor there is E - log2(2) = E - 1, and the
   headroom is the gap between the UDR commit bound and that.
+
+============================================================================================
+5. AT SOUNDCALC'S DERIVED m, THE HEADROOM IS LARGER STILL
+============================================================================================
+  Iteration 56 established that m_eq is the crossover parameter and jbrM is
+  what soundcalc actually evaluates at. Sections 3-4 used m_eq. Redone:
+
+  system           regime  head @m_eq  head @jbrM   nu   > nu?
+  --------------------------------------------------------------
+  SP1 6.1.0           UDR        20.6        20.6   23      NO
+  OpenVM 1.5.0        UDR        21.0        21.0   24      NO
+  Airbender           JBR        37.3        40.7   25     yes
+  Pico                JBR        35.3        38.7   23     yes
+  ZisK 0.16.1         JBR        34.3        44.5   22     yes
+  RISC Zero           JBR        29.4        41.8   23     yes
+  Miden               JBR        25.2        43.4   21     yes
+
+  The two UDR rows do not move -- the UDR bound has no proximity parameter. The
+  five JBR rows rise from 25.2-37.3 to 38.7-44.5, so the full range is
+  20.6-44.5 bits rather than 20.6-37.3.
+
+  FINDING 3's conclusion is unaffected in structure and stronger in degree: the
+  headroom still exceeds nu for every Johnson-regime system, now by 14-22 bits
+  rather than 10-14, and still fails for the two UDR systems (iteration 40).

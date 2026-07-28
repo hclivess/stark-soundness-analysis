@@ -2137,6 +2137,76 @@ def part_a():
               "so a JBR figure at m_eq just reproduces the UDR figure")
     except ImportError:
         pass
+
+    # --- ITERATION 57: propagating the m_eq -> jbrM correction.
+    try:
+        import a_floor_scope as _afs2
+
+        ZK57 = [("SP1 6.1.0", 124, 2, 21), ("OpenVM 1.5.0", 124, 1, 23),
+                ("Airbender", 124, 1, 24), ("Pico", 124, 1, 22),
+                ("ZisK 0.16.1", 192, 1, 21), ("RISC Zero", 124, 2, 21),
+                ("Miden", 128, 3, 18)]
+        _hs = [(nm_, _afs2.headroom_at_jbrM(nm_, E_, R_, T_)[2], T_ + R_)
+               for nm_, E_, R_, T_ in ZK57]
+        _jbr = [(n_, h_, v_) for n_, h_, v_ in _hs
+                if _afs2.REGIMES[n_] == "JBR"]
+        _udr = [(n_, h_, v_) for n_, h_, v_ in _hs
+                if _afs2.REGIMES[n_] == "UDR"]
+
+        # (a) the UDR rows must NOT move -- the UDR bound has no m
+        for nm_, E_, R_, T_ in ZK57:
+            if _afs2.REGIMES[nm_] != "UDR":
+                continue
+            a_ = _afs2.headroom_regime_correct(nm_, E_, R_, T_)[2]
+            b_ = _afs2.headroom_at_jbrM(nm_, E_, R_, T_)[2]
+            check(f"{nm_}'s headroom is unmoved by the m convention (UDR has no m)",
+                  abs(a_ - b_) < 1e-9, f"{a_:.1f} both ways")
+        # (b) the JBR rows must RISE, and the conclusion must strengthen
+        rises = []
+        for nm_, E_, R_, T_ in ZK57:
+            if _afs2.REGIMES[nm_] != "JBR":
+                continue
+            a_ = _afs2.headroom_regime_correct(nm_, E_, R_, T_)[2]
+            b_ = _afs2.headroom_at_jbrM(nm_, E_, R_, T_)[2]
+            rises.append(b_ - a_)
+        check("every JBR system's headroom rises at soundcalc's m",
+              all(r_ > 0 for r_ in rises),
+              f"+{min(rises):.1f} to +{max(rises):.1f} bits")
+        check("the headroom > nu conclusion holds and strengthens for JBR",
+              all(h_ > v_ for _, h_, v_ in _jbr)
+              and min(h_ - v_ for _, h_, v_ in _jbr) > 13,
+              f"margin now {min(h_-v_ for _, h_, v_ in _jbr):.0f}-"
+              f"{max(h_-v_ for _, h_, v_ in _jbr):.0f} bits")
+        check("...and still fails for the two UDR systems (iteration 40 stands)",
+              all(h_ <= v_ for _, h_, v_ in _udr),
+              "the regime split survives the m correction")
+        # (c) the full range must be the corrected one
+        check("the headroom range is 20.6-44.5 bits, not 20.6-37.3",
+              abs(min(h_ for _, h_, _ in _hs) - 20.6) < 0.3
+              and 44.0 < max(h_ for _, h_, _ in _hs) < 45.0,
+              f"{min(h_ for _, h_, _ in _hs):.1f}-{max(h_ for _, h_, _ in _hs):.1f}")
+
+        # (d) NO-OP CHECK: bcs_composition's bias must be unaffected, because it
+        # is driven by the two UDR systems which have no m. If a future edit
+        # makes the m convention matter there, this fires.
+        import bcs_composition as _bc
+        from soundcalc_lean import jbr_m as _jm2
+        biases = []
+        for nm_, E_, R_, T_, s_, g_, rep_, reg_ in _bc.ZKVMS:
+            nu_ = T_ + R_
+            if reg_ == "UDR":
+                kq_ = s_ * _bc.yield_udr(R_) + g_
+                kc_ = _bc.commit_udr(R_, nu_, E_)
+            else:
+                m_ = float(_jm2(2.0 ** -R_, E_))
+                kq_ = s_ * _bc.yield_jbr(R_, m_) + g_
+                kc_ = commit_jbr(R_, nu_, E_, m_)
+            biases.append(min(kq_, kc_) - _bc.bits_of_sum(kq_, kc_))
+        check("the sum-vs-min bias is unaffected by the m convention",
+              abs(max(biases) - 0.343) < 0.01,
+              f"max {max(biases):.3f} at jbrM, same as at m_eq -- it is a UDR effect")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

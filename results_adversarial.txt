@@ -281,6 +281,13 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  jbrM reproduces the JBR query term far better than m_eq   [52.7 bits of error at m_eq -> 3.3 at jbrM]
   PASS  every system lands within ~1 bit at jbrM   [5/5 within 1.2 bits]
   PASS  at m_eq the JBR yield equals the UDR yield, by definition   [so a JBR figure at m_eq just reproduces the UDR figure]
+  PASS  SP1 6.1.0's headroom is unmoved by the m convention (UDR has no m)   [20.6 both ways]
+  PASS  OpenVM 1.5.0's headroom is unmoved by the m convention (UDR has no m)   [21.0 both ways]
+  PASS  every JBR system's headroom rises at soundcalc's m   [+3.3 to +18.2 bits]
+  PASS  the headroom > nu conclusion holds and strengthens for JBR   [margin now 16-23 bits]
+  PASS  ...and still fails for the two UDR systems (iteration 40 stands)   [the regime split survives the m correction]
+  PASS  the headroom range is 20.6-44.5 bits, not 20.6-37.3   [20.6-44.5]
+  PASS  the sum-vs-min bias is unaffected by the m convention   [max 0.343 at jbrM, same as at m_eq -- it is a UDR effect]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -410,8 +417,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 402, suite has 402]
+  PASS  README's stated check count matches the suite   [README says 409, suite has 409]
 
 ========================================================================================
-402/402 PASS   no property broken
+409/409 PASS   no property broken
 ========================================================================================

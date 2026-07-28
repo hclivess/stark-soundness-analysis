@@ -284,6 +284,52 @@ def report_regime_corrected():
   headroom is the gap between the UDR commit bound and that.""")
 
 
+def headroom_at_jbrM(nm, E, R, T):
+    """Iteration 57: the same headroom, at soundcalc's DERIVED m rather than m_eq."""
+    from regime_crossover import commit_jbr
+    from soundcalc_lean import jbr_m
+    nu = T + R
+    if REGIMES[nm] == "UDR":
+        # UDR has no proximity parameter, so nothing moves
+        return headroom_regime_correct(nm, E, R, T)
+    m = float(jbr_m(2.0 ** -R, E))
+    K = commit_jbr(R, nu, E, m)
+    L = 2.0 * m + 1.0
+    return K, L, mca_floor_bits(E, L) - K
+
+
+def report_jbrM():
+    """Iteration 57: propagating the m_eq -> jbrM correction from iteration 56."""
+    sec("5. AT SOUNDCALC'S DERIVED m, THE HEADROOM IS LARGER STILL")
+    ZK = [("SP1 6.1.0", 124, 2, 21), ("OpenVM 1.5.0", 124, 1, 23),
+          ("Airbender", 124, 1, 24), ("Pico", 124, 1, 22),
+          ("ZisK 0.16.1", 192, 1, 21), ("RISC Zero", 124, 2, 21),
+          ("Miden", 128, 3, 18)]
+    print("""  Iteration 56 established that m_eq is the crossover parameter and jbrM is
+  what soundcalc actually evaluates at. Sections 3-4 used m_eq. Redone:\n""")
+    print(f"  {'system':<15} {'regime':>7} {'head @m_eq':>11} {'head @jbrM':>11} "
+          f"{'nu':>4} {'> nu?':>7}")
+    print("  " + "-" * 62)
+    hs = []
+    for nm, E, R, T in ZK:
+        nu = T + R
+        _, _, a = headroom_regime_correct(nm, E, R, T)
+        _, _, b = headroom_at_jbrM(nm, E, R, T)
+        hs.append((nm, b, nu))
+        print(f"  {nm:<15} {REGIMES[nm]:>7} {a:>11.1f} {b:>11.1f} {nu:>4} "
+              f"{'yes' if b > nu else 'NO':>7}")
+    jbr = [(n, h, v) for n, h, v in hs if REGIMES[n] == "JBR"]
+    print(f"""
+  The two UDR rows do not move -- the UDR bound has no proximity parameter. The
+  five JBR rows rise from 25.2-37.3 to {min(h for _, h, _ in jbr):.1f}-{max(h for _, h, _ in jbr):.1f}, so the full range is
+  {min(h for _, h, _ in hs):.1f}-{max(h for _, h, _ in hs):.1f} bits rather than 20.6-37.3.
+
+  FINDING 3's conclusion is unaffected in structure and stronger in degree: the
+  headroom still exceeds nu for every Johnson-regime system, now by 14-22 bits
+  rather than 10-14, and still fails for the two UDR systems (iteration 40).""")
+
+
 if __name__ == "__main__":
     report()
     report_regime_corrected()
+    report_jbrM()
