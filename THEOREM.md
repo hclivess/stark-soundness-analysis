@@ -209,7 +209,46 @@ the sign change.)
 *Value.* With `u = 10/3`: `u − 1 = 7/3` and `R* = 2log₂(10/3)`, so
 `f(R*) = −10log₂(10/3) + 7log₂(7/3) + log₂3 + 7`. ∎
 
-### Corollary 3.1 (practical reading)
+---
+
+## Theorem 3′ (the operative optimum: blowup exactly 4)
+
+Theorem 3 holds `ν` fixed. That is a valid question but not the deployment one:
+the evaluation domain is the trace times the blowup, so **`ν = T + R` is
+forced** for a fixed trace length `T = log₂(trace)`. Holding `ν` fixed while
+raising `R` silently shrinks the trace.
+
+Substituting `ν = T + R` into Theorem 2:
+
+```
+Λ_max = E − 2(T + R) − 5R + 7log₂(2^{R/2} − 1) + log₂3 + 7
+      = (E − 2T) + g(R),     g(R) := −7R + 7log₂(2^{R/2} − 1) + log₂3 + 7
+```
+
+**`g` attains a unique maximum on `(0, ∞)` at `R* = 2` exactly — blowup 4 — with**
+
+```
+g(2) = log₂3 − 7 ≈ −5.415037
+Λ_max^J = (E − 2T) + log₂3 − 7
+```
+
+*Proof.* With `u = 2^{R/2}`, `g'(R) = −7 + (7/2)·u/(u−1)`. Setting to zero:
+`(7/2)u = 7(u−1) ⟹ u = 2(u−1) ⟹ u = 2`, so `2^{R*/2} = 2` and `R* = 2`.
+Uniqueness and maximality follow as in Theorem 3: `u/(u−1)` is strictly
+decreasing in `u` and `u` is increasing in `R`, so `g'` is strictly decreasing
+and changes sign `+ → −` exactly once (`g' → +∞` as `R ↓ 0`; `g' → −7 + 7/2 < 0`
+as `R → ∞`). The value follows since `log₂(2^{R*/2} − 1) = log₂1 = 0`. ∎
+
+The optimum lands on an exact integer precisely because the `log₂(2^{R/2} − 1)`
+term vanishes identically at `R = 2`.
+
+**Theorem 3′ supersedes Theorem 3 for any practical question.** Theorem 3
+remains true as stated — it just answers "which blowup maximises the ceiling at
+constant evaluation-domain size", which compares systems with different trace
+lengths. Blowup 4 is deployed today (RISC Zero, Plonky3/BabyBear); those systems
+sit exactly at the Johnson-regime optimum.
+
+### Corollary 3.1 (practical reading, fixed ν — superseded by 3′)
 
 | blowup | R | f(R) | bits below optimum |
 |---|---|---|---|
@@ -260,7 +299,43 @@ is the best achievable even at the optimal rate.
 
 ---
 
-## Robustness to the `m ≥ m_floor` question
+## RESOLVED: the admissible range of `m` (2026-07-28)
+
+The load-bearing uncertainty flagged above is settled, and in favour of the
+theorems. ethSTARK v1.2 states the Johnson bound as:
+
+> for every `η ∈ (0, 1 − √ρ)`, the code `V` is `(1 − √ρ − η, 1/(2η√ρ))`-list-decodable
+
+Matching proximity radii, `1 − √ρ − η = 1 − √ρ(1 + 1/2m)` gives the change of
+variables
+
+```
+η = √ρ / (2m)          equivalently        m = √ρ / (2η)
+```
+
+Under it, the paper's constraint `η < 1 − √ρ` becomes
+
+```
+√ρ/(2m) < 1 − √ρ  ⟺  m > √ρ / (2(1 − √ρ)) = 1 / (2(2^{R/2} − 1)) = m_min(R)
+```
+
+— **exactly Lemma 1**, and `η > 0 ⟺ m < ∞`. So the paper's admissible set for
+`η` is an *open real interval*, and its image is precisely `A = (m_min, ∞)`:
+real-valued, open at the lower end, no integrality restriction and no `m ≥ 3`
+floor.
+
+Two consequences:
+
+1. **Theorems 2, 3 and 3′ hold unconditionally** on this point. The
+   `m_floor` caveat below is vacuous for ethSTARK's parameterisation.
+2. It explains the `(m + ½)⁷`: the list size in the paper is
+   `1/(2η√ρ) = m/ρ`, so the commit bound is polynomial in the list size, and
+   `m` enters through it.
+
+The supremum being unattained (Theorem 2) corresponds exactly to the interval
+for `η` being open at `1 − √ρ`.
+
+## Robustness to the `m ≥ m_floor` question (retained for other parameterisations)
 
 If BCIKS20 restricts `m` to `[m_floor, ∞)` for some `m_floor > m_min(R)`, then
 Prop. 1 is unchanged (it never used the left endpoint's value), and Theorem 2
@@ -281,8 +356,176 @@ and the optimal-blowup result disappears entirely.
 
 ---
 
+---
+
+# Part II — after the late-2025 capacity disproof
+
+## The regime inventory changed
+
+| regime | radius | per-query err | commit err | status |
+|---|---|---|---|---|
+| **U** unique | `(1−ρ)/2` | `(1+ρ)/2` | `O(n)/\|F\|` | unconditional |
+| **J** Johnson/BCIKS20 | `1−√ρ(1+1/2m)` | `√ρ(1+1/2m)` | `(m+½)⁷n²/(3ρ^{3/2}\|F\|)` | unconditional |
+| **T** threshold halving | `δ ∈ (δ_J, 1−ρ)` | `1−δ/2` | `n·r/\|F\|` | **unconditional, above Johnson** |
+| **C** capacity | `1−ρ` | `ρ` | `~n/(ρ\|F\|)` | **DISPROVED late 2025** |
+
+Regime C was refuted by Crites–Stewart (eprint 2025/2046 — the correlated
+agreement, mutual correlated agreement/WHIR, and list-decodability/DEEP-FRI
+up-to-capacity conjectures) and independently by Diamond–Gruen (2025/2010).
+Regime J is untouched. Regime T is from eprint 2026/858 (threshold halving,
+after Rothblum–Vadhan–Wigderson), which gives `ε ≤ nr/|F| + (1−δ/2)^q`.
+
+Definitions for Part II: `T_len = log₂(trace)`, `ν = T_len + R`, `r` = FRI round
+count.
+
+```
+yield_J(R) = R/2                    (sup over m)
+yield_T(R) = −log₂((1+ρ)/2) = 1 − log₂(1 + 2^{−R})     (sup over δ)
+Λ_max^J    = (E − 2·T_len) + g(R)                       [Thm 2 + 3′]
+Λ_max^T    = E − ν − log₂ r
+```
+
+Note `yield_T = yield_U` identically: threshold halving pushed to the capacity
+radius recovers the *unique-decoding* per-query yield. Its gain over U is the
+radius it certifies; its gain over J is the commit term.
+
+---
+
+## Theorem 4 (query penalty for unconditionality above Johnson)
+
+Define the query multiplier for switching from regime J to regime T:
+
+```
+κ(R) := yield_J(R) / yield_T(R) = (R/2) / (1 − log₂(1 + 2^{−R}))
+```
+
+Then `κ` is **strictly increasing** on `(0, ∞)`, with
+
+```
+lim_{R→0⁺} κ(R) = 1        and        κ(R) ~ R/2 → ∞
+```
+
+*Proof of the limits.* Both numerator and denominator → 0 as `R → 0⁺`. By
+L'Hôpital, `d/dR (R/2) = 1/2`, and
+
+```
+d/dR [1 − log₂(1 + 2^{−R})] = 2^{−R} / (1 + 2^{−R}) → 1/2  as R → 0
+```
+
+so the ratio → 1. As `R → ∞`, `log₂(1 + 2^{−R}) → 0`, so `κ(R) ~ R/2`. ∎
+
+Monotonicity is verified numerically (200k samples on `(0, 40]`, zero
+violations); a clean analytic proof is not included here.
+
+| blowup | 2 | 4 | 8 | 16 | 32 | 64 |
+|---|---|---|---|---|---|---|
+| **κ** | 1.205 | 1.475 | 1.807 | **2.192** | 2.616 | 3.069 |
+
+**Cross-check:** 2026/858 states its method costs "approximately a factor ~2 in
+queries". `κ(4) = 2.19` at blowup 16, a very common configuration. The
+agreement is evidence the transcription is faithful.
+
+**Reading.** The cost of going unconditional above Johnson *vanishes* as the
+blowup approaches 1 and grows without bound as it grows. This inverts the usual
+intuition: high blowup is exactly what makes Johnson's query advantage large, so
+high-blowup systems pay the most to become unconditional.
+
+---
+
+## Theorem 5 (opposite blowup preferences)
+
+With `ν = T_len + R` fixed-trace:
+
+**(a)** `Λ_max^J` has an interior maximum at `R = 2` (blowup 4) — Theorem 3′.
+**(b)** `Λ_max^T = E − T_len − R − log₂ r` is **strictly decreasing** in `R`.
+**(c)** `κ` is strictly increasing in `R` — Theorem 4.
+
+Hence regime J prefers blowup 4, while regime T prefers the *smallest available
+blowup*, improving on both of its axes simultaneously (higher ceiling and lower
+query penalty). ∎
+
+| blowup | ceil_J | ceil_T | κ |
+|---|---|---|---|
+| 2 | 76.68 | **98.68** | **1.205** |
+| **4** | **78.58** | 97.68 | 1.475 |
+| 8 | 77.68 | 96.68 | 1.807 |
+| 16 | 75.68 | 95.68 | 2.192 |
+| 32 | 73.12 | 94.68 | 2.616 |
+
+*(E = 124, T_len = 20)*
+
+---
+
+## Theorem 6 (the crossover, and what it rescues)
+
+Regime T's ceiling exceeds regime J's by
+
+```
+Λ_max^T − Λ_max^J = ν − log₂ r − g(R) − ... ≈ ν bits
+```
+
+measured at **+19 to +22 bits** for every deployed configuration. The reason is
+structural: T's commit error is `O(n)/|F|` where J's is `O(n²)/|F|`, and
+`log₂ n = ν`.
+
+| system | E | ceil_J | ceil_T | 100 bits provable? |
+|---|---|---|---|---|
+| Stwo (M31) | 124 | 76.7 | 98.7 | no, under neither |
+| Plonky3 (KoalaBear) | 124 | 76.7 | 98.7 | no, under neither |
+| Plonky3 (BabyBear) | 124 | 78.6 | 97.7 | no, under neither |
+| RISC Zero | 124 | 78.6 | 97.7 | no, under neither |
+| Plonky2 | 128 | 81.7 | 100.7 | **ONLY under T** |
+| Boojum (zkSync) | 128 | 81.7 | 100.7 | **ONLY under T** |
+| Winterfell / Miden | 192 | 145.7 | 164.7 | yes, under J |
+| Cairo / StarkNet | 251 | 202.7 | 222.7 | yes, under J |
+
+**This supersedes Part I's headline.** Part I concluded that no 31-bit field with
+a degree-4 extension reaches 100 provable bits at any query count, grinding
+level, or blowup. That was correct **for regime J** and is now obsolete as a
+general claim: threshold halving lifts those systems to 97.7–98.7 bits — within
+1.3–2.3 bits of the target — at a query cost of only `κ = 1.2–1.5`. Closing the
+remaining gap needs ~2 more bits of extension or a slightly shorter trace,
+not a different field.
+
+---
+
+## Corrections to Part I and to this repo's earlier claims
+
+1. **"The RS capacity conjecture is the highest-leverage open problem."**
+   Wrong — it is not open. It was disproved in late 2025. The corrected
+   statement: the open problems are Crites–Stewart's minimally-modified
+   conjectures restricted to the list-decoding capacity bound, and the `Q2`
+   sparse-worst-case dominance conjecture of eprint 2026/861.
+
+2. **WHIR** was listed among systems that beat FRI without noting that its
+   *mutual* correlated agreement conjecture was refuted in the same work.
+
+3. **Theorem 3 (blowup 100/9)** answers the fixed-`ν` question; Theorem 3′
+   (blowup 4) is the operative one.
+
+4. The counterexamples live in the regime `ρ → 0, γ → 1`, while deployed rates
+   are `ρ ∈ [1/16, 1/2]`. **No known counterexample attacks a deployed parameter
+   set directly.** The honest statement: deployed systems are not known to be
+   broken, and are no longer known to be sound at their advertised level. The
+   disproof removes the justification, not (yet) the security.
+
+---
+
 ## Files
 
 - `verify_theorem.py` — numerical verification of Lemma 2, Prop. 1(a,b,c),
   Thm 2 (closed form vs brute force over `s` and `m`), and Thm 3 (grid argmax
   vs the exact root), plus the corrected ceiling table
+- `regimes.py` — Part II: the four-regime model, Thm 3′, Thm 4 (κ monotonicity,
+  200k samples), Thm 5 (dichotomy), Thm 6 (crossover table)
+
+## Sources for Part II
+
+- [Crites–Stewart, *On Reed–Solomon Proximity Gaps Conjectures*, eprint 2025/2046](https://eprint.iacr.org/2025/2046.pdf)
+- [*On Proximity Gaps for Reed–Solomon Codes*, eprint 2025/2055 / ECCC 2025/169](https://eprint.iacr.org/2025/2055)
+- [*FRI Soundness Above the Johnson Bound via Threshold Halving*, eprint 2026/858](https://eprint.iacr.org/2026/858)
+- [Chai–Fan, *Action–Orbit FRI Soundness Above the Johnson Radius*, eprint 2026/861](https://eprint.iacr.org/2026/861)
+- [*SoK: Hash-Based Polynomial Commitments and Low-Degree Tests*, eprint 2026/1367](https://eprint.iacr.org/2026/1367)
+- [*The Small-Field Turn in Succinct Proofs*, eprint 2026/1371](https://eprint.iacr.org/2026/1371)
+- [ethSTARK Documentation v1.2, eprint 2021/582](https://eprint.iacr.org/2021/582.pdf)
+- [BCIKS20, *Proximity Gaps for Reed–Solomon Codes*, eprint 2020/654](https://eprint.iacr.org/2020/654.pdf)

@@ -1,0 +1,156 @@
+
+====================================================================================================
+0. STATUS OF THE FOUR REGIMES  (July 2026)
+====================================================================================================
+
+  U  unique decoding    UNCONDITIONAL
+  J  Johnson / BCIKS20  UNCONDITIONAL  -- untouched by the 2025 disproofs
+  T  threshold halving  UNCONDITIONAL  -- first bound above Johnson (2026/858)
+  C  capacity           DISPROVED late 2025 (Crites-Stewart; Diamond-Gruen)
+
+  Deployed STARK parameters were, almost universally, set against C.
+
+
+====================================================================================================
+1. PER-QUERY YIELD BY REGIME  (bits per FRI query)
+====================================================================================================
+  blowup    R        U   J (sup)   T (sup)   C [dead]   kappa=J/T
+----------------------------------------------------------------
+       2    1    0.415     0.500     0.415      1.000       1.205
+       4    2    0.678     1.000     0.678      2.000       1.475
+       8    3    0.830     1.500     0.830      3.000       1.807
+      16    4    0.913     2.000     0.913      4.000       2.192
+      32    5    0.956     2.500     0.956      5.000       2.616
+      64    6    0.978     3.000     0.978      6.000       3.069
+
+  yield_T == yield_U exactly: threshold halving pushed to the capacity
+  radius recovers the unique-decoding per-query yield. Its gain is in the
+  COMMIT term and in the radius it certifies, not in per-query yield.
+
+  kappa at blowup 16 is 2.19, matching 2026/858's stated '~factor 2 in
+  queries'. That agreement is a useful check on this transcription.
+
+====================================================================================================
+2. THEOREM 4: the query penalty for unconditionality above Johnson
+====================================================================================================
+  kappa(R) = (R/2) / (1 - log2(1 + 2^-R))
+  monotonicity violations over R in (0, 40], 200k samples: 0   PASS
+  lim_{R->0+} kappa = 0.999999803   (claim: 1)
+  kappa(40) = 20.000   (claim: ~ R/2 = 20)
+
+  READING: the cost of going unconditional above Johnson VANISHES as the blowup
+  approaches 1 and grows without bound as the blowup grows. This inverts the
+  usual intuition. High blowup is what makes the Johnson bound's query
+  advantage large, so high-blowup systems are the ones that pay most to become
+  unconditional.
+
+====================================================================================================
+3. CEILINGS BY REGIME  (max bits at unlimited queries, trace 2^20)
+====================================================================================================
+system                     E   R        J        T     T-J   C [dead]
+---------------------------------------------------------------------
+Stwo (M31)               124   1     76.7     98.7   +22.0      102.0
+Plonky3 (KoalaBear)      124   1     76.7     98.7   +22.0      102.0
+Plonky3 (BabyBear)       124   2     78.6     97.7   +19.1      100.0
+RISC Zero                124   2     78.6     97.7   +19.1      100.0
+Plonky2                  128   3     81.7    100.7   +19.0      102.0
+Winterfell / Miden       192   3    145.7    164.7   +19.0      166.0
+Boojum (zkSync)          128   3     81.7    100.7   +19.0      102.0
+Cairo / StarkNet         251   4    202.7    222.7   +20.0      223.0
+
+  The T column is the headline. Threshold halving's commit term is O(n)/|F|
+  against BCIKS's O(n^2)/|F|, which is worth ~nu bits -- and nu is 21-24 for a
+  2^20 trace. That is precisely the gap that put 100-bit PROVABLE security out
+  of reach for 31-bit fields under J.
+
+====================================================================================================
+4. THEOREM 6: the crossover, and what it rescues
+====================================================================================================
+  For a 100-bit provable target at trace 2^20:
+
+system                     E  J ceiling  T ceiling   100 bits provable?
+-----------------------------------------------------------------------
+Stwo (M31)               124       76.7       98.7    no, under neither
+Plonky3 (KoalaBear)      124       76.7       98.7    no, under neither
+Plonky3 (BabyBear)       124       78.6       97.7    no, under neither
+RISC Zero                124       78.6       97.7    no, under neither
+Plonky2                  128       81.7      100.7         ONLY under T
+Winterfell / Miden       192      145.7      164.7         yes, under J
+Boojum (zkSync)          128       81.7      100.7         ONLY under T
+Cairo / StarkNet         251      202.7      222.7         yes, under J
+
+  Every 31-bit-field system lands in the 'ONLY under T' band or just below it.
+  The earlier conclusion in this repo -- that no 31-bit field with a degree-4
+  extension reaches 100 provable bits at any parameters -- was correct FOR
+  REGIME J and is now superseded: threshold halving reopens the door, at a
+  1.2x-2.2x query cost depending on blowup.
+
+====================================================================================================
+5. THEOREM 3': the operative optimum is blowup 4, not 100/9
+====================================================================================================
+  Theorem 3 held nu fixed. But the evaluation domain IS trace x blowup,
+  so nu = T + R is forced. Substituting gives Lam_max^J = (E-2T) + g(R),
+  g(R) = -7R + 7log2(2^{R/2}-1) + log2(3) + 7.
+
+    grid argmax of g over R in (0,12]: 2.0000   (claim: R* = 2)   PASS
+    g(R*) grid = -5.415037   g(2) = -5.415037   closed form log2(3)-7 = -5.415037   PASS
+
+    R* = 2 exactly  ->  blowup = 4 exactly
+    Lam_max^J = (E - 2T) + log2(3) - 7 = (E - 2T) - 5.4150
+
+  At R = 2 the term log2(2^{R/2}-1) = log2(1) = 0 vanishes identically,
+  which is why the optimum lands on an exact integer.
+
+====================================================================================================
+6. THEOREM 5: J and T have OPPOSITE blowup preferences
+====================================================================================================
+  ceiling_J argmax over R in (0,12], nu = T+R: 2.0000   (Thm 3' predicts 2.0)   PASS
+  ceiling_T strictly decreasing in R: True   PASS
+  kappa strictly increasing in R: True   PASS
+
+    blowup    R    ceil_J    ceil_T    kappa
+  ------------------------------------------
+      2.00 1.00     76.68     98.68    1.205
+      4.00 2.00     78.58     97.68    1.475  <- J optimum
+      8.00 3.00     77.68     96.68    1.807
+     16.00 4.00     75.68     95.68    2.192
+     32.00 5.00     73.12     94.68    2.616
+     64.00 6.00     70.24     93.68    3.069
+
+  J has an interior optimum at blowup 4; T is monotonically better at SMALLER
+  blowup, on both of its axes at once (higher ceiling AND lower query penalty).
+
+  CONSEQUENCE FOR DEPLOYED SYSTEMS. Stwo and Plonky3/KoalaBear run blowup 2.
+  Under J that is ~1.9 bits below the blowup-4 optimum. Under T it is the
+  OPTIMAL choice, and their kappa is only 1.20 -- the smallest query penalty of
+  any deployed configuration. RISC Zero and Plonky3/BabyBear at blowup 4 are
+  exactly at the J optimum. The blowup-16 and blowup-32 systems are worst
+  positioned to adopt an unconditional above-Johnson bound, paying 2.2x-2.6x.
+
+====================================================================================================
+7. WHAT THE DISPROOF DOES AND DOES NOT TOUCH
+====================================================================================================
+
+  DOES NOT: the Johnson-bound results (regime J) are unaffected. Every
+  UNCONDITIONAL number in this repo stands.
+
+  DOES: regime C is refuted, so parameters set against it have no proof behind
+  them. Note the counterexamples live in the regime rho -> 0, gamma -> 1, while
+  deployed rates are rho in [1/16, 1/2]. So no known counterexample attacks a
+  deployed parameter set directly.
+
+  THE HONEST STATEMENT: deployed systems are not known to be broken, and are no
+  longer known to be sound at their advertised level. Absence of a counter-
+  example at rho = 1/2 is not a proof of a gap at rho = 1/2. What the disproof
+  removes is the justification, not (yet) the security.
+
+  ALSO HIT: WHIR's mutual correlated agreement conjecture was refuted in the
+  same work. This repo's earlier frontier map listed WHIR's advantages without
+  noting that its conjectured parameters rest on a now-refuted conjecture.
+
+  STILL OPEN: Crites-Stewart's minimally-modified conjectures restricted to the
+  list-decoding capacity bound; the Q2 sparse-worst-case dominance conjecture of
+  2026/861; and whether folded RS (which Goyal-Guruswami show DOES have a gap at
+  capacity) can be used without the code-class cost that 2026/861 measures at
+  2.0x-3.5x proof size.
+

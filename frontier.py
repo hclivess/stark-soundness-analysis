@@ -119,7 +119,11 @@ FRONTIER = [
          prover="O(n log n)", verifier="~100 microseconds concrete",
          assumption="CRHF + ROM", pq="yes",
          beats="verifier time by orders of magnitude; native multilinear "
-               "(sumcheck) queries, so it drops the univariate encoding tax"),
+               "(sumcheck) queries, so it drops the univariate encoding tax. "
+               "CAVEAT: its mutual correlated agreement up-to-capacity "
+               "conjecture was among those refuted by Crites-Stewart in 2025, "
+               "so its CONJECTURED parameters need repricing; the verifier-time "
+               "and query-complexity wins are unaffected"),
     dict(name="BaseFold", year=2024,
          cite="Zeilberger, Chen, Fisch",
          queries="O(lambda log d)", prover="O(n log n)",
@@ -153,6 +157,23 @@ FRONTIER = [
          assumption="M-SIS (lattice)", pq="yes",
          beats="sqrt verifier lattice PCS, ~50KB proofs; first practical "
                "lattice PCS competitive with hash-based on size"),
+    dict(name="Threshold halving", year=2026,
+         cite="eprint 2026/858",
+         queries="kappa(R) x FRI, kappa = (R/2)/(1-log2(1+2^-R))",
+         prover="unchanged", verifier="unchanged (only q recalibrated)",
+         assumption="CRHF + ROM", pq="yes",
+         beats="the DISPROVED capacity conjecture -- first UNCONDITIONAL "
+               "soundness above the Johnson bound. commit term O(n)/|F| vs "
+               "BCIKS's O(n^2)/|F|, worth ~nu bits of ceiling. Needs k=2^m and "
+               "a fixed-point-free involution on the domain (standard for "
+               "deployed FRI). See regimes.py Thms 4-6"),
+    dict(name="Action-Orbit", year=2026,
+         cite="Chai, Fan (eprint 2026/861)",
+         queries="n/a", prover="unchanged", verifier="unchanged",
+         assumption="CRHF + ROM + conjecture Q2", pq="yes",
+         beats="O(1)/|F| commit bound above Johnson on PLAIN RS; 79.8 KiB vs "
+               "161.4 KiB (interleaved RS) and 281.2 KiB (folded RS) at 128-bit. "
+               "Conditional on a sparse-worst-case dominance conjecture"),
 ]
 
 
@@ -204,15 +225,33 @@ def section_c():
   Any claim to "surpass" has to name which of these terms it improves.
 
   TERM 1: per-query yield -- log2(1/rho) conjectured vs (1/2)log2(1/rho) proven
-      STATUS: CONJECTURE-BOUND, factor 2.
-      The entire gap is whether Reed-Solomon codes are list-decodable up to
-      capacity with polynomially-bounded list size. Proving the capacity
-      conjecture for RS codes is worth exactly 2x in query count across every
-      deployed STARK simultaneously. It is a pure-mathematics target with a
-      known, precise statement -- the single highest-leverage open problem
-      in the entire field.
-      This is the one place where "run some math" and "improve every zkSTARK
-      at once" are literally the same act.
+      STATUS: *** THE CONJECTURE WAS DISPROVED IN LATE 2025. ***
+
+      CORRECTION. An earlier version of this file called proving the RS capacity
+      conjecture "the single highest-leverage open problem in the entire field."
+      That was wrong: it is not open. Crites-Stewart (eprint 2025/2046) refuted
+      the correlated agreement, mutual correlated agreement (WHIR) and
+      list-decodability (DEEP-FRI) up-to-capacity conjectures, and Diamond-Gruen
+      (2025/2010) gave an independent counterexample over multiplicative
+      subgroups of prime fields. The mechanism: correlated agreement with small
+      enough error implies list decoding, so a gap beyond capacity would imply
+      impossibly good list-decoding bounds.
+
+      WHAT SURVIVES. Johnson-bound soundness is untouched. The counterexamples
+      live in the regime rho -> 0, gamma -> 1, whereas deployed rates are
+      rho in [1/16, 1/2], so no known counterexample attacks a deployed
+      parameter set directly. Deployed systems are not known to be broken --
+      they are no longer known to be sound at their advertised level.
+
+      WHAT IS NOW OPEN: Crites-Stewart's minimally-modified conjectures
+      restricted to the list-decoding capacity bound; the Q2 sparse-worst-case
+      dominance conjecture of eprint 2026/861; and whether folded RS (which
+      Goyal-Guruswami show DOES admit a gap at capacity) can be deployed
+      without the 2.0x-3.5x proof-size cost of the code-class change.
+
+      THE REPLACEMENT LEVER: threshold halving (eprint 2026/858) gives the first
+      UNCONDITIONAL bound above the Johnson radius, at a query multiplier
+      kappa(R) = (R/2)/(1 - log2(1+2^-R)) -- see regimes.py, Theorem 4.
 
   TERM 2: commit-phase / field-size term -- E - 2*nu - 7*log2(m+1/2) - 1.5R
       STATUS: IMPROVABLE, and demonstrably loose.
