@@ -1,0 +1,65 @@
+
+============================================================================================
+1. THE FRONTIER: RADIUS BOUGHT vs FIELD PAID (rate 1/4)
+============================================================================================
+  Interleaved radius 0.2500, yield 0.4150. Johnson radius 0.5000.
+
+      eps    radius    yield  vs interleaved   query cut  field bits  beyond Johnson?
+  ----------------------------------------------------------------------------------
+     0.25    0.5000   1.0000           2.41x      58.5%        22.0         no (= J)
+     0.20    0.5500   1.1520           2.78x      64.0%        22.0              yes
+     0.15    0.6000   1.3219           3.19x      68.6%        24.9              yes
+     0.10    0.6500   1.5146           3.65x      72.6%        43.2              yes
+     0.05    0.7000   1.7370           4.19x      76.1%       106.4              yes
+     0.02    0.7300   1.8890           4.55x      78.0%       332.2              yes
+
+  The first row is exactly the Johnson radius -- at eps = sqrt(R) - R the two
+  coincide -- so the 2.41x there is "reach Johnson", not news. The rows below it
+  are beyond-Johnson, and cost 25 to 332 bits.
+
+  Note where the cost lives: the first 2.78x is free, because q = Theta(n)
+  dominates and 22 bits is required either way. After that the (2/eps)^(1/eps)
+  term takes over and returns diminish hard -- eps 0.20 -> 0.02 buys 14 more
+  percentage points for 15x the field.
+
+============================================================================================
+2. ACROSS RATES, AT THE FREE POINT
+============================================================================================
+     rate  distance  interleaved   capacity   query cut  field bits
+  ------------------------------------------------------------------
+    0.500     0.500       0.1667     0.2929      47.4%        22.0
+    0.250     0.750       0.2500     0.5000      58.5%        22.0
+    0.125     0.875       0.2917     0.6464      66.8%        22.0
+
+  47% to 67% fewer queries at 22 bits of field, across the deployed rate range,
+  purely from testing at the Johnson radius instead of the interleaved (1-R)/3.
+
+============================================================================================
+3. WHY THIS IS A PRICE AND NOT A PROTOCOL
+============================================================================================
+
+  Four things stand between this table and a deployable change, and none of them
+  is field size:
+
+  1. COMPOSITION. A proximity-gap statement is not a proof system. Ligero-style
+     soundness also involves the interleaved structure, the linear check and the
+     opening argument. Whether those compose at the capacity radius is not
+     something Yuan-Zhu claim, and not something checked here.
+
+  2. ALPHABET. The near-MDS assumption needs a large alphabet, and q = Theta(n)
+     supplies it -- but Ligero and Brakedown are often deployed over SMALL fields
+     precisely to make encoding cheap. A 22-bit alphabet is a real change whose
+     encoding cost this file does not model.
+
+  3. CERTIFICATION. The guarantee holds with high probability over the choice of
+     C. A deployed system samples one code and publishes it, and no efficient
+     certificate for a particular sample is known. Flagged in iteration 30 and
+     still unresolved.
+
+  4. QUERIES ARE NOT PROOF SIZE for these systems. Ligero/Brakedown proofs are
+     dominated by O(sqrt(n)) column openings, so a 60% query cut is not a 60%
+     proof-size cut. Pricing that needs a proof-size model this repo lacks.
+
+  So: the one open capacity route is worth 2.4x to 4.6x in per-query yield, the
+  first 2.8x of it at no extra field cost, and four unmodelled obstacles stand
+  between that and a deployment.

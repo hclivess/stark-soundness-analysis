@@ -168,6 +168,16 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the random-evaluation route costs ~20x prover for at most 2x queries   [20.0x prover vs 2x query reduction at best]
   PASS  the prover penalty is driven by NTT's share of latency   [at 0% NTT share there is no penalty; at 90.5% there is 20x]
   PASS  iteration 30's 'blocked by field size' verdict is retracted   [blocked by structure instead: no x->x^2 map, and ~20x prover]
+  PASS  capacity radius beats the interleaved radius at rate 0.5   [0.2929 vs 0.1667]
+  PASS  capacity radius beats the interleaved radius at rate 0.25   [0.5000 vs 0.2500]
+  PASS  capacity radius beats the interleaved radius at rate 0.125   [0.6464 vs 0.2917]
+  PASS  the free-point query cut is 47-67% across deployed rates   [47.4% to 66.8%]
+  PASS  the first 2.8x of yield costs no extra field   [Theta(n) dominates down to eps = 0.20]
+  PASS  and beyond that the field cost rises steeply   [15.1x from eps 0.20 -> 0.02]
+  PASS  the free point IS the Johnson radius at rate 0.5, not beyond   [so the first row is 'reach Johnson', not news]
+  PASS  the free point IS the Johnson radius at rate 0.25, not beyond   [so the first row is 'reach Johnson', not news]
+  PASS  the free point IS the Johnson radius at rate 0.125, not beyond   [so the first row is 'reach Johnson', not news]
+  PASS  returns on field size diminish monotonically   [each extra bit buys less query reduction than the last]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -297,8 +307,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 289, suite has 289]
+  PASS  README's stated check count matches the suite   [README says 299, suite has 299]
 
 ========================================================================================
-289/289 PASS   no property broken
+299/299 PASS   no property broken
 ========================================================================================

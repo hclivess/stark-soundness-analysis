@@ -1388,6 +1388,58 @@ def part_a():
               "blocked by structure instead: no x->x^2 map, and ~20x prover")
     except ImportError:
         pass
+
+    # --- ITERATION 43: pricing the one capacity route that is open.
+    #
+    # Linear-code systems (Ligero/Brakedown/Blaze/Bolt) have no x -> x^2
+    # obstruction, so Yuan-Zhu's capacity-radius result IS available to them.
+    # Their current test runs at the Roth-Zemor interleaved radius (1-R)/3
+    # (iteration 28); the question is what the larger radius is worth.
+    try:
+        import linear_code_capacity as _lcc
+
+        # (a) the capacity radius must actually EXCEED the interleaved one, or
+        # there is nothing to price
+        for R_ in (0.5, 0.25, 0.125):
+            e_ = _lcc.eps_at_johnson(R_)
+            check(f"capacity radius beats the interleaved radius at rate {R_}",
+                  _lcc.capacity_radius(R_, e_) > _lcc.interleaved_radius(R_),
+                  f"{_lcc.capacity_radius(R_, e_):.4f} vs "
+                  f"{_lcc.interleaved_radius(R_):.4f}")
+        # (b) the query cut must be 47-67% at the free point, across rates
+        cuts = [_lcc.query_cut(R_, _lcc.eps_at_johnson(R_))
+                for R_ in (0.5, 0.25, 0.125)]
+        check("the free-point query cut is 47-67% across deployed rates",
+              0.45 < min(cuts) and max(cuts) < 0.70,
+              f"{min(cuts):.1%} to {max(cuts):.1%}")
+        # (c) THE FREE REGION MUST BE GENUINELY FREE: field bits pinned at the
+        # Theta(n) floor until eps drops below ~0.17. If a future edit makes the
+        # (2/eps)^(1/eps) term bite earlier, this fails.
+        check("the first 2.8x of yield costs no extra field",
+              abs(_lcc.field_bits(0.25) - _lcc.field_bits(0.20)) < 1e-9
+              and _lcc.field_bits(0.20) == math.log2(2 ** 22),
+              "Theta(n) dominates down to eps = 0.20")
+        check("and beyond that the field cost rises steeply",
+              _lcc.field_bits(0.02) / _lcc.field_bits(0.20) > 10,
+              f"{_lcc.field_bits(0.02)/_lcc.field_bits(0.20):.1f}x from eps "
+              f"0.20 -> 0.02")
+        # (d) at eps = sqrt(R)-R the capacity radius is EXACTLY Johnson's, so the
+        # first row is not a beyond-Johnson claim
+        for R_ in (0.5, 0.25, 0.125):
+            e_ = _lcc.eps_at_johnson(R_)
+            check(f"the free point IS the Johnson radius at rate {R_}, not beyond",
+                  abs(_lcc.capacity_radius(R_, e_) - _lcc.johnson_radius(R_)) < 1e-12,
+                  "so the first row is 'reach Johnson', not news")
+        # (e) diminishing returns: yield must be concave in the field spent
+        pairs = [(_lcc.field_bits(e_), _lcc.query_cut(0.25, e_))
+                 for e_ in (0.20, 0.15, 0.10, 0.05, 0.02)]
+        gains = [(pairs[i + 1][1] - pairs[i][1]) /
+                 (pairs[i + 1][0] - pairs[i][0]) for i in range(len(pairs) - 1)]
+        check("returns on field size diminish monotonically",
+              gains == sorted(gains, reverse=True),
+              "each extra bit buys less query reduction than the last")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()
