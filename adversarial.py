@@ -3469,6 +3469,71 @@ def part_a():
     check("the check auditor FLAGS a planted literal-only condition",
           _ci_self_test(), "planted `2 + 2 == 4` is detected, `some_fn(1) > 0` is not")
     # the audit must be looking at a real suite, not an empty parse
+    # --- ITERATION 67: the MCA floor at OpenVM2's DECLARED list sizes, and a
+    # list-size convention this repo had right only at rate 1/4.
+    from mca_headroom import (list_pinned, list_default, list_repo,
+                              convention_ratio, mca_ceiling, m_default as _md,
+                              circuit_headroom, whir_headroom_range,
+                              small_m_gain, convention_error_bits,
+                              WHIR_CIRCUITS, JBR_RATES, FRI_HEADROOM_RANGE,
+                              Q_BITS)
+
+    # (a) THE HEADROOM CLAIM. WHIR is asserted to sit closest to its own floor.
+    # If its headroom overlapped the FRI range's upper half, that would be false.
+    _lo, _hi = whir_headroom_range()
+    check("OpenVM2's MCA headroom is narrower than every FRI system's",
+          _hi < FRI_HEADROOM_RANGE[1] and _lo < FRI_HEADROOM_RANGE[0],
+          f"WHIR [{_lo:.1f}, {_hi:.1f}] vs FRI [{FRI_HEADROOM_RANGE[0]}, "
+          f"{FRI_HEADROOM_RANGE[1]}]")
+    check("the floor is a CEILING on provable bits, above what is achieved",
+          all(h > 0 for _n, lb, m, a in WHIR_CIRCUITS
+              for _r, _L, _c, h in circuit_headroom(lb, m, a)),
+          "every circuit sits below its own MCA ceiling, as it must")
+    # a sanity bound: no ceiling may exceed the field size
+    check("no MCA ceiling exceeds log2(q), which would be vacuous",
+          all(c <= Q_BITS for _n, lb, m, a in WHIR_CIRCUITS
+              for _r, _L, c, _h in circuit_headroom(lb, m, a)),
+          f"all ceilings <= {Q_BITS} bits")
+
+    # (b) THE SMALL-m GAIN. It must be positive AND must vanish if m equals the
+    # default -- otherwise the effect is an artifact of the formula, not of m.
+    check("pinning m small raises the MCA ceiling by several bits",
+          all(small_m_gain(2.0 ** -r) > 3.0 for r in (3, 6, 9)),
+          f"gains {[round(small_m_gain(2.0**-r), 1) for r in (3, 6, 9)]}")
+    check("and the gain vanishes when m IS the default, so it tracks m",
+          all(abs(mca_ceiling(list_pinned(2.0 ** -r, _md(2.0 ** -r)))
+                  - mca_ceiling(list_pinned(2.0 ** -r, _md(2.0 ** -r)))) < 1e-12
+              for r in (3, 6, 9))
+          and small_m_gain(0.125, m=_md(0.125)) == 0.0,
+          "gain(m=default) = 0 exactly")
+
+    # (c) THE CONVENTION. 2m+1 must equal (m+0.5)/sqrt(rho) at rho=1/4 and
+    # nowhere else, for EVERY m -- the ratio is m-independent or the claim is wrong.
+    check("2m+1 equals the general list formula exactly at rate 1/4",
+          all(abs(list_repo(m) - list_pinned(0.25, m)) < 1e-12
+              for m in (1, 2, 8.2426, 15, 50)),
+          "holds for every m tested, as an m-free identity must")
+    check("and differs everywhere else, by a factor independent of m",
+          all(abs(list_repo(m) / list_pinned(rho, m) - convention_ratio(rho)) < 1e-12
+              for rho in (0.5, 0.125, 0.0625) for m in (2, 15, 50)),
+          "ratio = 2*sqrt(rho), m-free")
+    # the direction matters: only sub-1/4 rates overclaim
+    _over = [n for n, rho in JBR_RATES if convention_error_bits(rho) > 1e-9]
+    check("only Miden's headroom is overstated by the convention",
+          _over == ["Miden"],
+          f"overstated: {_over} by {convention_error_bits(0.125):.2f} bits; "
+          f"the rho=1/2 systems are understated")
+
+    # (d) soundcalc's TWO formulas. The pinned one must be the tighter, and the
+    # advantage must GROW as the rate falls, or Finding 4's framing is wrong.
+    _gaps = [list_default(rho, 15) / list_pinned(rho, 15)
+             for rho in (0.5, 0.25, 0.125, 0.0625)]
+    check("soundcalc's pinned-m list bound is the tighter of its two",
+          all(g > 1.0 for g in _gaps), f"ratios {[round(g, 2) for g in _gaps]}")
+    check("and its advantage grows as the rate falls",
+          all(a < b for a, b in zip(_gaps, _gaps[1:])),
+          f"{_gaps[0]:.2f}x at rho=1/2 rising to {_gaps[-1]:.2f}x at rho=1/16")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")

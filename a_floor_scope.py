@@ -2,7 +2,24 @@
 The a >= 1 floor is proved for interleaved codes and NOT for FRI -- and there
 are 25-37 bits of room between what is proved possible and proved impossible.
 
-*** CORRECTED TWICE -- READ BOTH NOTES BEFORE THE NUMBERS ***
+*** CORRECTED THREE TIMES -- READ ALL NOTES BEFORE THE NUMBERS ***
+
+*** ITERATION 67: THE LIST-SIZE CONVENTION IS RATE-1/4-ONLY ***
+This file computes the MCA floor with L = 2m+1. soundcalc's pinned-m branch
+(johnson_bound.py:91-105) uses (m+0.5)/sqrt(rho), and the two agree ONLY at
+rho = 1/4 -- the ratio is 2*sqrt(rho), independent of m. Effect on the headroom
+figures below:
+
+    Airbender, Pico, ZisK   rho = 1/2    understated by 0.50 bits (conservative)
+    RISC Zero               rho = 1/4    exact
+    Miden                   rho = 1/8    OVERSTATED by 0.50 bits
+    SP1, OpenVM             UDR, L = 1   unaffected
+
+So Miden's headroom is 0.5 bits too generous and the rest are conservative or
+exact. Small, and the direction is what makes it worth recording: everywhere
+else this convention errs toward understating the repo's own claims. See
+mca_headroom.py, which also measures the floor on the one deployed system whose
+soundness actually rests on mutual correlated agreement.
 
 *** ITERATION 40: THE HEADROOM TABLE MIXES REGIMES ***
 Section 3 computes headroom for all seven zkVMs using commit_jbr and the
