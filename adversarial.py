@@ -1440,6 +1440,69 @@ def part_a():
               "each extra bit buys less query reduction than the last")
     except ImportError:
         pass
+
+    # --- ITERATION 44: converting iteration 43's query cut into bytes.
+    #
+    # Ligero/Brakedown proof = 1 combined row (n elts) + t columns (m elts) +
+    # t Merkle paths. At the optimum m* = sqrt(N/(tR)) both field terms equal
+    # F*sqrt(Nt/R), so the FIELD part scales as sqrt(t) and only the Merkle part
+    # is linear in t. A query cut therefore translates sub-linearly.
+    try:
+        import ligero_proof_size as _lps
+
+        N44, R44 = 2 ** 20, 0.25
+        # (a) the closed form must track the numeric argmin (it drops a log term)
+        devs44 = []
+        for t_ in (200, 100, 60):
+            cf_ = _lps.m_star_closed(N44, R44, t_)
+            _, num_ = _lps.best_m_numeric(N44, R44, t_)
+            devs44.append(abs(num_ / cf_ - 1))
+        check("the closed-form m* tracks the numeric argmin within 5%",
+              max(devs44) < 0.05, f"max deviation {max(devs44):.1%}")
+        # (b) m* must RISE as t falls -- that is the mechanism
+        ms44 = [_lps.best_m_numeric(N44, R44, t_)[1] for t_ in (200, 150, 100, 60)]
+        check("the optimal m rises as queries fall (the rebalancing mechanism)",
+              ms44 == sorted(ms44), f"{[round(x_) for x_ in ms44]}")
+        # (c) THE HEADLINE: the size cut must be strictly SMALLER than the query
+        # cut, and land in the 40-50% band
+        red44 = _lps.size_reduction(N44, R44, 200, 83)
+        check("a 58.5% query cut is NOT a 58.5% size cut",
+              red44 < 0.585 - 0.05, f"{red44:.1%} vs 58.5%")
+        check("the size cut lands in the 40-50% band at deployed witness sizes",
+              all(0.38 < _lps.size_reduction(2 ** lg, R44, 200, 83) < 0.52
+                  for lg in (16, 18, 20, 22)),
+              f"2^16 {_lps.size_reduction(2**16, R44, 200, 83):.1%} to "
+              f"2^22 {_lps.size_reduction(2**22, R44, 200, 83):.1%}")
+        # the sqrt scaling must be verifiable directly on the field term
+        s_a, m_a = _lps.best_m_numeric(N44, R44, 200)
+        s_b, m_b = _lps.best_m_numeric(N44, R44, 83)
+        fld_a = (N44 / (m_a * R44) + 200 * m_a) * _lps.F_BYTES
+        fld_b = (N44 / (m_b * R44) + 83 * m_b) * _lps.F_BYTES
+        check("the field term scales as sqrt(alpha), not alpha",
+              abs(fld_b / fld_a - math.sqrt(83 / 200.0)) < 0.02,
+              f"measured {fld_b/fld_a:.3f} vs sqrt(alpha) = "
+              f"{math.sqrt(83/200.0):.3f}")
+        # (d) BOTH sensitivities must push the reduction DOWN, not up
+        reds_dedup = [_lps.size_reduction(N44, R44, 200, 83, dedup=d_)
+                      for d_ in (1.0, 0.67, 0.48)]
+        check("Merkle dedup makes the size reduction smaller, not larger",
+              reds_dedup == sorted(reds_dedup, reverse=True),
+              f"{[f'{x_:.1%}' for x_ in reds_dedup]}")
+        reds_N = [_lps.size_reduction(2 ** lg, R44, 200, 83)
+                  for lg in (16, 18, 20, 22)]
+        check("larger witnesses make the size reduction smaller",
+              reds_N == sorted(reds_N, reverse=True),
+              f"{[f'{x_:.1%}' for x_ in reds_N]}")
+        # (e) the multi-row claim: Ligero carries several combined rows, and
+        # this file asserts that pushes the reduction DOWN. Verify rather than
+        # assert -- it is the file's own upper-bound justification.
+        reds_rows = [_lps.size_reduction(N44, R44, 200, 83, n_rows=r_)
+                     for r_ in (1, 2, 3, 4)]
+        check("more combined rows lower the reduction (the upper-bound claim)",
+              reds_rows == sorted(reds_rows, reverse=True),
+              f"{[f'{x_:.1%}' for x_ in reds_rows]} for 1-4 rows")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

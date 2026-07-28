@@ -1,0 +1,64 @@
+
+============================================================================================
+1. THE FIELD TERM SCALES AS sqrt(t), WHICH IS THE WHOLE POINT
+============================================================================================
+  N = 2^20 witness, rate 1/4, 4B elements, 32B hashes
+
+       t        m*      n_enc   size KiB  field KiB  Merkle KiB
+  ------------------------------------------------------------
+     200     150.6      27842      318.7      226.5        92.3
+     150     173.0      24238      264.3      196.1        68.3
+     120     192.7      21769      229.4      175.4        54.0
+     100     210.8      19893      204.7      160.1        44.6
+      83     230.7      18179      182.5      145.8        36.7
+      60     270.6      15500      150.1      124.0        26.1
+
+  m* RISES as t falls -- the optimiser rebalances toward fewer, taller columns.
+  That is why the field part goes as sqrt(t): both field terms equal
+  F*sqrt(N t/R) at the optimum, so they move together with sqrt(t).
+
+============================================================================================
+2. CLOSED FORM vs NUMERIC ARGMIN (the log term is dropped, so check it)
+============================================================================================
+       t   m* closed   m* numeric   difference
+  --------------------------------------------
+     200       144.8        150.6        4.0%
+     100       204.8        210.8        2.9%
+      60       264.4        270.6        2.3%
+
+  2.3% to 4.0% apart. Every figure in this file uses the numeric argmin.
+
+============================================================================================
+3. CONVERTING ITERATION 43's QUERY CUT INTO BYTES
+============================================================================================
+
+  Iteration 43, rate 1/4: 58.5% fewer queries (alpha = 0.415).
+
+      field part scales by sqrt(alpha) = 0.644
+      Merkle part scales by      alpha = 0.415
+
+      318.7 KiB  ->  182.5 KiB   =   42.7% smaller
+
+  not the 58.5% the query count alone suggests.
+
+============================================================================================
+4. SENSITIVITY -- BOTH KNOBS MAKE IT WORSE
+============================================================================================
+  Merkle model    before KiB  after KiB   reduction
+  --------------------------------------------------
+  no dedup             318.7      182.5      42.7%
+  dedup -33%           288.3      170.4      40.9%
+  dedup -52%           270.7      163.4      39.6%
+
+  witness N        reduction
+  ----------------------------
+  2^16                50.1%
+  2^18                46.3%
+  2^20                42.7%
+  2^22                40.0%
+
+  Deduplication shrinks the only term that scales linearly in t, so it leaves
+  the sqrt-scaling field term more dominant and the reduction SMALLER. Larger
+  witnesses do the same, for the same reason. And Ligero's several combined rows
+  (not modelled) push further in that direction -- so 40-50% is an upper bound,
+  not a midpoint.

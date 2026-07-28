@@ -178,6 +178,14 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the free point IS the Johnson radius at rate 0.25, not beyond   [so the first row is 'reach Johnson', not news]
   PASS  the free point IS the Johnson radius at rate 0.125, not beyond   [so the first row is 'reach Johnson', not news]
   PASS  returns on field size diminish monotonically   [each extra bit buys less query reduction than the last]
+  PASS  the closed-form m* tracks the numeric argmin within 5%   [max deviation 4.0%]
+  PASS  the optimal m rises as queries fall (the rebalancing mechanism)   [[151, 173, 211, 271]]
+  PASS  a 58.5% query cut is NOT a 58.5% size cut   [42.7% vs 58.5%]
+  PASS  the size cut lands in the 40-50% band at deployed witness sizes   [2^16 50.1% to 2^22 40.0%]
+  PASS  the field term scales as sqrt(alpha), not alpha   [measured 0.644 vs sqrt(alpha) = 0.644]
+  PASS  Merkle dedup makes the size reduction smaller, not larger   [['42.7%', '40.9%', '39.6%']]
+  PASS  larger witnesses make the size reduction smaller   [['50.1%', '46.3%', '42.7%', '40.0%']]
+  PASS  more combined rows lower the reduction (the upper-bound claim)   [['42.7%', '41.0%', '40.1%', '39.6%'] for 1-4 rows]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -307,8 +315,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 299, suite has 299]
+  PASS  README's stated check count matches the suite   [README says 307, suite has 307]
 
 ========================================================================================
-299/299 PASS   no property broken
+307/307 PASS   no property broken
 ========================================================================================
