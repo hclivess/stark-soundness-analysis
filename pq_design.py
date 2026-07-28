@@ -124,7 +124,19 @@ def _auth_nodes(s, d):
 
 
 def proof_kib(nu, R, s, ext_words, bbits, n_base_trees=2):
-    """Merkle paths dominate, deduplicated across queries."""
+    """Merkle paths dominate, deduplicated across queries.
+
+    *** SCOPE CORRECTION, ITERATION 72 ***
+    n_base_trees = 2 charges TWO base field elements per query at the initial
+    commitment -- a trace two columns wide. Merkle paths dominate only there.
+    Real zkVM traces are 18 to 80,000 columns (from the soundcalc tomls), where
+    leaf data is 60-99.6% of the proof and this function omits the dominant
+    term. The 797 KiB headline below is therefore the Merkle-path cost of a
+    two-column trace, not a zkVM proof size: the same configuration priced in
+    the verified model (proof_size_exact.py, matched against 122 published
+    figures) is 1188 KiB at one column and 6591 KiB at Airbender's width.
+    See pq_design_cost.py.
+    """
     rounds = max(0, nu - R)
     path_hashes = (n_base_trees * _auth_nodes(s, nu)
                    + sum(_auth_nodes(s, max(nu - i, 1)) for i in range(rounds)))

@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 558 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 569 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -50,14 +50,22 @@ confirm them. It has caught two real errors in my own work.
 
 **1. Extension degree 4 is a universal default, and it caps every deployed
 system near 50 post-quantum bits.** RISC Zero, SP1, OpenVM, OpenVM2, Pico,
-Airbender all use it. Degree 9–10 over a 31-bit base reaches 128 PQ bits for
-~800 KiB *(at `c = 2`; see finding 2 — at `c = 3` it needs degree 14)*, resting
+Airbender all use it. Degree 9–10 over a 31-bit base reaches 128 PQ bits *(at
+`c = 2`; see finding 2 — at `c = 3` it needs degree 14)*, resting
 on collision resistance plus the random oracle — no conjecture, no lattice. It
 is a configuration choice nobody has revisited. **It also needs a 386-bit Merkle
 digest**: quantum collision finding costs `2^{λ/3}`, so the ubiquitous 256-bit
 default caps the design at 85 PQ bits however large the extension degree is.
 (13 field elements over a 31-bit base = 403 bits clears it.)
-→ `pq_design.py`, `quantum.py`
+
+*(Iteration 72: this said "for ~800 KiB". That figure charges two base field
+elements per query — **a two-column trace**. Real zkVM traces are 18–80,000
+columns, where leaf data is 60–99.6% of the proof. Priced in the model verified
+against all 122 published figures, the same configuration is **1,188 KiB at one
+column and 6,591 KiB at Airbender's width**; a realistic 128-PQ single circuit
+is **4–19 MiB** depending on blowup. "No conjecture, no lattice" stands;
+"nearly free" does not.)*
+→ `pq_design.py`, `quantum.py`, `pq_design_cost.py`
 
 **2. Under a quantum adversary, everything halves — not just grinding, and
 `classical/2` is the *ceiling*, not the conservative floor.** Fiat–Shamir hands
@@ -183,7 +191,7 @@ circuit, not an aggregate, and that Venus differs from ZisK in one circuit.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **558 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **569 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |

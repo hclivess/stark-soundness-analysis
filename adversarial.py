@@ -3786,6 +3786,68 @@ def part_a():
     check("the query yield saturates at exactly R/2 as m grows",
           max(_sat) < 1e-6, f"worst deviation {max(_sat):.2e} at m = 1e7")
 
+    # --- ITERATION 72: what 128 PQ bits actually costs, and the correction to
+    # finding 1's "~800 KiB".
+    from pq_design_cost import (queries_needed, field_needed, extension_degree,
+                                digest_needed, design_size_kib, leaf_share,
+                                pq_design_reproduced, TARGET_CLASSICAL,
+                                PQ_DESIGN_BEST, REAL_BATCHES)
+    import pq_design as _pqd
+
+    # (a) THE CONSTRAINTS. Proposition 11 must reproduce finding 1's degree
+    # independently -- if it gave degree 4 or 20 the two would be inconsistent.
+    _degs = [extension_degree(field_needed(nu_)) for nu_ in (20, 23, 26)]
+    check("Proposition 11 reproduces finding 1's degree 9-10 for the field",
+          all(9 <= d_ <= 10 for d_ in _degs),
+          f"degrees {_degs} at nu 20/23/26, derived from the query cap not "
+          f"from finding 1's own optimisation")
+    check("and the query constraint is a 1/R family summing to the target",
+          all(abs(queries_needed(R_) * R_ / 2 + 28 - TARGET_CLASSICAL) <= R_ / 2
+              for R_ in (1, 2, 3, 4, 5)),
+          f"s = {[queries_needed(R_) for R_ in (1,2,3,4,5)]} at blowups 2..32")
+    check("the BHT digest requirement is 384 bits, above the 256 default",
+          digest_needed() == 384 > 256,
+          "quantum collision finding costs 2^(lambda/3)")
+
+    # (b) THE SIZE CURVE. Proof size must FALL with blowup but sublinearly --
+    # if it fell as fast as the query count, the domain growth would be missing.
+    _sizes = [design_size_kib(R_, 1000) for R_ in (1, 2, 3, 4, 5)]
+    check("proof size falls monotonically with blowup",
+          all(a > b for a, b in zip(_sizes, _sizes[1:])),
+          f"{_sizes[0]} -> {_sizes[-1]} KiB over blowup 2 -> 32")
+    check("but sublinearly: size falls slower than the query count",
+          (_sizes[0] / _sizes[-1]) < (queries_needed(1) / queries_needed(5)),
+          f"size {_sizes[0]/_sizes[-1]:.2f}x vs queries "
+          f"{queries_needed(1)/queries_needed(5):.2f}x -- the domain grows as 2^R")
+
+    # (c) THE CORRECTION. pq_design's model must diverge from the verified one,
+    # and the divergence must GROW with trace width -- that is the omitted term.
+    _shares = [leaf_share(4, b_) for b_, _w in REAL_BATCHES]
+    check("leaf data is a minority at 2 columns and a majority at real widths",
+          _shares[0] < 0.05 and max(_shares) > 0.95,
+          f"{_shares[0]:.1%} at batch 2, {max(_shares):.1%} at batch 80000")
+    check("the leaf share rises monotonically with trace width",
+          all(a < b for a, b in zip(_shares, _shares[1:])),
+          "so a model omitting it errs more the wider the trace")
+    check("pq_design's own winning config exceeds its 797 KiB even at 1 column",
+          pq_design_reproduced(1) > PQ_DESIGN_BEST["claimed_kib"],
+          f"{pq_design_reproduced(1)} KiB vs its {PQ_DESIGN_BEST['claimed_kib']}")
+    check("and is several times larger at a real trace width",
+          pq_design_reproduced(1225) > 5 * PQ_DESIGN_BEST["claimed_kib"],
+          f"{pq_design_reproduced(1225)} KiB at Airbender's 1225 columns")
+    # the source of the omission must be the n_base_trees default
+    import inspect as _insp
+    _sig = _insp.signature(_pqd.proof_kib)
+    check("pq_design.proof_kib defaults to a two-column trace",
+          _sig.parameters["n_base_trees"].default == 2,
+          "n_base_trees=2 charges two base elements per query at layer 0")
+    # a realistic 128-PQ circuit must be megabytes, not sub-megabyte
+    check("a realistic 128-PQ single circuit is megabytes, not ~800 KiB",
+          min(design_size_kib(R_, 1225) for R_ in (1, 2, 3, 4, 5)) > 4000,
+          f"{min(design_size_kib(R_, 1225) for R_ in (1,2,3,4,5))}-"
+          f"{max(design_size_kib(R_, 1225) for R_ in (1,2,3,4,5))} KiB at "
+          f"Airbender's width")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")
