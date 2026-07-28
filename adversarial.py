@@ -606,8 +606,17 @@ def part_a():
     check("the real post-patch gain is 47 -> 63, not 47 -> 111",
           abs(min(NADO_TERMS.values()) - 63) < 1.5)
     # DEEP is not on the main path at all -- stark.prove has no OOD step
-    check("DEEP is off the main STARK path (deep_eval is a separate subsystem)",
-          True, "io_bind / bound_epoch_o1 / state_io_tie / settlement_aggregate")
+    # ITERATION 66: was bare `True`. /root/nado is on this machine, so the claim
+    # is now checkable: deep_eval lives in its own module and stark.py never
+    # references it. Skipped (not passed) if the tree is absent.
+    try:
+        _sp = "/root/nado/execnode/stark/stark.py"
+        _stark_src = open(_sp).read()
+        check("DEEP is off the main STARK path (deep_eval is a separate subsystem)",
+              "deep_eval" not in _stark_src,
+              f"{_stark_src.count('deep_eval')} references to deep_eval in stark.py")
+    except OSError:
+        pass
     # and moving the alphas would let the FRI commit term bind instead
     check("migrating the alphas would lift NADO to the 112-bit FRI commit term",
           min(112.0, 150.8, 128.0) == 112.0, "112 classical / 56 PQ")
@@ -636,11 +645,25 @@ def part_a():
     # quantitative constant is still unfetched; only its DIRECTION is now settled.
     E_deg4, nu_deg4 = 124, 22
     classical_deg4 = E_deg4 - nu_deg4
-    check("the QROM constant is still unfetched (no open-access mirror exists)",
-          True, "eprint behind Cloudflare; OpenAlex reports oa_status=closed")
+    # ITERATION 66: was a bare `True` check. Whether an eprint PDF is reachable
+    # cannot be verified offline, so this is a NOTE, not a check. A check that
+    # cannot fail inflates the count and implies verification that never
+    # happened. See check_integrity.py.
+    print("      note: the QROM constant is still unfetched -- eprint behind "
+          "Cloudflare,\n            OpenAlex reports oa_status=closed. Not "
+          "machine-verifiable here.")
     # soundcalc genuinely does not model PQ -- verified by inspection
-    check("no consulted calculator publishes a post-quantum column",
-          True, "soundcalc classical-only; risc0 soundness.rs has no quantum term")
+    # ITERATION 66: was bare `True`. soundcalc is cloned locally, so grep it.
+    import glob as _glob, re as _re
+    _sc = _glob.glob("/tmp/claude-0/*/*/scratchpad/sc/soundcalc/**/*.py",
+                     recursive=True)
+    if _sc:
+        _q = sum(len(_re.findall(r"quantum|grover|qrom", open(f).read(), _re.I))
+                 for f in _sc)
+        check("no consulted calculator publishes a post-quantum column",
+              _q == 0,
+              f"{_q} quantum/grover/qrom references across {len(_sc)} soundcalc "
+              f"source files")
 
     # --- ITERATION 24: the bracket k/c <= PQ <= k/2 (qrom_bracket.py).
     #
@@ -839,10 +862,16 @@ def part_a():
     check("so `c = 2 everywhere` is false -- c is term-dependent",
           3.0 > 2.0, "challenge search c=2; hash chain c=3")
     # the consequence for the repo's own design target
+    # ITERATION 66: was literal arithmetic (256/3). Bound to quantum.pq_bits so
+    # it fails if that function changes.
+    from quantum import pq_bits as _pq
     check("a 256-bit digest caps a design at 85 PQ bits under the BHT reading",
-          abs(256 / 3 - 85.33) < 0.5, f"{256/3:.1f}")
+          abs(_pq(10 ** 9, 256, qram=True) - 85.33) < 0.5,
+          f"pq_bits(hash=256, qram) = {_pq(10**9, 256, qram=True):.1f}")
     check("128 PQ bits needs a 384-bit digest, not the 256-bit default",
-          3 * 128 == 384 and 256 / 3 < 128, "13 field elements over a 31-bit base")
+          _pq(10 ** 9, 384, qram=True) >= 128 > _pq(10 ** 9, 256, qram=True),
+          f"384 -> {_pq(10**9, 384, qram=True):.0f} PQ, "
+          f"256 -> {_pq(10**9, 256, qram=True):.1f} PQ")
     # pq_design.py's floor must be the thing this corrects -- if that line ever
     # changes to lambda/3, this check should be revisited rather than silently pass
     try:
@@ -3421,6 +3450,29 @@ def part_a():
     check("the definition guard FAILS when a duplicate is perturbed",
           _dg_self_test(),
           "perturbing whir_jbr.eta_default by 1% is detected")
+    # --- ITERATION 66: the suite audits itself. Iteration 65's false claim
+    # survived inside a passing check because it lived in the NAME. This makes
+    # the mechanically-detectable half of that class impossible to add silently.
+    from check_integrity import (literal_only_checks, always_true_checks,
+                                 total_check_sites, LITERAL_ONLY_BUDGET,
+                                 self_test as _ci_self_test)
+
+    _lit = literal_only_checks()
+    check("no check condition is the bare literal True",
+          not always_true_checks(),
+          f"{len(always_true_checks())} bare-True conditions "
+          f"(three were resolved in iteration 66)")
+    check("literal-only checks stay within the audited budget",
+          len(_lit) <= LITERAL_ONLY_BUDGET,
+          f"{len(_lit)} conditions reference no identifier, budget "
+          f"{LITERAL_ONLY_BUDGET} of {total_check_sites()} sites")
+    check("the check auditor FLAGS a planted literal-only condition",
+          _ci_self_test(), "planted `2 + 2 == 4` is detected, `some_fn(1) > 0` is not")
+    # the audit must be looking at a real suite, not an empty parse
+    check("the auditor parses the whole suite, not a fragment",
+          total_check_sites() > 400,
+          f"{total_check_sites()} check() call sites parsed from adversarial.py")
+
     check("the guard covers field sizes on both sides of the 2^150 switch",
           any(a[1] > 150 for a, _ in __import__("definition_guard").eta_calls())
           and any(a[1] <= 150 for a, _ in __import__("definition_guard").eta_calls()),
