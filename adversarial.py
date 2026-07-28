@@ -3052,25 +3052,19 @@ def part_a():
           124 * 21 > true_worst,
           f"s*depth {124*21} vs level-capped {true_worst}")
 
-    # (g) A system-level expected/worst ratio CANNOT exceed the auth-node saving,
-    # because both proofs carry identical leaf data -- dilution only reduces it.
-    # CORRECTED IN ITERATION 61. This originally read SP1's violation as evidence
-    # the summary figure "aggregates 3 circuits". It does not: the summary
-    # reports the LAST circuit (proof_size_exact.py verifies this exactly for
-    # Pico, OpenVM and ZisK). SP1's violation is that systems.py records its CORE
-    # parameters while the summary quotes its SHRINK circuit.
+    # (g) WITHDRAWN IN ITERATION 62. Two checks here asserted that a system-level
+    # expected/worst ratio cannot exceed the SINGLE-TREE auth-node saving, on the
+    # grounds that both proofs carry identical leaf data. That bound is false: a
+    # FRI proof carries one Merkle tree per round, each shallower than the last,
+    # and shallow trees dedup far better (98.9% at depth 3). The valid bound is
+    # the aggregate over all rounds, asserted in iteration 62's block below.
+    # Iterations 60 and 61 each invented an explanation for SP1's "violation" of
+    # a bound that never held. The replacement below states only what is true.
     ded = dict(dep)
-    viol = [n for n, e, w in SUMMARY_KIB
-            if n in ded and (1 - e / w) > ded[n] + 1e-9]
-    check("all but one system obey ratio <= single-circuit dedup saving",
-          len(viol) == 1 and viol == ["SP1"],
-          f"violations: {viol or 'none'} -- SP1's summary quotes its SHRINK "
-          f"circuit while systems.py records its CORE, so the two are not "
-          f"comparable")
-    check("the four non-aggregate systems fall far BELOW their dedup saving",
-          all(ded[n] - (1 - e / w) > 0.10 for n, e, w in SUMMARY_KIB
-              if n in ded and n != "SP1"),
-          "fixed proof components dilute the query-dependent part")
+    check("a system ratio can exceed the single-tree saving (SP1 does)",
+          (1 - 529 / 887) > ded["SP1"],
+          f"SP1 ratio {1-529/887:.1%} vs single-tree {ded['SP1']:.1%} -- so the "
+          f"single-tree figure is not an upper bound")
 
     # --- ITERATION 61: the proof-size model reconstructed from the tomls. Every
     # published figure is a falsification opportunity -- one KiB out and the
@@ -3164,6 +3158,74 @@ def part_a():
                              2 ** 23, ff2, 0.5, True)
         check(f"perturbing the {label} changes the reconstructed size",
               alt != base, f"{base} -> {alt} bits")
+
+    # --- ITERATION 62: the other three protocol families, and the false bound.
+    from protocol_families import (reconstruct_jagged, aggregate_saving,
+                                   initial_tree_saving, round_savings,
+                                   jagged_proof_bits, sumcheck_size_bits,
+                                   LAST_CIRCUITS, FAMILY_EXPECTED_MODEL)
+
+    jag = reconstruct_jagged()
+    check("all six JAGGED circuits reconstruct exactly from their tomls",
+          all(e == pe and w == pw for _s, _n, e, w, pe, pw in jag),
+          f"{sum((e!=pe)+(w!=pw) for _s,_n,e,w,pe,pw in jag)} deviations "
+          f"across {2*len(jag)} figures")
+    check("the JAGGED reconstruction spans two systems and three circuits each",
+          len({s for s, *_ in jag}) == 2 and len(jag) == 6,
+          f"{len(jag)} circuits over {len({s for s, *_ in jag})} systems")
+    # SP1's core, reached by a second independent route
+    sp1_core = [r for r in jag if r[0] == "SP1" and r[1] == "core"][0]
+    check("SP1's core matches soundcalc-lean's sp1CoreJagged from iteration 48",
+          (sp1_core[2], sp1_core[3]) == (918, 1479),
+          f"toml route gives {sp1_core[2]}/{sp1_core[3]}, Lean gave 918/1479")
+    # the reduction term must actually contribute -- if it were zero the match
+    # would be telling us JAGGED is just FRI
+    eb_kb = elem_bits("KoalaBear^4")
+    check("the Jagged sumcheck reduction is a real, non-trivial term",
+          sumcheck_size_bits(2, 29, eb_kb) + sumcheck_size_bits(2, 60, eb_kb) > 40000,
+          f"{sumcheck_size_bits(2,29,eb_kb)+sumcheck_size_bits(2,60,eb_kb)} bits "
+          f"for SP1 core")
+    base_j = jagged_proof_bits(248, eb_kb, 2 ** 21, 193, 124, 0.25, [2] * 21, True)
+    alt_j = fri_proof_bits(248, eb_kb, 193, 124, 2 ** 23, [2] * 21, 0.25, True)
+    check("JAGGED is strictly larger than its dense FRI PCS alone",
+          base_j > alt_j, f"{base_j} vs bare FRI {alt_j} bits")
+
+    # (a) SWIRL's stub. If WHIR or JAGGED also stubbed it, the diagnosis would
+    # be about the PCS class rather than about SWIRL specifically.
+    check("SWIRL is the only family without an expected-size model",
+          [f for f, has in FAMILY_EXPECTED_MODEL.items() if not has] == ["SWIRL"],
+          f"stubbed: {[f for f, h in FAMILY_EXPECTED_MODEL.items() if not h]}")
+    check("the two 0.0%-ratio systems are exactly those with a SWIRL last circuit",
+          all(e == w for n, e, w in SUMMARY_KIB if n in ("OpenVM2", "zkDTVM"))
+          and all(e != w for n, e, w in SUMMARY_KIB
+                  if n not in ("OpenVM2", "zkDTVM")),
+          "OpenVM2 and zkDTVM report expected == worst; no other system does")
+
+    # (b) THE FALSE BOUND. Shallow trees must dedup better -- that is the whole
+    # mechanism. If saving were flat in depth, the aggregate would equal the
+    # single-tree figure and iterations 60/61 would have been right.
+    rs = round_savings(94, 2 ** 21, [2] * 18)
+    savs = [1 - e / n for _d, e, n in rs]
+    check("dedup saving rises monotonically as FRI trees get shallower",
+          all(a <= b + 1e-12 for a, b in zip(savs, savs[1:])),
+          f"first {savs[0]:.1%} -> last {savs[-1]:.1%} over {len(savs)} rounds")
+    check("the aggregate saving strictly exceeds the initial tree's",
+          aggregate_saving(94, 2 ** 21, [2] * 18) > initial_tree_saving(94, 2 ** 21),
+          f"aggregate {aggregate_saving(94, 2**21, [2]*18):.1%} vs single "
+          f"{initial_tree_saving(94, 2**21):.1%}")
+    # the valid bound must hold everywhere...
+    bad_agg = [nm for nm, q, D, ff, pe, pw in LAST_CIRCUITS
+               if (1 - pe / pw) > aggregate_saving(q, D, ff) + 1e-9]
+    check("every published ratio respects the AGGREGATE bound",
+          not bad_agg, f"violations: {bad_agg or 'none'} across "
+                       f"{len(LAST_CIRCUITS)} systems")
+    # ...and the invalid one must fail somewhere, or withdrawing it was pointless
+    bad_one = [nm for nm, q, D, ff, pe, pw in LAST_CIRCUITS
+               if (1 - pe / pw) > initial_tree_saving(q, D) + 1e-9]
+    check("the single-tree bound is violated by at least one real system",
+          bad_one == ["SP1 shrink"],
+          f"violates single-tree: {bad_one} -- which is why it alone looked "
+          f"anomalous to iterations 60 and 61")
 
 
 # ==================================================================== PART B

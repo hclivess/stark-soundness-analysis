@@ -30,9 +30,16 @@ same, and iteration 48's comparison was well-posed.
 The 0-40% spread across systems is therefore not about Merkle sharing at all --
 it is the fixed, query-independent part of each proof (field elements, OOD
 samples, per-circuit overhead) diluting the varying part by different amounts.
-OpenVM2 and zkDTVM show 0.0% because WHIR/SWIRL proofs are dominated by
-components that do not scale with the query set. A system-level exp/worst ratio
-is not a measurement of Merkle dedup, and should not be read as one.
+A system-level exp/worst ratio is not a measurement of Merkle dedup, and should
+not be read as one.
+
+    ITERATION 62 CORRECTS THE 0.0% EXPLANATION. This file originally said
+    OpenVM2 and zkDTVM read 0.0% "because WHIR/SWIRL proofs are dominated by
+    components that do not scale with the query set". That is not the reason.
+    SWIRL's get_expected_proof_size_bits (swirl/circuit.py:132) RETURNS THE
+    WORST CASE VERBATIM -- there is no expected-size model for it. WHIR and
+    JAGGED both have real ones. Both 0.0% systems have a SWIRL last circuit.
+    See protocol_families.py.
 
 THE EXACT FORMULA, AND WHAT IT SAYS ABOUT THIS REPO'S APPROXIMATION
 --------------------------------------------------------------------
