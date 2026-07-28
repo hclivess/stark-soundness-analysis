@@ -194,6 +194,15 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  at m -> m_min the Theorem 6 margin REVERSES, it does not merely shrink   [blowup 4-32: [-1.91, -2.26, -1.83, -1.0]]
   PASS  III.3's m>=3 margin reproduces at +5.6 to +10.2 bits   [[5.63, 7.13, 8.63, 10.13]]
   PASS  the two m-regimes disagree on WHICH bound wins the ceiling   [m_min favours Johnson, m>=3 favours threshold halving]
+  PASS  m*(s) is monotone decreasing in the query budget   [[2.582, 1.666, 0.967, 0.679, 0.563, 0.515, 0.503]]
+  PASS  m*(s) converges to m_min as s grows   [m* -> 0.503 vs m_min = 0.500]
+  PASS  the supremum needs a query budget two orders beyond deployment   [at the largest deployed s (229) m* is still well above m_min]
+  PASS  the m >= 3 floor binds for exactly one deployed system   [[('SP1 6.1.0', 3.46)]]
+  PASS  and it costs that system about 3.5 bits   [SP1 6.1.0: 3.46 bits]
+  PASS  the floor is free for the other six   [their unconstrained optimum already exceeds 3]
+  PASS  no deployed system operates near the m_min supremum   [m* spans 1.7 to 846.0]
+  PASS  most deployed systems optimise ORDERS above the m=3 floor   [5 of 7 have m* > 30]
+  PASS  the fleet's m* spans more than two orders of magnitude   [1.7 to 846.0]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -265,8 +274,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 257, suite has 257]
+  PASS  README's stated check count matches the suite   [README says 266, suite has 266]
 
 ========================================================================================
-257/257 PASS   no property broken
+266/266 PASS   no property broken
 ========================================================================================

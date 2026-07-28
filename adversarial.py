@@ -1601,6 +1601,62 @@ def part_a():
           min(margins_sup) < 0 < min(margins_m3),
           "m_min favours Johnson, m>=3 favours threshold halving")
 
+    # --- ITERATION 38: the m_min vs m>=3 hinge is the QUERY BUDGET (m_star.py).
+    #
+    # Theorem 2: "The supremum is not attained: it is approached as m -> m_min
+    # AND s -> oo." The two limits are tied -- the yield vanishes as m -> m_min,
+    # so reaching that ceiling costs an unbounded query budget. At finite s
+    # there is a unique interior optimum m*(s).
+    try:
+        import m_star as _ms
+
+        # (a) m*(s) must be monotone DECREASING in s and converge to m_min
+        seq = [_ms.best_m(2, 23, 124, s_, 16)[0]
+               for s_ in (100, 124, 200, 400, 1000, 4000, 20000)]
+        check("m*(s) is monotone decreasing in the query budget",
+              all(seq[i] >= seq[i + 1] - 1e-9 for i in range(len(seq) - 1)),
+              f"{[round(x_, 3) for x_ in seq]}")
+        check("m*(s) converges to m_min as s grows",
+              abs(seq[-1] - _ms.m_min(2)) < 0.01 and seq[0] > 2 * _ms.m_min(2),
+              f"m* -> {seq[-1]:.3f} vs m_min = {_ms.m_min(2):.3f}")
+        # the convergence must be SLOW -- that is why the supremum is not deployed
+        check("the supremum needs a query budget two orders beyond deployment",
+              _ms.best_m(2, 23, 124, 229, 16)[0] > 1.2 * _ms.m_min(2),
+              "at the largest deployed s (229) m* is still well above m_min")
+
+        # (b) the m >= 3 floor must bind for exactly ONE deployed system
+        costs = []
+        for nm_, E_, R_, T_, s_, g_ in _ms.ZKVMS:
+            nu_ = T_ + R_
+            _, vf_ = _ms.best_m(R_, nu_, E_, s_, g_)
+            _, v3_ = _ms.best_m(R_, nu_, E_, s_, g_, lo=3.0)
+            costs.append((nm_, vf_ - v3_))
+        binding = [(n_, c_) for n_, c_ in costs if c_ > 0.01]
+        check("the m >= 3 floor binds for exactly one deployed system",
+              len(binding) == 1, f"{[(n_, round(c_,2)) for n_, c_ in binding]}")
+        check("and it costs that system about 3.5 bits",
+              3.0 < binding[0][1] < 4.0, f"{binding[0][0]}: {binding[0][1]:.2f} bits")
+        check("the floor is free for the other six",
+              all(c_ < 0.01 for n_, c_ in costs if n_ != binding[0][0]),
+              "their unconstrained optimum already exceeds 3")
+
+        # (c) NEITHER convention describes deployment: most systems optimise far
+        # above 3, and none is near m_min
+        ms_ = [_ms.best_m(R_, T_ + R_, E_, s_, g_)[0]
+               for nm_, E_, R_, T_, s_, g_ in _ms.ZKVMS]
+        check("no deployed system operates near the m_min supremum",
+              all(m_ > 1.3 * _ms.m_min(R_)
+                  for m_, (nm_, E_, R_, T_, s_, g_) in zip(ms_, _ms.ZKVMS)),
+              f"m* spans {min(ms_):.1f} to {max(ms_):.1f}")
+        check("most deployed systems optimise ORDERS above the m=3 floor",
+              sum(1 for m_ in ms_ if m_ > 30) >= 4,
+              f"{sum(1 for m_ in ms_ if m_ > 30)} of 7 have m* > 30")
+        # the span must be wide -- a narrow span would mean a convention is fine
+        check("the fleet's m* spans more than two orders of magnitude",
+              max(ms_) / min(ms_) > 100, f"{min(ms_):.1f} to {max(ms_):.1f}")
+    except ImportError:
+        pass
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

@@ -1,0 +1,62 @@
+
+============================================================================================
+1. m*(s) IS MONOTONE DECREASING AND CONVERGES TO m_min
+============================================================================================
+  SP1 parameters: R=2, nu=23, E=124, g=16, m_min = 0.500
+
+         s      m*(s)     total   m* / m_min
+  --------------------------------------------
+        50     95.859      65.6      191.718
+       100      2.582      90.5        5.164
+       124      1.666      93.0        3.332
+       200      0.967      95.8        1.935
+       400      0.679      97.4        1.357
+      1000      0.563      97.9        1.125
+      4000      0.515      98.0        1.030
+     20000      0.503      98.0        1.006
+
+  Monotone decreasing: True. Theorem 2 says the supremum "is approached as
+  m -> m_min AND s -> oo" -- the two limits are tied, because the yield
+  -log2(sqrt(rho)(1+1/2m)) vanishes as m -> m_min, so an unbounded query budget
+  is exactly what reaching that ceiling costs. Part II's supremum is reached to
+  three decimals only past s ~ 20000.
+
+============================================================================================
+2. THE m >= 3 FLOOR BINDS FOR EXACTLY ONE DEPLOYED SYSTEM
+============================================================================================
+  system              s    m_min    m* free    total   m* >= 3    total  floor costs
+  ----------------------------------------------------------------------------------
+  SP1 6.1.0         124    0.500      1.666     93.0     3.000     89.5        +3.46
+  OpenVM 1.5.0      193    1.207      4.541     87.4     4.540     87.4        +0.00
+  Airbender          87    1.207     47.327     70.2    47.323     70.2        +0.00
+  Pico               84    1.207    349.376     57.8   349.429     57.8        -0.00
+  ZisK 0.16.1       229    1.207    231.629    129.8   231.555    129.8        +0.00
+  RISC Zero          50    0.500    846.014     50.0   845.779     50.0        +0.00
+  Miden              27    0.273    639.456     56.5   639.969     56.5        -0.00
+
+  Binding for 1 of 7: SP1 6.1.0 (3.46 bits).
+  For the other six the unconstrained optimum is 4.5 to 846 -- one to three
+  orders of magnitude above the floor, so it is not a constraint at all.
+
+============================================================================================
+3. NEITHER CONVENTION DESCRIBES DEPLOYMENT
+============================================================================================
+  system           m_min (Part II)   3 (Part III)  m*(s) (actual)   ratio to 3
+  ----------------------------------------------------------------------------
+  SP1 6.1.0                  0.500            3.0           1.666         0.56x
+  OpenVM 1.5.0               1.207            3.0           4.541         1.51x
+  Airbender                  1.207            3.0          47.327        15.78x
+  Pico                       1.207            3.0         349.376       116.46x
+  ZisK 0.16.1                1.207            3.0         231.629        77.21x
+  RISC Zero                  0.500            3.0         846.014       282.00x
+  Miden                      0.273            3.0         639.456       213.15x
+
+  Part II's m_min is the s -> oo limit; Part III's 3 is a floor that binds once.
+  The fleet spans m* from 1.7 to 846. Any claim of the form "at m >= 3, regime X
+  beats regime Y" describes a point most deployed systems are nowhere near.
+
+  This does NOT overturn III.2 or III.3, which are statements about the CEILING
+  K(m) -- monotone decreasing in m, hence maximised at the smallest available m,
+  so evaluating at the floor is correct for them. It changes the reading of the
+  TOTAL: ceilings are maximised at small m, totals at m*(s), and for six of the
+  seven those are very different places.

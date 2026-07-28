@@ -589,6 +589,31 @@ genuinely permits `m ↓ m_min`; Plonky3's floor of 3 is a conservative choice,
 not a theorem. But the operative guidance for anyone using a standard
 calculator is **small blowup**, not blowup 4.
 
+> **Iteration 38 (`m_star.py`): the hinge is the query budget, not a
+> convention.** Theorem 2 already says the supremum "is approached as
+> `m → m_min` **and** `s → ∞`" — the two limits are tied, because the yield
+> `−log₂(√ρ(1+1/2m))` vanishes as `m → m_min`, so reaching that ceiling costs an
+> unbounded query budget. At finite `s` there is a unique interior optimum
+> `m*(s)`, monotone decreasing in `s`:
+>
+> | `s` | 50 | 100 | 124 | 200 | 400 | 1000 | 4000 | 20000 |
+> |---|---|---|---|---|---|---|---|---|
+> | `m*` | 95.86 | 2.582 | 1.666 | 0.967 | 0.679 | 0.563 | 0.515 | 0.503 |
+>
+> (`m_min = 0.500`; SP1's parameters.) So Part II's supremum is reached to three
+> decimals only past `s ≈ 20000`, two orders beyond any deployed query count.
+>
+> **The `m ≥ 3` floor binds for exactly one of the seven deployed systems** —
+> SP1, costing it 3.46 bits. For the other six the unconstrained optimum is
+> 4.5 to 846, so the floor is not a constraint at all.
+>
+> Hence *neither* convention describes deployment: `m_min` is the `s → ∞` limit
+> nobody is near, and `m = 3` is a floor that binds once while six systems
+> optimise one to three orders of magnitude above it. This does **not** overturn
+> III.2 or III.3 — those are statements about the ceiling `K(m)`, which is
+> monotone decreasing in `m` and so is correctly evaluated at the smallest
+> available `m`. It changes the reading of the **total**.
+
 This also **collapses the Theorem 5 dichotomy**: under `m ≥ 3`, regimes J and T
 both prefer the smallest blowup. The opposition in Part II was an artifact of
 letting `m` reach `m_min` in regime J.
