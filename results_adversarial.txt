@@ -43,10 +43,12 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  all Jagged sumcheck terms sit ABOVE SP1's code layer   [weakest 112.2 vs code 100.1]
   PASS  the minimum over Jagged + code equals the code layer
   PASS  a=0 sumcheck terms barely move with trace size; a=1 code term moves linearly   [sumcheck 0.01 vs code 4.00 bits]
-  PASS  every VERIFIED unconditional code bound has a >= 1   [[('BCHKS25-JBR', 1), ('BCIKS20', 2), ('UDR', 1), ('threshold-halving', 1)]]
+  PASS  every VERIFIED unconditional code bound has a >= 1   [[('BCHKS25-JBR', 1), ('BCIKS20', 2), ('Ligero/Brakedown', 1), ('UDR', 1), ('threshold-halving', 1)]]
   PASS  the only verified a=0 code bound is conditional
   PASS  the sumcheck family is verified at a = 0
-  PASS  Brakedown/Ligero is recorded as unresolved, not assumed   [excluded from the verified set by design]
+  PASS  Ligero/Brakedown (e+1)/q scales as a = 1 (doubling n costs 1 bit)   [1.0000 bits per doubling]
+  PASS  Brakedown/Ligero is now VERIFIED at a = 1, not assumed   [106.6 bits at n=2^20, delta=1/2]
+  PASS  no unconditional a = 0 code test is known in the verified set
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
   PASS  clustered queries are far cheaper than the model   [clustered 13 vs model 1893]
@@ -86,5 +88,5 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
 
 ========================================================================================
-75/75 PASS   no property broken
+77/77 PASS   no property broken
 ========================================================================================

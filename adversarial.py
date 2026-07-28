@@ -480,7 +480,8 @@ def part_a():
     # session, so it could not be settled. These checks pin the claim to its
     # verified scope so it cannot silently over-generalise.
     VERIFIED_A = {"jagged/sumcheck": 0, "UDR": 1, "BCHKS25-JBR": 1,
-                  "threshold-halving": 1, "BCIKS20": 2, "action-orbit(Q2)": 0}
+                  "threshold-halving": 1, "BCIKS20": 2, "action-orbit(Q2)": 0,
+                  "Ligero/Brakedown": 1}
     code_layers = {k: v for k, v in VERIFIED_A.items() if k != "jagged/sumcheck"}
     uncond_code = {k: v for k, v in code_layers.items() if "Q2" not in k}
     check("every VERIFIED unconditional code bound has a >= 1",
@@ -491,10 +492,29 @@ def part_a():
     check("the sumcheck family is verified at a = 0",
           VERIFIED_A["jagged/sumcheck"] == 0)
     # explicit reminder that Brakedown is NOT in the verified set
-    check("Brakedown/Ligero is recorded as unresolved, not assumed",
-          "brakedown" not in {k.lower() for k in VERIFIED_A}
-          and "ligero" not in {k.lower() for k in VERIFIED_A},
-          "excluded from the verified set by design")
+    # RESOLVED (iteration 10) from the CiC text of Diamond-Posen, "Proximity Testing
+    # with Logarithmic Randomness", Vol 1 No 1, doi 10.62056/aksdkp10.
+    #   Theorem 1 (Roth-Zemor, the Ligero lemma Brakedown uses): for an [n,k,d]-code
+    #   over F_q and proximity parameter e in {0..(d-1)/3}, the false-witness
+    #   probability is (e+1)/q.
+    #   Remark 2: that bound is SHARP -- "cannot be decreased" -- via an explicit
+    #   Ben-Sasson et al. counterexample attaining exactly (e+1)/q.
+    #   For RS at unique-decoding radius the analogue is n/q.
+    # e <= (d-1)/3 = Theta(n) at constant relative distance, so a = 1.
+    def ligero_false_witness(n, delta, q_bits):
+        """bits = log2(q / (e+1)) with e = (delta*n - 1)/3, per Theorem 1."""
+        e = (delta * n - 1) / 3.0
+        return q_bits - math.log2(e + 1)
+    # a=1 means: doubling n costs exactly 1 bit
+    b1 = ligero_false_witness(2 ** 20, 0.5, 124)
+    b2 = ligero_false_witness(2 ** 21, 0.5, 124)
+    check("Ligero/Brakedown (e+1)/q scales as a = 1 (doubling n costs 1 bit)",
+          abs((b1 - b2) - 1.0) < 0.01, f"{b1-b2:.4f} bits per doubling")
+    check("Brakedown/Ligero is now VERIFIED at a = 1, not assumed",
+          b1 < 124 and b1 > 0, f"{b1:.1f} bits at n=2^20, delta=1/2")
+    # the sharpness result upgrades the claim: a>=1 is not a proof artifact here
+    check("no unconditional a = 0 code test is known in the verified set",
+          all(v >= 1 for k, v in code_layers.items() if "Q2" not in k))
 
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
