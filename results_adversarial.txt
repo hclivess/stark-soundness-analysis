@@ -9,6 +9,11 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  Thm 4: kappa -> 1 as R -> 0+
   PASS  Thm 4: series branch agrees with the direct form at the join   [max discrepancy 0.00e+00]
   PASS  Thm 7(a): yields cross exactly at m_eq(R) = u/(u-1)^2   [max |y_J(m_eq) - y_U| = 5.55e-16]
+  PASS  Thm 7(a): rationalised form matches u/(u-1)^2   [max dev 3.55e-15]
+  PASS  Thm 7(a): m_eq(1) = 4 + 3*sqrt(2) exactly
+  PASS  Thm 7(a): m_eq is rational at even R (2, 4/9, 8/49, 16/225)
+  PASS  Thm 7(a): m_eq is NOT rational at odd R
+  PASS  UDR commit term agrees with soundcalc-lean Regime.lean errLinear   [max dev 0.00e+00]
   PASS  Thm 7(b): s* = (K_J(m_eq) - g)/y_UDR matches directed scan   [max |scan - closed form| = 0.9 queries]
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
@@ -49,5 +54,5 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
 
 ========================================================================================
-38/38 PASS   no property broken
+43/43 PASS   no property broken
 ========================================================================================

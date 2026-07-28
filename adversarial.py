@@ -190,6 +190,47 @@ def part_a():
     check("Thm 7(a): yields cross exactly at m_eq(R) = u/(u-1)^2",
           worst_err < 1e-9, f"max |y_J(m_eq) - y_U| = {worst_err:.2e}")
 
+    # --- Thm 7(a), EXACT ALGEBRAIC FORM.
+    #
+    # soundcalc-lean carries theta as rational LOWER and UPPER bounds because the
+    # Johnson threshold is irrational in general. The same applies to m_eq, and
+    # rationalising the denominator gives the exact form:
+    #
+    #     m_eq(R) = u/(u-1)^2 = [ 2^(R+1) + u*(2^R + 1) ] / (2^R - 1)^2,  u = 2^(R/2)
+    #
+    # so m_eq lies in Q when R is EVEN (u integral) and in Q(sqrt 2) when R is odd.
+    # Exactly rational: m_eq(2) = 2, m_eq(4) = 4/9, m_eq(6) = 8/49.
+    # Exactly quadratic: m_eq(1) = 4 + 3*sqrt(2).
+    def m_eq_rationalised(R):
+        u = 2.0 ** (R / 2)
+        return (2 ** (R + 1) + u * (2 ** R + 1)) / (2 ** R - 1) ** 2
+    worst = max(abs(m_eq(R) - m_eq_rationalised(R)) for R in range(1, 13))
+    check("Thm 7(a): rationalised form matches u/(u-1)^2", worst < 1e-12,
+          f"max dev {worst:.2e}")
+    check("Thm 7(a): m_eq(1) = 4 + 3*sqrt(2) exactly",
+          abs(m_eq(1) - (4 + 3 * math.sqrt(2))) < 1e-12)
+    rat = {2: 2.0, 4: 4 / 9, 6: 8 / 49, 8: 16 / 225}
+    check("Thm 7(a): m_eq is rational at even R (2, 4/9, 8/49, 16/225)",
+          all(abs(m_eq(R) - v) < 1e-12 for R, v in rat.items()))
+    # and the irrationality claim: odd R must NOT be a ratio of small integers
+    def near_rational(x, maxden=10000):
+        from fractions import Fraction
+        f = Fraction(x).limit_denominator(maxden)
+        return abs(float(f) - x) < 1e-14
+    check("Thm 7(a): m_eq is NOT rational at odd R",
+          not any(near_rational(m_eq(R)) for R in (1, 3, 5, 7)))
+
+    # --- UDR errLinear must match soundcalc-lean's (theta*(d/rho) + 1)/|F|.
+    def udr_lean(R, nu, E):
+        rho = 2.0 ** -R
+        theta = (1 - rho) / 2
+        n = 2.0 ** nu                     # d/rho, the LDE domain
+        return E - math.log2(theta * n + 1)
+    dev = max(abs(commit_udr(R, nu, E) - udr_lean(R, nu, E))
+              for R in (1, 2, 3, 4) for nu in (18, 21, 24) for E in (64, 124, 251))
+    check("UDR commit term agrees with soundcalc-lean Regime.lean errLinear",
+          dev < 1e-12, f"max dev {dev:.2e}")
+
     # --- Thm 7(b): s* prediction vs a directed scan, adversarial parameter draws.
     def best_jbr(R, nu, E, s, g):
         best = -1e18
