@@ -1,0 +1,79 @@
+
+================================================================================================
+1. THE RADIUS GAIN IS NEGLIGIBLE (one integer step of the error budget)
+================================================================================================
+      rate  log2 n    delta_J  delta_J+1step   yield_J   yield_M       gain
+  --------------------------------------------------------------------------
+       1/2      21   0.292893       0.292894   0.50000   0.50000   9.73e-07
+       1/4      21   0.500000       0.500001   1.00000   1.00000   1.38e-06
+       1/8      21   0.646447       0.646448   1.50000   1.50000   1.95e-06
+      1/16      21   0.750001       0.750001   2.00001   2.00001   2.75e-06
+
+  One step moves delta by 1/n. The per-query yield changes in the 7th decimal
+  place. Whatever this theorem is worth, it is not worth it per query.
+
+================================================================================================
+2. THE COMMIT TERM K^6/q IS THE BINDING COST
+================================================================================================
+  Field size needed for MCA error < 2^-lambda, by trace length:
+
+     trace   lam=100   lam=128   lam=160
+  ----------------------------------------
+      2^14       184       212       244
+      2^17       202       230       262
+      2^20       220       248       280
+      2^22       232       260       292
+      2^24       244       272       304
+
+================================================================================================
+3. WHAT EACH DEPLOYED FIELD CAN ACTUALLY GET (trace 2^20)
+================================================================================================
+  field                                    E  MCA bits   >=100?   >=128?
+  ----------------------------------------------------------------------
+  M31^4 / BabyBear^4 / KoalaBear^4       124         4       NO       NO
+  Goldilocks^2 (Plonky2, Miden)          128         8       NO       NO
+  Goldilocks^3 (Venus, ZisK)             192        72       NO       NO
+  Cairo / StarkNet 251-bit               251       131      yes      yes
+  BN254-class 254-bit                    254       134      yes      yes
+
+  Every small-field system is deeply negative or near zero: at a 2^20 trace,
+  K^6 alone is 2^120, which exhausts a 124-bit extension before any security
+  budget is allocated. Only 250-bit-class fields clear 128 bits.
+
+  Shortening the trace helps at rate 6 bits of field per bit of log-trace, so a
+  2^14 trace leaves 124 - 84 = 40 bits at E=124 -- still far short.
+
+================================================================================================
+4. WHERE REGIME M SITS IN THE INVENTORY
+================================================================================================
+
+  U  unique decoding      unconditional. Best CEILING of the classical regimes
+                          (no (m+1/2) factor). THEOREM.md Thm 7.
+  J  Johnson / BCHKS25    unconditional. Best per-query YIELD for m > m_eq(R).
+  T  threshold halving    unconditional ABOVE Johnson (2026/858). Costs
+                          kappa(R) in queries; commit term O(n)/|F|.
+  M  post-Johnson MCA     unconditional, h integer steps past Johnson
+                          (2026/1432). Yield ~ Johnson. Commit K^6/|F|.
+                          USABLE ONLY AT ~250-BIT FIELDS.
+  C  capacity             DISPROVED late 2025.
+
+  For a small-field system wanting above-Johnson soundness, T remains the only
+  practical option: its commit term is O(n)/|F| (~nu bits) against M's
+  O(K^6)/|F| (~6*log2 K bits). At a 2^20 trace that is 21 bits versus 120.
+
+  The pattern across this whole repository holds again: small fields buy prover
+  speed and pay for it in every soundness bound, and each new result tends to
+  widen rather than narrow that gap.
+
+================================================================================================
+5. NOT A PROXIMITY REGIME: SWIRL
+================================================================================================
+
+  SWIRL (OpenVM2, zkDTVM) is a matrix-stacking proof system that reduces trace
+  evaluations to a stacked polynomial evaluation, opened via the WHIR PCS. It is
+  an ARITHMETIZATION layer, not a new low-degree test, so it does not change the
+  regime inventory above -- its soundness bottoms out in WHIR's proximity
+  analysis, which is where BCHKS25 and the MCA question apply.
+
+  Source: soundcalc math_companion/swirl.tex; SWIRL paper openvm.dev/swirl.pdf;
+  canonical calculator openvm-org/stark-backend soundness.rs.
