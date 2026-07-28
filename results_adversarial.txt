@@ -240,6 +240,16 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  a=0 at UDR is worth 8-16 bits to NADO at a defensible constant   [+8 to +14 bits]
   PASS  the a=0 admissibility margin is wide at NADO's nu   [log2 C < 20]
   PASS  NADO's digest requirement is ~170 bits, met by a 256-bit hash   [needs 170, a 256-bit digest clears it]
+  PASS  inverting the ceiling equation round-trips at 64 bits   [E=87.4 -> 64.0]
+  PASS  inverting the ceiling equation round-trips at 100 bits   [E=123.4 -> 100.0]
+  PASS  inverting the ceiling equation round-trips at 128 bits   [E=151.4 -> 128.0]
+  PASS  inverting the ceiling equation round-trips at 256 bits   [E=279.4 -> 256.0]
+  PASS  a hash-based system needs >4x LatticeFold+'s stated field at 128 PQ   [279 bits vs 64, a factor 4.4]
+  PASS  the field-size gap widens with the security target   [[1.4, 2.4, 4.4]x at 32, 64, 128 PQ]
+  PASS  M-SIS retains ~91% post-quantum where hash-based retains 50%   [0.9075 vs 0.5000]
+  PASS  so 128 PQ costs a lattice system far fewer classical bits   [141 vs 256 classical]
+  PASS  the ceiling equation reproduces pq_design's degree-10 recommendation   [E >= 279 over a 31-bit base is degree 10]
+  PASS  ...and gives a different degree at a different target   [128 CLASSICAL bits is degree 5, not 10]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -369,8 +379,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 361, suite has 361]
+  PASS  README's stated check count matches the suite   [README says 371, suite has 371]
 
 ========================================================================================
-361/361 PASS   no property broken
+371/371 PASS   no property broken
 ========================================================================================

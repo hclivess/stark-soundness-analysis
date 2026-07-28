@@ -1,0 +1,64 @@
+
+============================================================================================
+1. WHAT THE CEILING EQUATION DEMANDS OF A HASH-BASED FIELD
+============================================================================================
+            target   E needed  deg over 31b  deg over 64b   lattice
+  ------------------------------------------------------------------
+     100 classical        123             4             2    64-bit
+     128 classical        151             5             3    64-bit
+             64 PQ        151             5             3    64-bit
+            128 PQ        279            10             5    64-bit
+
+  At 128 post-quantum bits a hash-based system needs a 279-bit challenge field;
+  LatticeFold+ states 64. A factor of 4.4, and it compounds -- every query
+  opening carries field elements, 35 bytes each against 8.
+
+============================================================================================
+2. WHY THE ESCAPE IS STRUCTURAL
+============================================================================================
+
+  The ceiling equation contains E because a hash-based system's soundness comes
+  from a challenge landing outside a bad set, measured against the challenge
+  SPACE. Security scales 1:1 with field bits and cannot be bought elsewhere.
+
+  M-SIS security is sourced from the lattice DIMENSION, not the field: the ring
+  is R_q with q a 64-bit prime and the hardness parameter is beta. So the field
+  stays small while security grows, and Theorem 2's ceiling does not apply.
+
+  The post-quantum column compounds it:
+
+      hash-based retains  0.5000   (Grover on Fiat-Shamir)
+      M-SIS      retains  0.9075   (sieving exponents 0.265/0.292)
+
+  so 128 post-quantum bits costs a hash-based system 256 classical bits
+  and a lattice system about 141.
+
+============================================================================================
+3. AN UNPLANNED CROSS-CHECK WITH pq_design.py
+============================================================================================
+
+  pq_design.py recommends extension degree 9-10 over a 31-bit base for 128
+  post-quantum bits, from its own cost model. The ceiling equation independently
+  gives E >= 279, which over a 31-bit base is degree 10. Two derivations,
+  same answer.
+
+============================================================================================
+4. WHAT REMAINS UNPRICED -- THE LARGER HALF
+============================================================================================
+
+  1. M-SIS DIMENSIONS. The beta a 64-bit LatticeFold+ instance needs for 128
+     bits sits in a table behind a walled PDF. Without it, "64-bit field" is a
+     field-size claim and not a parameter set: a small field with a huge
+     dimension may pay in prover time what it saves in field.
+
+  2. PROOF SIZES. LatticeFold+'s abstract claims its prover is "five to ten
+     times faster" and its proofs "shorter" -- all relative to LatticeFold, not
+     to a hash-based baseline. No absolute figure is quoted.
+
+  3. THE LINE HAS MOVED PAST IT. Cyclo (2026/359), an l2-norm variant
+     (2026/721) and ProtogaLattice (2026/1317) all improve on LatticeFold+, and
+     all state gains relative to it rather than absolutely.
+
+  So thread 4 is HALF closed. The field-size escape is a number now; the cost
+  side is not. Saying so plainly is better than letting the priced half stand in
+  for the whole.

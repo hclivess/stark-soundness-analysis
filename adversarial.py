@@ -1876,6 +1876,54 @@ def part_a():
               f"needs {_nb.digest_needed(pq_):.0f}, a 256-bit digest clears it")
     except ImportError:
         pass
+
+    # --- ITERATION 51: HORIZONS thread 4, priced on the field-size axis.
+    try:
+        import lattice_field_escape as _lfe
+
+        # (a) the ceiling equation must be invertible consistently: solving for E
+        # and plugging back must reproduce the target
+        for tgt_ in (64, 100, 128, 256):
+            E_ = _lfe.field_needed(tgt_, 22)
+            back = E_ - 22 + math.log2((1 - 0.25) / 2)
+            check(f"inverting the ceiling equation round-trips at {tgt_} bits",
+                  abs(back - tgt_) < 1e-9, f"E={E_:.1f} -> {back:.1f}")
+        # (b) the escape must be MATERIAL at the post-quantum target
+        E128_ = _lfe.field_needed(
+            _lfe.classical_for_pq(128, _lfe.HASH_RETENTION), 22)
+        check("a hash-based system needs >4x LatticeFold+'s stated field at 128 PQ",
+              E128_ / _lfe.LATTICEFOLD_FIELD_BITS > 4.0,
+              f"{E128_:.0f} bits vs 64, a factor {E128_/64:.1f}")
+        # and the gap must GROW with the target, or it is not a ceiling effect
+        gaps = [_lfe.field_needed(_lfe.classical_for_pq(p_, _lfe.HASH_RETENTION), 22)
+                / _lfe.LATTICEFOLD_FIELD_BITS for p_ in (32, 64, 128)]
+        check("the field-size gap widens with the security target",
+              gaps == sorted(gaps),
+              f"{[round(g_, 1) for g_ in gaps]}x at 32, 64, 128 PQ")
+
+        # (c) the retention asymmetry is the compounding factor
+        check("M-SIS retains ~91% post-quantum where hash-based retains 50%",
+              0.90 < _lfe.LATTICE_RETENTION < 0.91
+              and _lfe.HASH_RETENTION == 0.5,
+              f"{_lfe.LATTICE_RETENTION:.4f} vs {_lfe.HASH_RETENTION:.4f}")
+        check("so 128 PQ costs a lattice system far fewer classical bits",
+              _lfe.classical_for_pq(128, _lfe.LATTICE_RETENTION)
+              < _lfe.classical_for_pq(128, _lfe.HASH_RETENTION) * 0.6,
+              f"{_lfe.classical_for_pq(128, _lfe.LATTICE_RETENTION):.0f} vs "
+              f"{_lfe.classical_for_pq(128, _lfe.HASH_RETENTION):.0f} classical")
+
+        # (d) THE CROSS-CHECK: the ceiling equation must independently reproduce
+        # pq_design.py's degree 9-10 recommendation for 128 PQ
+        check("the ceiling equation reproduces pq_design's degree-10 recommendation",
+              _lfe.degree_over(31, E128_) == 10,
+              f"E >= {E128_:.0f} over a 31-bit base is degree "
+              f"{_lfe.degree_over(31, E128_)}")
+        # a check that the equation is not trivially producing 10 for everything
+        check("...and gives a different degree at a different target",
+              _lfe.degree_over(31, _lfe.field_needed(128, 22)) == 5,
+              "128 CLASSICAL bits is degree 5, not 10")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

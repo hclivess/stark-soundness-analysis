@@ -159,8 +159,15 @@ conjecture on resilience grounds should not then adopt M-SIS to go faster.
    **hash**-bound system, i.e. >169 classical bits at a 256-bit digest — the
    highest deployed figure is ZisK's 128, with 62–182 bits of digest margin
    across the fleet (`pq_ranking.py`).
-4. **LatticeFold+ concrete parameters** — M-SIS dimensions and proof sizes at
-   64-bit fields, to price path (b) properly rather than qualitatively.
+4. **LatticeFold+ concrete parameters** — **HALF PULLED, iteration 51.** The
+   M-SIS dimension tables and proof sizes are inside walled PDFs, so the thread
+   cannot close as written. The axis both literatures *do* state — field size —
+   is now priced (`lattice_field_escape.py`): the ceiling equation demands a
+   **279-bit** challenge field for 128 PQ bits where LatticeFold+ states **64**,
+   a factor of 4.4 that widens with the target. The escape is structural — M-SIS
+   security comes from the lattice *dimension*, not the field — and compounds
+   with the retention asymmetry (91% vs 50%). **Still unpriced: M-SIS dimensions
+   and absolute proof sizes**, which is the larger half.
 
 ## Sources
 
