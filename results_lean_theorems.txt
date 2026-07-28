@@ -1,0 +1,55 @@
+
+============================================================================================
+1. THE TWO SUBSTANTIVE THEOREMS, AND WHAT THEY COMPOSE TO
+============================================================================================
+
+  Regime.lean:   trueErrLinearJBR  <=  jbrErrLinear
+                 (soundcalc's computed error is at least the true error)
+  SecBits.lean:  a <= b  ->  secBits b <= secBits a
+                 (secBits is antitone in the error)
+
+  Composing:     soundcalc's reported bits  <=  the true bits.
+
+  This repo's commit_jbr uses math.sqrt -- the exact value -- so it computes the
+  TRUE formula, and the same composition runs the other way:
+
+                 this repo's bits  >=  soundcalc's bits,  always.
+
+============================================================================================
+2. THE DIRECTION IS GUARANTEED; THE MAGNITUDE IS NEGLIGIBLE
+============================================================================================
+  at R=1, nu=25, E=124, m=20
+
+   granularity g   sqrtLB error   this repo   soundcalc   difference
+  ------------------------------------------------------------------
+              10       7.11e-03     76.2972     76.2826      +0.0146
+             100       7.11e-03     76.2972     76.2826      +0.0146
+            1000       1.07e-04     76.2972     76.2970      +0.0002
+         1000000       7.81e-07     76.2972     76.2972      +0.0000
+      1000000000       1.87e-10     76.2972     76.2972      +0.0000
+
+  Non-negative everywhere, as the theorems require. This is one parameter set;
+  sweeping R, nu and m too, the worst case is 0.237 bits (R=3, nu=25, m=3,
+  g=10). Still an order of magnitude below the overshoot it might have
+  explained.
+
+============================================================================================
+3. WHAT THAT SETTLES, AND WHAT IT DOES NOT
+============================================================================================
+
+  SETTLES a standing empirical claim. README says the model "upper bounds
+  published totals -- verified to never undershoot across seven systems".
+  That was an observation over seven data points; it is now a consequence of two
+  machine-checked theorems plus one fact about which formula this repo
+  implements. It therefore holds for systems outside the set.
+
+  RULES OUT one explanation for the overshoot. If the sqrt approximation were
+  large it could account for the 3-5 bit gap seen where another component binds.
+  At a worst case of 0.237 bits it cannot. The remaining explanation is the untuned-`m` gap this
+  repo identified and measured in iteration 14 -- two candidates, one now
+  quantitatively excluded.
+
+  DOES NOT verify Theorems 4-7, which is what thread 1 hoped for. Those are this
+  repository's own results about crossovers and blowup optima, and the Lean
+  development formalises the soundness FORMULAS, not the optimisation results
+  built on them. Nothing in the 79 theorems speaks to Theorem 4, 5, 6 or 7.

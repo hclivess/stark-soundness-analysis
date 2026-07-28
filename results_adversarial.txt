@@ -266,6 +266,12 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  EFFICIENCY.md now carries a verbatim source block for all three   [the SOURCES.md treatment, applied where numbers were loose]
   PASS  EFFICIENCY.md's NADO surplus-query figure matches the live tree   [soundness.py reports saturation at 227, so 93 surplus, not 247]
   PASS  ...and records why it changed   [the GF(p^2) migration raised the ceiling and absorbed the rest]
+  PASS  this repo's figure never undershoots soundcalc's, as the theorems require   [81 parameter sets, min +0.00e+00]
+  PASS  the sqrt approximation costs under 0.25 bits across the sweep   [max 0.2371 bits]
+  PASS  and under 0.001 bits at any granularity a real build would use   [the coarse-g worst case is not the operative one]
+  PASS  ...so it cannot account for the repo's 3-5 bit overshoot   [the untuned-m gap remains the explanation (iteration 14)]
+  PASS  the gap shrinks monotonically with granularity   [['0.0146', '0.0002', '0.0000', '0.0000']]
+  PASS  sqrtLB is a genuine lower bound on sqrt at every granularity   [floor(sqrt(g^2 rho))/g <= sqrt(rho)]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -395,8 +401,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 387, suite has 387]
+  PASS  README's stated check count matches the suite   [README says 393, suite has 393]
 
 ========================================================================================
-387/387 PASS   no property broken
+393/393 PASS   no property broken
 ========================================================================================

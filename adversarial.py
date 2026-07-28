@@ -2040,6 +2040,55 @@ def part_a():
               "the GF(p^2) migration raised the ceiling and absorbed the rest")
     except OSError:
         pass
+
+    # --- ITERATION 55: two Lean theorems prove the direction of this repo's error.
+    #
+    #   Regime.lean  trueErrLinearJBR <= jbrErrLinear   (soundcalc is conservative)
+    #   SecBits.lean a <= b -> secBits b <= secBits a   (secBits is antitone)
+    # This repo's commit_jbr uses exact sqrt, so it computes the TRUE formula and
+    # must therefore report at least as many bits as soundcalc, always.
+    try:
+        import lean_theorems as _lt
+
+        # (a) THE DIRECTION: never negative, at any granularity or parameter set
+        signs = []
+        for R_ in (1, 2, 3):
+            for nu_ in (18, 22, 25):
+                for m_ in (3.0, 20.0, 50.0):
+                    for g_ in (10, 10 ** 3, 10 ** 6):
+                        signs.append(_lt.sqrt_gap_bits(R_, nu_, 124, m_, g_))
+        check("this repo's figure never undershoots soundcalc's, as the theorems require",
+              all(s_ >= -1e-12 for s_ in signs),
+              f"{len(signs)} parameter sets, min {min(signs):+.2e}")
+        # (b) THE MAGNITUDE: negligible, so it cannot explain the 3-5 bit overshoot
+        # NOTE: the first draft of this bound said 0.05, generalising from a
+        # single parameter set. The sweep's true worst case is 0.237 bits, at
+        # R=3, nu=25, m=3, g=10 -- coarse granularity at the smallest m.
+        check("the sqrt approximation costs under 0.25 bits across the sweep",
+              max(signs) < 0.25, f"max {max(signs):.4f} bits")
+        check("and under 0.001 bits at any granularity a real build would use",
+              max(_lt.sqrt_gap_bits(R_, nu_, 124, m_, 10 ** 6)
+                  for R_ in (1, 2, 3) for nu_ in (18, 22, 25)
+                  for m_ in (3.0, 20.0, 50.0)) < 0.001,
+              "the coarse-g worst case is not the operative one")
+        check("...so it cannot account for the repo's 3-5 bit overshoot",
+              max(signs) < 0.5,
+              "the untuned-m gap remains the explanation (iteration 14)")
+        # (c) the gap must SHRINK as granularity rises, or the model of sqrtLB is
+        # not what the Lean says it is
+        seq = [_lt.sqrt_gap_bits(1, 25, 124, 20.0, g_)
+               for g_ in (10, 10 ** 3, 10 ** 6, 10 ** 9)]
+        check("the gap shrinks monotonically with granularity",
+              all(seq[i] >= seq[i + 1] - 1e-12 for i in range(len(seq) - 1)),
+              f"{[f'{s_:.4f}' for s_ in seq]}")
+        # (d) sqrtLB must actually be a LOWER bound -- if it were not, the whole
+        # composition inverts
+        check("sqrtLB is a genuine lower bound on sqrt at every granularity",
+              all(_lt.sqrt_lb(2.0 ** -R_, g_) <= math.sqrt(2.0 ** -R_) + 1e-15
+                  for R_ in (1, 2, 3) for g_ in (10, 10 ** 3, 10 ** 6)),
+              "floor(sqrt(g^2 rho))/g <= sqrt(rho)")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

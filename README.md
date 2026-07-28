@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 387 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 393 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -150,13 +150,14 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **387 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **393 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
 | `capacity_frs.py` | capacity moved to folded RS — and buys ~0%, not 50% |
 | `pq_ranking.py` | HORIZONS thread 3: the PQ ranking does **not** reorder, and the threshold |
 | `sp1_verified.py` | SP1's components, machine-checked: the 100 is set by FRI query **and** lookup |
+| `lean_theorems.py` | two Lean theorems prove the repo never undershoots soundcalc |
 | `soundcalc_lean.py` | the Lean formalization: `m` is derived, not free; Thm 7 robust to it |
 | `m_star.py` | the `m` hinge is the query budget; the `m≥3` floor costs **zero** (it 39 corrects it 38) |
 | `theorem4_scope.py` | Thm 4 needed the `m ≥ 3` correction III.3 exempted it from |
@@ -283,7 +284,9 @@ Both are genuinely open problems, not gaps in this analysis.
 
 The model is FRI/code-layer only; soundcalc composes DEEP-ALI and LogUp terms
 this repo does not. It therefore **upper bounds** published totals — verified to
-never undershoot across seven systems. Where FRI binds it matches to 0.1 bits;
+never undershoot across seven systems — and since iteration 55 that direction is
+a consequence of two machine-checked theorems, not just seven data points
+(`lean_theorems.py`). Where FRI binds it matches to 0.1 bits;
 where another component binds it runs 3–5 high, and that residual is the
 untuned-`m` gap, measured.
 
