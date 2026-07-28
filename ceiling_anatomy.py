@@ -138,5 +138,56 @@ def report():
   repository, and it is not ours to claim: it depends on someone settling Q2.""")
 
 
+def scope_and_open_questions():
+    sec("5. SCOPE OF THE a-CLASSIFICATION -- AND ONE UNRESOLVED CASE")
+    print("""
+  VERIFIED, by reading the formula in each case:
+
+    a = 0   Jagged / sumcheck / zerocheck / RLC   soundcalc/circuits/jagged.py
+            numerators are log2(width), 2*log_trace, num_constraints -- all
+            logarithmic or constraint-counted, none polynomial in n
+    a = 1   UDR                                   (gamma*n + 1)/|F|
+    a = 1   BCHKS25 JBR                           (2m'^5 + ...)*n/(3 rho^{3/2}|F|)
+    a = 1   threshold halving                     n*r/|F|            [2026/858]
+    a = 2   BCIKS20                               (m+1/2)^7 n^2/(3 rho^{3/2}|F|)
+    a = 0   action-orbit, CONDITIONAL on Q2       O(1)/|F|           [2026/861]
+
+  So on everything whose formula I have actually read, the split holds: the
+  sumcheck family is a = 0, the RS-proximity family is a >= 1, and the only
+  a = 0 code test is conditional.
+
+  UNRESOLVED -- Brakedown / Ligero interleaved codes.
+
+  This is the case that could break the classification, and I could not settle
+  it. Ligero-style proximity testing takes a random linear combination of m rows
+  and applies a proximity test to the combination. The classic interleaved
+  lemma (Ames-Hazay-Ishai-Venkitasubramaniam) is frequently quoted with a
+  soundness term of O(1)/|F|, independent of n. If that is the operative bound
+  for Brakedown at its deployed radius, then Brakedown is an UNCONDITIONAL
+  a = 0 CODE test, and the claim "code-proximity layers have a >= 1" is false
+  as stated -- it would instead be a statement about REED-SOLOMON proximity in
+  the list-decoding regime specifically.
+
+  Evidence pulling the other way: soundcalc's UDR bound for RS is
+  (gamma*n + 1)/|F|, i.e. a = 1, and that IS a unique-decoding-radius bound. So
+  an n-dependence survives at unique-decoding radius for RS. Whether the
+  gamma*n term comes from the bare proximity gap or from the multi-point
+  quotient structure layered on top of it is exactly what I could not determine.
+
+  WHAT WOULD SETTLE IT: the explicit soundness statement in
+    - Diamond, "Proximity Testing with Logarithmic Randomness", eprint 2023/630
+    - "Proximity Gaps in Interleaved Codes"
+    - the Brakedown paper's proximity lemma
+  read directly rather than from abstracts. eprint PDFs return HTTP 403 to this
+  session's fetcher, so this is a tooling limit, not a reasoning one.
+
+  UNTIL THEN the classification should be read as scoped:
+      "for the Reed-Solomon proximity bounds whose formulas are recorded above,
+       code layers carry a >= 1 unconditionally, and the sumcheck family carries
+       a = 0"
+  and NOT as a claim about every possible code-based commitment.""")
+
+
 if __name__ == "__main__":
     report()
+    scope_and_open_questions()

@@ -470,6 +470,32 @@ def part_a():
     check("a=0 sumcheck terms barely move with trace size; a=1 code term moves linearly",
           d_sum < 0.5 and d_code > 3.5, f"sumcheck {d_sum:.2f} vs code {d_code:.2f} bits")
 
+    # --- SCOPE GUARD on the a-classification.
+    #
+    # The classification is verified only for bounds whose formula has been read.
+    # Brakedown/Ligero interleaved proximity is UNRESOLVED: the classic
+    # interleaved lemma is often quoted as O(1)/|F|, which if operative at the
+    # deployed radius would make it an unconditional a=0 CODE test and falsify
+    # "code layers have a >= 1" as a general claim. eprint PDFs 403 to this
+    # session, so it could not be settled. These checks pin the claim to its
+    # verified scope so it cannot silently over-generalise.
+    VERIFIED_A = {"jagged/sumcheck": 0, "UDR": 1, "BCHKS25-JBR": 1,
+                  "threshold-halving": 1, "BCIKS20": 2, "action-orbit(Q2)": 0}
+    code_layers = {k: v for k, v in VERIFIED_A.items() if k != "jagged/sumcheck"}
+    uncond_code = {k: v for k, v in code_layers.items() if "Q2" not in k}
+    check("every VERIFIED unconditional code bound has a >= 1",
+          all(v >= 1 for v in uncond_code.values()),
+          f"{sorted(uncond_code.items())}")
+    check("the only verified a=0 code bound is conditional",
+          all("Q2" in k for k, v in code_layers.items() if v == 0))
+    check("the sumcheck family is verified at a = 0",
+          VERIFIED_A["jagged/sumcheck"] == 0)
+    # explicit reminder that Brakedown is NOT in the verified set
+    check("Brakedown/Ligero is recorded as unresolved, not assumed",
+          "brakedown" not in {k.lower() for k in VERIFIED_A}
+          and "ligero" not in {k.lower() for k in VERIFIED_A},
+          "excluded from the verified set by design")
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0
