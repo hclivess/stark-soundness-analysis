@@ -231,6 +231,15 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the thinnest margin belongs to the highest-classical system   [more classical bits means less digest headroom]
   PASS  the threshold formula reproduces iteration 27's 386-bit digest   [385.8 vs 386 from the BCS shape]
   PASS  and explains iteration 27's 85-bit cap at a 256-bit digest   [84.7 PQ bits]
+  PASS  NADO's base-field aux/LogUp term is its weakest by >2x   [aux 44.0 vs next-weakest 112.0]
+  PASS  migrating it to GF(p^2) is worth exactly 64 bits   [the extension doubles the challenge field]
+  PASS  and it would no longer be the binding term afterwards   [108.0 bits after the fix]
+  PASS  NADO has ~93 queries buying no security   [320 configured, saturates at 227]
+  PASS  the query term exceeds the ceiling, which is why the surplus exists   [query 150.8 > ceiling 112.0]
+  PASS  NADO can pay a=0's proximity loss out of surplus queries   [38.8 bits of query term above the ceiling]
+  PASS  a=0 at UDR is worth 8-16 bits to NADO at a defensible constant   [+8 to +14 bits]
+  PASS  the a=0 admissibility margin is wide at NADO's nu   [log2 C < 20]
+  PASS  NADO's digest requirement is ~170 bits, met by a 256-bit hash   [needs 170, a 256-bit digest clears it]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -360,8 +369,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 352, suite has 352]
+  PASS  README's stated check count matches the suite   [README says 361, suite has 361]
 
 ========================================================================================
-352/352 PASS   no property broken
+361/361 PASS   no property broken
 ========================================================================================

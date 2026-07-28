@@ -1,0 +1,71 @@
+
+============================================================================================
+1. WHERE NADO STANDS (live tree, 2026-07-28)
+============================================================================================
+  E = 128 (GF(p^2)), nu = 18, queries = 320, grind = 18
+
+  term                           bits
+  ------------------------------------
+  commit phase (UDR)            112.0
+  query phase                   150.8
+  alphas, GF(p^2), nc=100       121.4
+  aux / LogUp, BASE field        44.0   <-- caps the VM circuit
+
+  Both recommended migrations landed (EXT_CHALLENGES, and the alphas at
+  stark.py:323/448), taking NADO from 47 to 111 bits. The aux/LogUp challenges
+  at stark.py:305/441 were not migrated, and they are now the weakest term by a
+  factor of more than two.
+
+============================================================================================
+2. FINDING 1 -- THE AUX/LogUp CHALLENGES ARE STILL BASE FIELD
+============================================================================================
+                                base (today)   GF(p^2) (fix)    gain
+  ------------------------------------------------------------------
+  aux / LogUp term                      44.0           108.0   +64.0
+
+  The fix is the guard already present two lines below, at stark.py:305 and 441:
+
+      challenges = [(t.challenge_ext() if _ext_a else t.challenge())
+                    for _ in range(aux_spec["num_challenges"])]
+
+  The exact figure depends on NADO's real lookup count, which this file does not
+  know. The structural point does not: it is a 64-bit challenge in a system
+  whose other terms are 111 to 121.
+
+============================================================================================
+3. FINDING 2 -- 93 QUERIES BUY NOTHING
+============================================================================================
+  query term 150.8 against a ceiling of 112.0; saturation at 227 queries.
+  320 - 227 = 93 queries are proof size with no security (29% of the total).
+
+============================================================================================
+4. FINDING 3 -- NADO IS THE GOOD CASE FOR BCHKS25 RESULT 1
+============================================================================================
+   log2 C(eps*)   ceiling at a=0   vs today
+  ------------------------------------------
+              0            128.0      +16.0
+              2            126.0      +14.0
+              4            124.0      +12.0
+              8            120.0       +8.0
+
+  a = 0 beats a = 1 while log2 C < nu + log2(1/gamma) = 20, a wide margin.
+
+  Iteration 34 found this correction usually inert, because the query phase
+  binds below the raised ceiling. NADO is the opposite: its query term is 150.8,
+  far above the ceiling, so it has 93 spare queries to pay the proximity loss
+  with. It is the one configuration in this repo's survey where the trade is
+  clearly favourable -- but finding 1 must land first, or the aux term binds at
+  44 and none of it matters.
+
+============================================================================================
+5. FINDING 4 -- THE DIGEST NUMBER TO CHECK AGAINST
+============================================================================================
+
+  NADO is search-bound (iteration 49: no PQ reordering), so PQ = 56.0 bits.
+  The BCS additive error is a birthday bound, giving lambda/3 post-quantum, so
+
+      lambda >= 3 * (56.0 + 0.6) = 170 bits
+
+  A 256-bit digest clears it with 86 bits to spare. This file could not
+  determine NADO's Merkle hash from the tree, so this is a number to check
+  against, not an assertion that anything is wrong.

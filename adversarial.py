@@ -1825,6 +1825,57 @@ def part_a():
               f"{_pr.hash_pq(256):.1f} PQ bits")
     except ImportError:
         pass
+
+    # --- ITERATION 50: what to backport to NADO after iterations 24-50.
+    try:
+        import nado_backport as _nb
+
+        K_ = _nb.commit_udr(_nb.R, _nb.NU, _nb.E_EXT)
+        q_ = _nb.S * _nb.y_udr(_nb.R) + _nb.G
+        # (a) the aux/LogUp term must be the WEAKEST by a wide margin -- that is
+        # the finding. If a future migration fixes it this check should flip.
+        aux_base = _nb.aux_term(_nb.E_BASE)
+        others = [K_, q_, _nb.E_EXT - math.log2(100)]
+        check("NADO's base-field aux/LogUp term is its weakest by >2x",
+              aux_base < min(others) / 2,
+              f"aux {aux_base:.1f} vs next-weakest {min(others):.1f}")
+        check("migrating it to GF(p^2) is worth exactly 64 bits",
+              abs((_nb.aux_term(_nb.E_EXT) - aux_base) - 64.0) < 1e-9,
+              "the extension doubles the challenge field")
+        check("and it would no longer be the binding term afterwards",
+              _nb.aux_term(_nb.E_EXT) > aux_base
+              and _nb.aux_term(_nb.E_EXT) > 100,
+              f"{_nb.aux_term(_nb.E_EXT):.1f} bits after the fix")
+
+        # (b) the query surplus must be real
+        sat_ = _nb.saturation_queries(K_, _nb.G, _nb.R)
+        check("NADO has ~93 queries buying no security",
+              80 < _nb.S - sat_ < 110,
+              f"{_nb.S} configured, saturates at {sat_}")
+        check("the query term exceeds the ceiling, which is why the surplus exists",
+              q_ > K_, f"query {q_:.1f} > ceiling {K_:.1f}")
+
+        # (c) NADO is the favourable case for BCHKS25 result 1 precisely BECAUSE
+        # its query term is above the ceiling -- iteration 34 found it inert
+        # where the query phase binds below.
+        check("NADO can pay a=0's proximity loss out of surplus queries",
+              q_ - K_ > 30,
+              f"{q_-K_:.1f} bits of query term above the ceiling")
+        check("a=0 at UDR is worth 8-16 bits to NADO at a defensible constant",
+              8 <= _nb.ceiling_a0(_nb.E_EXT, 8) - K_ <= 16
+              and _nb.ceiling_a0(_nb.E_EXT, 2) - K_ <= 16,
+              f"+{_nb.ceiling_a0(_nb.E_EXT, 8)-K_:.0f} to "
+              f"+{_nb.ceiling_a0(_nb.E_EXT, 2)-K_:.0f} bits")
+        check("the a=0 admissibility margin is wide at NADO's nu",
+              _nb.NU + 2 >= 20, f"log2 C < {_nb.NU + 2}")
+
+        # (d) the digest requirement must be met by a 256-bit hash
+        pq_ = min(K_, q_) / 2
+        check("NADO's digest requirement is ~170 bits, met by a 256-bit hash",
+              160 < _nb.digest_needed(pq_) < 180 < 256,
+              f"needs {_nb.digest_needed(pq_):.0f}, a 256-bit digest clears it")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()
