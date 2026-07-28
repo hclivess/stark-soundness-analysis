@@ -1,0 +1,64 @@
+
+============================================================================================
+1. THEOREM 4's kappa USES A SUPREMUM DEPLOYMENT CANNOT REACH
+============================================================================================
+   blowup  yield_J sup  yield_J m=3   yield_T  kappa Thm4  kappa m=3  overstated
+  ------------------------------------------------------------------------------
+        2        0.500        0.278     0.415       1.205      0.669      +0.536
+        4        1.000        0.778     0.678       1.475      1.147      +0.328
+        8        1.500        1.278     0.830       1.807      1.539      +0.268
+       16        2.000        1.778     0.913       2.192      1.948      +0.244
+       32        2.500        2.278     0.956       2.616      2.383      +0.233
+       64        3.000        2.778     0.978       3.069      2.841      +0.227
+
+  III.2 removed the m -> m_min supremum from Theorems 3' and 5 as unavailable in
+  deployment. Theorem 4 uses the same supremum, and III.3 exempted it: "it still
+  costs kappa(R) in queries (Theorem 4, unaffected)". It is affected.
+
+============================================================================================
+2. AND BELOW BLOWUP ~3 THE PENALTY IS NEGATIVE
+============================================================================================
+       m    kappa = 1 at blowup                            reading
+  ------------------------------------------------------------------
+       3                  3.124  below this, T needs FEWER queries
+       5                  2.428  below this, T needs FEWER queries
+      10                  1.877  below this, T needs FEWER queries
+      20                  1.562  below this, T needs FEWER queries
+
+  At blowup 2 with m = 3, kappa = 0.669: threshold halving needs about
+  33% FEWER queries than the Johnson regime, not more. Theorem 4's
+  reading -- "the cost vanishes as the blowup approaches 1" -- is right in
+  direction and wrong at the boundary: under the deployed convention it does not
+  vanish, it changes sign.
+
+============================================================================================
+3. WHAT THAT DOES TO III.3's CONCLUSION
+============================================================================================
+   blowup   ceil_J m=3    ceil_T    T - J  kappa m=3    T better on
+  ------------------------------------------------------------------
+        2        93.05     98.68    +5.63      0.669      both axes
+        4        90.55     97.68    +7.13      1.147   ceiling only
+        8        88.05     96.68    +8.63      1.539   ceiling only
+       16        85.55     95.68   +10.13      1.948   ceiling only
+
+  III.3 concluded "the case for adopting it is materially weaker than Part II
+  concluded". At blowup 2 with deployed m the opposite holds: higher ceiling AND
+  fewer queries. Conditional, of course, on eprint 2026/858 being correct --
+  iteration 31 graded it tier 3 and nothing here raises that grade.
+
+============================================================================================
+4. REFINEMENT TO III.3: AT THE SUPREMUM THE MARGIN REVERSES
+============================================================================================
+   blowup   ceil_J sup   ceil_J m=3    ceil_T   T-J sup   T-J m=3
+  ----------------------------------------------------------------
+        2        98.23        93.05     98.68     +0.45     +5.63
+        4        99.58        90.55     97.68     -1.91     +7.13
+        8        98.94        88.05     96.68     -2.26     +8.63
+       16        97.51        85.55     95.68     -1.83    +10.13
+       32        95.68        83.05     94.68     -1.00    +11.63
+
+  III.3 reports the m >= 3 column only. At the supremum the margin does not
+  shrink from +19..+22 to +5.7..+8.7 -- it goes NEGATIVE at blowup 4 and above,
+  where the BCHKS25 Johnson ceiling beats threshold halving outright. Which
+  regime wins on ceiling depends on which m is available, the same hinge III.2
+  identified for the blowup question.

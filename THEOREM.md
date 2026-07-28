@@ -609,6 +609,34 @@ Threshold halving's remaining advantage is the *radius* it certifies, not the
 commit term — and it still costs `κ(R)` in queries (Theorem 4, unaffected). The
 case for adopting it is materially weaker than Part II concluded.
 
+> **Corrected in iteration 37 (`theorem4_scope.py`).** "Theorem 4, unaffected"
+> is wrong, and the error is the same one III.2 fixed two sections earlier.
+> Part II defines `yield_J(R) = R/2` **"(sup over m)"** — the `m → m_min` limit
+> III.2 says deployment cannot reach. Recomputed at `m = 3`:
+>
+> | blowup | 2 | 4 | 8 | 16 | 32 | 64 |
+> |---|---|---|---|---|---|---|
+> | κ (Thm 4) | 1.205 | 1.475 | 1.807 | 2.192 | 2.616 | 3.069 |
+> | κ (m = 3) | **0.669** | 1.147 | 1.539 | 1.948 | 2.383 | 2.841 |
+>
+> Overstated by 0.23–0.54 throughout — and **the sign flips**: at blowup 2 the
+> deployed multiplier is 0.669, so threshold halving needs ~33% *fewer* queries,
+> not more. The crossover is blowup 3.12 at `m = 3`, falling to 1.56 at `m = 20`.
+> Theorem 4's reading — "the cost vanishes as the blowup approaches 1" — is right
+> in direction and wrong at the boundary: it does not vanish, it changes sign.
+>
+> So the last sentence above inverts at low blowup. At blowup 2 with deployed
+> `m`, threshold halving leads on **both** axes — +5.6 bits of ceiling *and* ~33%
+> fewer queries. That remains conditional on eprint 2026/858 being correct, which
+> iteration 31 graded tier 3 (unreviewed, one group, PDF unreachable); nothing in
+> iteration 37 raises that grade.
+>
+> **Refinement to the table above.** It reports `m ≥ 3` only. At the supremum
+> `m → m_min` the margin does not shrink — it *reverses*: the BCHKS25 Johnson
+> ceiling beats threshold halving by 1.9–2.3 bits at blowup 4 and above. Which
+> regime wins on ceiling depends on which `m` is available — the same hinge III.2
+> identified for the blowup question.
+
 ## III.4 The measured conjectured-vs-proven gap
 
 At each configuration's own `(s, g)`, optimising `m` over `[3, 1000]`:

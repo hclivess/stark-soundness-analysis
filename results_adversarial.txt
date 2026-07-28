@@ -185,6 +185,15 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  full BCHKS25 argmax is blowup 4 at T=20, E=192   [numeric R* = 2.0000]
   PASS  the UDR ceiling is strictly decreasing in blowup, so 4 is NOT optimal   [[106.27, 105.0, 103.42, 102.19, 101.09, 100.05]]
   PASS  blowup 4 is a Johnson-regime result, not a universal one   [holds under BCHKS25 Johnson; fails under the UDR bound]
+  PASS  Theorem 4's yield_J is a supremum deployment cannot reach   [m >= 3 gives -log2(sqrt(rho)(1+1/2m)) < R/2]
+  PASS  Theorem 4 overstates the query penalty at every blowup   [overstated by 0.23-0.54]
+  PASS  at blowup 2 with deployed m the query penalty is NEGATIVE   [kappa = 0.669, i.e. 33% FEWER queries]
+  PASS  Theorem 4's supremum form never shows the sign flip   [sup kappa = 1.205 > 1 -- the flip is invisible at m_min]
+  PASS  the kappa crossover lies between blowup 1 and 4 for every deployed m   [[3.12, 2.43, 1.88, 1.56]]
+  PASS  the crossover falls as m rises (larger m closes the gap)   [m=3 -> 3.12, m=20 -> 1.56]
+  PASS  at m -> m_min the Theorem 6 margin REVERSES, it does not merely shrink   [blowup 4-32: [-1.91, -2.26, -1.83, -1.0]]
+  PASS  III.3's m>=3 margin reproduces at +5.6 to +10.2 bits   [[5.63, 7.13, 8.63, 10.13]]
+  PASS  the two m-regimes disagree on WHICH bound wins the ceiling   [m_min favours Johnson, m>=3 favours threshold halving]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -256,8 +265,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 248, suite has 248]
+  PASS  README's stated check count matches the suite   [README says 257, suite has 257]
 
 ========================================================================================
-248/248 PASS   no property broken
+257/257 PASS   no property broken
 ========================================================================================

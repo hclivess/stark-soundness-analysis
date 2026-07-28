@@ -1515,6 +1515,92 @@ def part_a():
           abs(r_star_(1, 5) - 2.0) < 1e-12 and udr_vals[0] > udr_vals[2],
           "holds under BCHKS25 Johnson; fails under the UDR bound")
 
+    # --- ITERATION 37: Theorem 4 needed the m >= 3 correction III.3 exempted it from.
+    #
+    # III.2 removed the m -> m_min supremum from Theorems 3' and 5 as unavailable
+    # in deployment. III.3 then wrote "it still costs kappa(R) in queries
+    # (Theorem 4, unaffected)". But Part II defines yield_J(R) = R/2 "(sup over
+    # m)" -- the same unavailable limit.
+    def yJ_sup_(R_):
+        return R_ / 2.0
+
+    def yJ_m_(R_, m_):
+        a_ = math.sqrt(2.0 ** -R_) * (1 + 0.5 / m_)
+        return -math.log2(a_) if a_ < 1 else float("nan")
+
+    def yT_(R_):
+        return 1 - math.log2(1 + 2.0 ** -R_)
+
+    # (a) the deployed yield is strictly below the supremum at every blowup
+    check("Theorem 4's yield_J is a supremum deployment cannot reach",
+          all(yJ_m_(R_, 3.0) < yJ_sup_(R_) - 1e-9 for R_ in (1, 2, 3, 4, 5, 6)),
+          "m >= 3 gives -log2(sqrt(rho)(1+1/2m)) < R/2")
+    # (b) so kappa is overstated throughout -- by 0.22 to 0.54
+    over = [yJ_sup_(R_) / yT_(R_) - yJ_m_(R_, 3.0) / yT_(R_)
+            for R_ in (1, 2, 3, 4, 5, 6)]
+    check("Theorem 4 overstates the query penalty at every blowup",
+          all(o_ > 0 for o_ in over) and 0.2 < min(over) and max(over) < 0.6,
+          f"overstated by {min(over):.2f}-{max(over):.2f}")
+    # (c) AND THE SIGN FLIPS: below blowup ~3 threshold halving is CHEAPER
+    k_lo = yJ_m_(1, 3.0) / yT_(1)
+    check("at blowup 2 with deployed m the query penalty is NEGATIVE",
+          k_lo < 1.0, f"kappa = {k_lo:.3f}, i.e. {100*(1-k_lo):.0f}% FEWER queries")
+    check("Theorem 4's supremum form never shows the sign flip",
+          yJ_sup_(1) / yT_(1) > 1.0,
+          f"sup kappa = {yJ_sup_(1)/yT_(1):.3f} > 1 -- the flip is invisible at m_min")
+    # the crossover must sit between blowup 1 and 4 and move with m
+    def cross_(m_):
+        lo_, hi_ = 0.05, 10.0
+        if yJ_m_(lo_, m_) - yT_(lo_) > 0:
+            return None
+        for _ in range(200):
+            mid_ = (lo_ + hi_) / 2
+            if yJ_m_(mid_, m_) - yT_(mid_) < 0:
+                lo_ = mid_
+            else:
+                hi_ = mid_
+        return hi_
+    crosses = [2 ** cross_(m_) for m_ in (3.0, 5.0, 10.0, 20.0)]
+    check("the kappa crossover lies between blowup 1 and 4 for every deployed m",
+          all(1.0 < c_ < 4.0 for c_ in crosses),
+          f"{[round(c_, 2) for c_ in crosses]}")
+    check("the crossover falls as m rises (larger m closes the gap)",
+          crosses == sorted(crosses, reverse=True),
+          "m=3 -> 3.12, m=20 -> 1.56")
+
+    # (d) REFINEMENT TO III.3: at the supremum the ceiling margin REVERSES
+    def cJ_sup_(R_, T_, E_):
+        u_ = 2 ** (R_ / 2.0)
+        return ((E_ - T_) + (-5 * R_ + 5 * math.log2(u_ - 1) + 4 + math.log2(3))
+                if u_ > 1 else float("-inf"))
+
+    def cT_(R_, T_, E_, rounds=20):
+        return E_ - T_ - R_ - math.log2(rounds)
+
+    margins_sup = [cT_(R_, 20, 124) - cJ_sup_(R_, 20, 124) for R_ in (2, 3, 4, 5)]
+    check("at m -> m_min the Theorem 6 margin REVERSES, it does not merely shrink",
+          all(mm_ < 0 for mm_ in margins_sup),
+          f"blowup 4-32: {[round(mm_, 2) for mm_ in margins_sup]}")
+    def cJ_m_(R_, T_, E_, m_):
+        rho_ = 2.0 ** -R_
+        sr_ = math.sqrt(rho_)
+        mm_ = m_ + 0.5
+        gam_ = 1 - sr_ * (1 + 0.5 / m_)
+        if gam_ <= 0:
+            return float("-inf")
+        n_ = 2.0 ** (T_ + R_)
+        return E_ - math.log2((2 * mm_ ** 5 + 3 * mm_ * gam_ * rho_) * n_
+                              / (3 * rho_ * sr_) + mm_ / sr_)
+
+    margins_m3 = [cT_(R_, 20, 124) - cJ_m_(R_, 20, 124, 3.0) for R_ in (1, 2, 3, 4)]
+    check("III.3's m>=3 margin reproduces at +5.6 to +10.2 bits",
+          all(mm_ > 0 for mm_ in margins_m3)
+          and 5.0 < min(margins_m3) and max(margins_m3) < 11.0,
+          f"{[round(mm_, 2) for mm_ in margins_m3]}")
+    check("the two m-regimes disagree on WHICH bound wins the ceiling",
+          min(margins_sup) < 0 < min(margins_m3),
+          "m_min favours Johnson, m>=3 favours threshold halving")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
