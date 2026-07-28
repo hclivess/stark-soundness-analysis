@@ -51,6 +51,10 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the real post-patch gain is 47 -> 63, not 47 -> 111
   PASS  DEEP is off the main STARK path (deep_eval is a separate subsystem)   [io_bind / bound_epoch_o1 / state_io_tie / settlement_aggregate]
   PASS  migrating the alphas would lift NADO to the 112-bit FRI commit term   [112 classical / 56 PQ]
+  PASS  the alphas term falls by log2(nc), so nc=1 was an overstatement   [nc=1 64.0 vs nc=100 57.4]
+  PASS  a 100-constraint NADO circuit sits near 57 bits, not 63   [57.4]
+  PASS  base-field alphas cap NADO below the migrated FRI commit term at any nc
+  PASS  migrating the alphas lifts that term by exactly 64 bits
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -122,8 +126,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 114, suite has 114]
+  PASS  README's stated check count matches the suite   [README says 118, suite has 118]
 
 ========================================================================================
-114/114 PASS   no property broken
+118/118 PASS   no property broken
 ========================================================================================

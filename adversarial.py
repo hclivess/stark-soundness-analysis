@@ -611,6 +611,22 @@ def part_a():
     check("migrating the alphas would lift NADO to the 112-bit FRI commit term",
           min(112.0, 150.8, 128.0) == 112.0, "112 classical / 56 PQ")
 
+    # --- ITERATION 22: the alphas term carries a union bound over constraints.
+    # Naive Schwartz-Zippel says log2(q). soundcalc's ALI (deep_ali.py, Thm 8 of
+    # eprint 2022/1216) uses e_ALI = L_plus * nc / |F|, so the term is
+    # log2(q) - log2(L_plus * nc). Iteration 21 assumed nc = 1 and overstated.
+    def alphas_term(E, nc, Lplus=1.0):
+        return E - math.log2(max(Lplus * nc, 1.0))
+    check("the alphas term falls by log2(nc), so nc=1 was an overstatement",
+          alphas_term(64, 100) < alphas_term(64, 1),
+          f"nc=1 {alphas_term(64,1):.1f} vs nc=100 {alphas_term(64,100):.1f}")
+    check("a 100-constraint NADO circuit sits near 57 bits, not 63",
+          abs(alphas_term(64, 100) - 57.4) < 1.2, f"{alphas_term(64,100):.1f}")
+    check("base-field alphas cap NADO below the migrated FRI commit term at any nc",
+          all(alphas_term(64, nc) < 112 for nc in (1, 10, 100, 3412)))
+    check("migrating the alphas lifts that term by exactly 64 bits",
+          abs(alphas_term(128, 100) - alphas_term(64, 100) - 64) < 1e-9)
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
