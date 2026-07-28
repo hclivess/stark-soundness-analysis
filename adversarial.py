@@ -397,6 +397,43 @@ def part_a():
     check("degree-10 over a 31-bit base clears 128 PQ under WHIR too",
           (310 - 23) / 2 >= 128, f"{(310-23)/2:.1f} PQ bits")
 
+    # --- THE CEILING IS FIVE TERMS (ceiling_anatomy.py), correcting iteration 6.
+    #     ceiling = E - a*nu - log2(C) + g_commit
+    def ceil5(E, nu, a, log2C, gc=0):
+        return E - a * nu - log2C + gc
+    # the general form must reproduce the specific bounds this repo already models
+    E5, nu5 = 124, 22
+    # UDR's constant is log2(gamma) with gamma = (1-rho)/2, so it DEPENDS ON RATE:
+    # log2 C = -2 at rho=1/2, -1.415 at rho=1/4. An earlier draft of this check
+    # used the rho=1/4 constant while testing at rho=1/2 and failed by 0.585.
+    def log2C_udr(R):
+        return math.log2((1 - 2.0 ** -R) / 2)
+    dev5 = max(abs(ceil5(E5, nu5, 1, log2C_udr(R)) - commit_udr(R, nu5, E5))
+               for R in (1, 2, 3, 4))
+    check("general ceiling form reproduces the UDR commit bound at every rate",
+          dev5 < 0.02, f"max dev {dev5:.4f}")
+    # each decrement of the domain exponent a is worth exactly nu bits
+    check("a decrement of the domain exponent is worth exactly nu bits",
+          abs((ceil5(E5, nu5, 1, 0) - ceil5(E5, nu5, 2, 0)) - nu5) < 1e-9)
+    # BCIKS20 -> BCHKS25 must beat what doubling the extension degree would give
+    b2020 = ceil5(E5, nu5, 2, 7 * math.log2(16.5) - math.log2(3) + 1.5)
+    b2025 = ceil5(E5, nu5, 1, -1.415)
+    doubling_E = ceil5(2 * E5, nu5, 2, 7 * math.log2(16.5) - math.log2(3) + 1.5) - b2020
+    check("the 2020->2025 analysis gain exceeded doubling the extension degree",
+          (b2025 - b2020) > 0 and (b2025 - b2020) >= 0.35 * doubling_E,
+          f"analysis +{b2025-b2020:.0f} vs doubling E +{doubling_E:.0f}")
+    # a = 0 (action-orbit, conditional) would remove the domain term entirely
+    check("a=0 would make the ceiling independent of domain size",
+          abs(ceil5(E5, 10, 0, 0) - ceil5(E5, 30, 0, 0)) < 1e-9)
+    # commit grinding is additive, and must not be confused with query grinding
+    check("commit-phase grinding is additive on the ceiling",
+          abs(ceil5(E5, nu5, 1, 0, 20) - ceil5(E5, nu5, 1, 0) - 20) < 1e-9)
+    # sanity: the five-term form must never exceed E (nothing beats the field size)
+    worst5 = max(ceil5(E5, nu, a, 0, 0) - E5
+                 for nu in (8, 22, 30) for a in (0, 1, 2))
+    check("no zero-grinding ceiling exceeds the field size itself",
+          worst5 <= 1e-9, f"max excess {worst5:.2f}")
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0

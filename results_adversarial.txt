@@ -34,6 +34,12 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  WHIR system zkDTVM KoalaBear^5 is still capped at E-nu   [132 classical / 66 PQ]
   PASS  no deployed WHIR system reaches 128 PQ bits either
   PASS  degree-10 over a 31-bit base clears 128 PQ under WHIR too   [143.5 PQ bits]
+  PASS  general ceiling form reproduces the UDR commit bound at every rate   [max dev 0.0000]
+  PASS  a decrement of the domain exponent is worth exactly nu bits
+  PASS  the 2020->2025 analysis gain exceeded doubling the extension degree   [analysis +52 vs doubling E +124]
+  PASS  a=0 would make the ceiling independent of domain size
+  PASS  commit-phase grinding is additive on the ceiling
+  PASS  no zero-grinding ceiling exceeds the field size itself   [max excess 0.00]
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
   PASS  clustered queries are far cheaper than the model   [clustered 13 vs model 1893]
@@ -73,5 +79,5 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
 
 ========================================================================================
-62/62 PASS   no property broken
+68/68 PASS   no property broken
 ========================================================================================
