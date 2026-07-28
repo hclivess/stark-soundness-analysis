@@ -1,0 +1,102 @@
+
+============================================================================================
+1. THE CORRECTION: what halves under a quantum adversary
+============================================================================================
+
+  frontier.py halved GRINDING only. That was wrong.
+
+  Under Fiat-Shamir the adversary controls the transcript, so finding a
+  favourable challenge is an unstructured search over a marked set of density
+  eps_rbr -- Grover-able. Grinding does not sit outside that search; it is part
+  of the cost of each attempt. So the whole product halves:
+
+      work_classical ~ 2^(g + bits_rbr)     ->   work_quantum ~ 2^((g + bits_rbr)/2)
+
+  PQ bits = classical bits / 2, applied to commit phase, query phase, DEEP and
+  grinding alike. In an INTERACTIVE protocol none of this applies -- the
+  verifier's challenges cannot be searched. Every deployed STARK is
+  non-interactive.
+
+============================================================================================
+2. PROVABLE SOUNDNESS, CLASSICAL vs POST-QUANTUM
+============================================================================================
+  system                  E  R    s   g  classical      PQ  >=128 PQ?  >=100 PQ?
+  ------------------------------------------------------------------------------------
+  RISC Zero             124  2   50   0       50.0    25.0         NO         NO
+  Plonky2 std recur     128  3   28  16       57.9    29.0         NO         NO
+  Miden RECURSIVE_96    128  3   27  16       56.5    28.2         NO         NO
+  NADO (today)           64  1  320  18       47.0    23.5         NO         NO
+  NADO + GF(p^2)        128  1  320  18      111.0    55.5         NO         NO
+  NADO + GF(p^3)        192  1  320  18      155.9    77.9         NO         NO
+  Cairo / StarkNet      251  4   30   0       60.0    30.0         NO         NO
+  Venus / ZisK          192  3   27  16       56.5    28.2         NO         NO
+
+  NOT ONE deployed system reaches 100 bits of PROVABLE post-quantum soundness,
+  and none is close to 128. That is the headline, and it is a direct consequence
+  of the halving: 128 PQ provable bits requires 256 CLASSICAL provable bits, and
+  the best classical provable figure anywhere in this repo is Cairo's ~203.
+
+============================================================================================
+3. WHAT 'POST-QUANTUM' IS AND IS NOT CLAIMING
+============================================================================================
+
+  These systems ARE post-quantum in the sense that matters most: no Shor attack
+  applies. Hash-based IOPs have no discrete log and no factoring to break, so
+  they do not fall over the way an elliptic-curve SNARK does. That property is
+  real and it is why the whole hash-based line exists.
+
+  What they are NOT is 128-bit post-quantum at their advertised parameters. The
+  advertised number is classical. Halving it is the honest PQ figure, and almost
+  nobody publishes that column -- the 2026 SoK already found proven-vs-conjectured
+  to be the least consistently reported dimension; PQ-adjusted is reported even
+  less.
+
+============================================================================================
+4. WHAT IT COSTS TO ACTUALLY REACH 128 PQ BITS
+============================================================================================
+  Need 256 classical provable bits. By THEOREM.md Thm 2 the ceiling is ~(E - 2nu) for JBR and
+  ~(E - nu) for UDR, so at a 2^20 trace:
+
+   target PQ  classical   min E (UDR ceiling)
+  --------------------------------------------
+          64        128                   149
+          80        160                   181
+         100        200                   221
+         128        256                   277
+
+  A 128-bit PQ provable STARK at a 2^20 trace needs roughly a 277-bit field.
+  That is not a small-field system, and it is not most large-field systems
+  either. The honest ceiling for 31-bit fields with degree-4 extensions is
+  ~50 PQ bits.
+
+============================================================================================
+5. THE ONE PLACE THE HALVING IS CHEAP TO FIX
+============================================================================================
+
+  Grinding is the exception worth noting. It is the only term that is free for
+  the VERIFIER, so doubling it to compensate for Grover costs the prover 2^g
+  work and the verifier nothing. Going from g to 2g restores g/2 PQ bits.
+
+  For NADO: GRIND_BITS = 18 contributes 9 PQ bits. Raising to 36 would restore
+  the other 9 at a cost of 2^36 prover hashes -- feasible with the native
+  alghash2 grind loop, and it needs no protocol geometry change. It does not
+  come close to closing the gap on its own, but it is the cheapest bit on the
+  table and the in-circuit grind check is already calibrated for a constant.
+
+============================================================================================
+6. RANKING, PQ-ADJUSTED
+============================================================================================
+  rank      PQ  classical system               status
+  ------------------------------------------------------------
+     1    77.9      155.9 NADO + GF(p^3)       proposed
+     2    55.5      111.0 NADO + GF(p^2)       proposed
+     3    30.0       60.0 Cairo / StarkNet     recalled
+     4    29.0       57.9 Plonky2 std recur    VERIFIED
+     5    28.2       56.5 Venus / ZisK         recalled
+     6    28.2       56.5 Miden RECURSIVE_96   VERIFIED
+     7    25.0       50.0 RISC Zero            VERIFIED
+     8    23.5       47.0 NADO (today)         VERIFIED
+
+  The ordering is driven almost entirely by FIELD SIZE, not by query count or
+  blowup -- which is the same conclusion every other part of this repo reached,
+  now with the PQ factor of two applied on top.
