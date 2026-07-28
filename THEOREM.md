@@ -603,9 +603,14 @@ calculator is **small blowup**, not blowup 4.
 > (`m_min = 0.500`; SP1's parameters.) So Part II's supremum is reached to three
 > decimals only past `s ≈ 20000`, two orders beyond any deployed query count.
 >
-> **The `m ≥ 3` floor binds for exactly one of the seven deployed systems** —
-> SP1, costing it 3.46 bits. For the other six the unconstrained optimum is
-> 4.5 to 846, so the floor is not a constraint at all.
+> **The `m ≥ 3` floor costs zero bits to every deployed system.** *(Corrected in
+> iteration 39: the previous sentence here said it binds for SP1 at 3.46 bits.
+> `m` is the Johnson-regime proximity parameter and SP1 is reported in **UDR**,
+> whose bound `(γn+1)/|F|` has no `m` — the JBR model had been applied to a
+> system that does not use it.)* Across the five systems that actually run JBR,
+> `m*` spans 47 to 846, all far above the floor. The residual is a margin, not a
+> cost: the floor would begin to bind at **2–3× each system's deployed query
+> count**.
 >
 > Hence *neither* convention describes deployment: `m_min` is the `s → ∞` limit
 > nobody is near, and `m = 3` is a floor that binds once while six systems

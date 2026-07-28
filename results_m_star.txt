@@ -60,3 +60,39 @@
   so evaluating at the floor is correct for them. It changes the reading of the
   TOTAL: ceilings are maximised at small m, totals at m*(s), and for six of the
   seven those are very different places.
+
+============================================================================================
+4. CORRECTED: THE FLOOR COSTS NOTHING TO ANY DEPLOYED SYSTEM
+============================================================================================
+  m is the JOHNSON-regime proximity parameter. The UDR bound
+  (gamma*n + 1)/|F| has no m, so it cannot bind a UDR-reported system.
+
+  system           regime     s    m* free  floor binds?    cost
+  --------------------------------------------------------------
+  Airbender           JBR    87      47.33            no    0.00
+  Pico                JBR    84     349.38            no   -0.00
+  ZisK 0.16.1         JBR   229     231.63            no    0.00
+  RISC Zero           JBR    50     846.01            no    0.00
+  Miden               JBR    27     639.46            no   -0.00
+  SP1 6.1.0           UDR   124        n/a   n/a -- no m    0.00
+  OpenVM 1.5.0        UDR   193        n/a   n/a -- no m    0.00
+
+  Total cost across every deployed system: 0.00 bits. Iteration 38's
+  "3.46 bits to SP1" applied the JBR model to a UDR-reported system.
+
+============================================================================================
+5. THE RESIDUAL: HOW MUCH HEADROOM BEFORE THE FLOOR WOULD BIND
+============================================================================================
+  system           deployed s  s where m* = 3   headroom
+  --------------------------------------------------------
+  Airbender                87             221       2.5x
+  Pico                     84             271       3.2x
+  ZisK 0.16.1             229             521       2.3x
+  RISC Zero                50             116       2.3x
+  Miden                    27              62       2.3x
+
+  Every Johnson-regime system sits a factor of 2 to 3 below the query count at
+  which Plonky3's floor would start costing it bits. That is a real margin and a
+  concrete prediction: a JBR system that doubled or tripled its queries would
+  begin paying for a floor that is, as III.2 says, a conservative choice rather
+  than a theorem.

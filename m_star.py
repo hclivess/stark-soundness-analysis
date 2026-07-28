@@ -1,6 +1,28 @@
 """
 The m -> m_min vs m >= 3 hinge is not a convention. It is the query budget.
 
+*** CORRECTED IN ITERATION 39 -- READ BEFORE THE NUMBERS BELOW ***
+Finding 2 below reports that the m >= 3 floor "binds for exactly one deployed
+system, SP1, costing it 3.46 bits". That is wrong, and the error is a scope one:
+m is the JOHNSON-regime proximity parameter, and SP1 is reported in UDR, whose
+bound (gamma*n + 1)/|F| contains no m at all. The 3.46 bits was computed by
+applying the JBR model to a system that does not use it.
+
+Restricted to the five systems that actually operate in the Johnson regime
+(Airbender, Pico, ZisK, RISC Zero, Miden), every m* lies between 47 and 846, so:
+
+    the m >= 3 floor costs ZERO bits to every deployed system.
+
+The residual finding is a margin rather than a cost: the floor would begin to
+bind at 2x to 3x each system's deployed query count. See section 4, added in
+iteration 39, for the corrected table.
+
+Finding 1 (m*(s) monotone decreasing, converging to m_min) is unaffected -- it is
+a property of the JBR objective, not of any system's regime. Finding 3's
+conclusion survives and strengthens, but its "more than two orders of magnitude"
+span used SP1's 1.666; across the five actual JBR systems the span is 47 to 846,
+about 18x.
+
 Five results in THEOREM.md now flip on which value of the proximity parameter
 you assume -- Theorem 3' (blowup 4), Theorem 4 (the query multiplier kappa),
 Theorem 5 (opposite blowup preferences), Theorem 6 (threshold halving's margin)
@@ -181,5 +203,66 @@ def report():
   seven those are very different places.""")
 
 
+JBR_ONLY = [("Airbender", 124, 1, 24, 87, 28),
+            ("Pico", 124, 1, 22, 84, 16),
+            ("ZisK 0.16.1", 192, 1, 21, 229, 16),
+            ("RISC Zero", 124, 2, 21, 50, 0),
+            ("Miden", 128, 3, 18, 27, 16)]
+
+UDR_ONLY = [("SP1 6.1.0", 124, 2, 21, 124, 16),
+            ("OpenVM 1.5.0", 124, 1, 23, 193, 20)]
+
+
+def s_where_m_star_hits(target, R, nu, E, g, hi=200000):
+    """Query count at which m*(s) falls to `target`. Bisection on s."""
+    lo = 1
+    for _ in range(60):
+        mid = (lo + hi) // 2
+        if best_m(R, nu, E, mid, g, steps=1200)[0] > target:
+            lo = mid
+        else:
+            hi = mid
+    return hi
+
+
+def report_regimes():
+    """Iteration 39: the floor question, restricted to the right regime."""
+    sec("4. CORRECTED: THE FLOOR COSTS NOTHING TO ANY DEPLOYED SYSTEM")
+    print("  m is the JOHNSON-regime proximity parameter. The UDR bound")
+    print("  (gamma*n + 1)/|F| has no m, so it cannot bind a UDR-reported system.\n")
+    print(f"  {'system':<15} {'regime':>7} {'s':>5} {'m* free':>10} "
+          f"{'floor binds?':>13} {'cost':>7}")
+    print("  " + "-" * 62)
+    total = 0.0
+    for nm, E, R, T, s, g in JBR_ONLY:
+        nu = T + R
+        mf, vf = best_m(R, nu, E, s, g)
+        _, v3 = best_m(R, nu, E, s, g, lo=3.0)
+        total += max(0.0, vf - v3)
+        print(f"  {nm:<15} {'JBR':>7} {s:>5} {mf:>10.2f} "
+              f"{'YES' if mf < 3 else 'no':>13} {vf-v3:>7.2f}")
+    for nm, E, R, T, s, g in UDR_ONLY:
+        print(f"  {nm:<15} {'UDR':>7} {s:>5} {'n/a':>10} "
+              f"{'n/a -- no m':>13} {'0.00':>7}")
+    print(f"""
+  Total cost across every deployed system: {total:.2f} bits. Iteration 38's
+  "3.46 bits to SP1" applied the JBR model to a UDR-reported system.""")
+
+    sec("5. THE RESIDUAL: HOW MUCH HEADROOM BEFORE THE FLOOR WOULD BIND")
+    print(f"  {'system':<15} {'deployed s':>11} {'s where m* = 3':>15} "
+          f"{'headroom':>10}")
+    print("  " + "-" * 56)
+    for nm, E, R, T, s, g in JBR_ONLY:
+        thr = s_where_m_star_hits(3.0, R, T + R, E, g)
+        print(f"  {nm:<15} {s:>11} {thr:>15} {thr/s:>9.1f}x")
+    print("""
+  Every Johnson-regime system sits a factor of 2 to 3 below the query count at
+  which Plonky3's floor would start costing it bits. That is a real margin and a
+  concrete prediction: a JBR system that doubled or tripled its queries would
+  begin paying for a floor that is, as III.2 says, a conservative choice rather
+  than a theorem.""")
+
+
 if __name__ == "__main__":
     report()
+    report_regimes()

@@ -61,6 +61,9 @@ RETRACTED = [
     ("conservative LOWER bound",
      "classical/2 bounds provable PQ from ABOVE; it is a ceiling",
      24),
+    ("floor binds for exactly one deployed system",
+     "it costs zero -- m is Johnson-regime and SP1 is reported in UDR",
+     39),
 ]
 
 # Extended in iteration 35 after its own first run produced a FALSE POSITIVE:

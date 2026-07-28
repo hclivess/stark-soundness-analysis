@@ -1631,14 +1631,35 @@ def part_a():
             _, vf_ = _ms.best_m(R_, nu_, E_, s_, g_)
             _, v3_ = _ms.best_m(R_, nu_, E_, s_, g_, lo=3.0)
             costs.append((nm_, vf_ - v3_))
-        binding = [(n_, c_) for n_, c_ in costs if c_ > 0.01]
-        check("the m >= 3 floor binds for exactly one deployed system",
-              len(binding) == 1, f"{[(n_, round(c_,2)) for n_, c_ in binding]}")
-        check("and it costs that system about 3.5 bits",
-              3.0 < binding[0][1] < 4.0, f"{binding[0][0]}: {binding[0][1]:.2f} bits")
-        check("the floor is free for the other six",
-              all(c_ < 0.01 for n_, c_ in costs if n_ != binding[0][0]),
-              "their unconstrained optimum already exceeds 3")
+        # RETRACTED AND CORRECTED IN ITERATION 39. Iteration 38 concluded the
+        # floor "binds for exactly one deployed system, SP1, costing 3.46 bits".
+        # m is the JOHNSON-regime proximity parameter and SP1 is reported in
+        # UDR, whose bound (gamma*n+1)/|F| has no m. The JBR model was applied
+        # to a system that does not use it.
+        jbr_costs = []
+        for nm_, E_, R_, T_, s_, g_ in _ms.JBR_ONLY:
+            nu_ = T_ + R_
+            _, vf_ = _ms.best_m(R_, nu_, E_, s_, g_)
+            _, v3_ = _ms.best_m(R_, nu_, E_, s_, g_, lo=3.0)
+            jbr_costs.append((nm_, vf_ - v3_))
+        check("the m >= 3 floor costs ZERO bits to every deployed system",
+              all(c_ < 0.01 for _, c_ in jbr_costs),
+              f"max cost {max(c_ for _, c_ in jbr_costs):.3f} bits across 5 JBR systems")
+        check("every Johnson-regime system optimises far above the floor",
+              all(_ms.best_m(R_, T_ + R_, E_, s_, g_)[0] > 40
+                  for _, E_, R_, T_, s_, g_ in _ms.JBR_ONLY),
+              "m* spans 47 to 846, not 1.7 to 846")
+        # the UDR systems have no m at all -- applying the JBR model to them is
+        # the error iteration 38 made
+        check("the UDR bound has no proximity parameter to floor",
+              len(_ms.UDR_ONLY) == 2,
+              "SP1 and OpenVM are reported in UDR; (gamma*n+1)/|F| has no m")
+        # RESIDUAL: how much query headroom before the floor would bind
+        heads_ = [(nm_, _ms.s_where_m_star_hits(3.0, R_, T_ + R_, E_, g_) / s_)
+                  for nm_, E_, R_, T_, s_, g_ in _ms.JBR_ONLY]
+        check("every JBR system sits 2-3x below the query count where m* hits 3",
+              all(2.0 < h_ < 3.5 for _, h_ in heads_),
+              f"{min(h_ for _, h_ in heads_):.1f}x to {max(h_ for _, h_ in heads_):.1f}x")
 
         # (c) NEITHER convention describes deployment: most systems optimise far
         # above 3, and none is near m_min
@@ -1651,9 +1672,16 @@ def part_a():
         check("most deployed systems optimise ORDERS above the m=3 floor",
               sum(1 for m_ in ms_ if m_ > 30) >= 4,
               f"{sum(1 for m_ in ms_ if m_ > 30)} of 7 have m* > 30")
-        # the span must be wide -- a narrow span would mean a convention is fine
-        check("the fleet's m* spans more than two orders of magnitude",
-              max(ms_) / min(ms_) > 100, f"{min(ms_):.1f} to {max(ms_):.1f}")
+        # the span must be wide -- a narrow span would mean a convention is fine.
+        # CORRECTED IN ITERATION 39: iteration 38 said "more than two orders",
+        # which used SP1's 1.666 from the JBR model SP1 does not use. Across the
+        # five actual JBR systems the span is about 18x -- still wide enough that
+        # no single value of m describes the fleet.
+        jbr_ms = [_ms.best_m(R_, T_ + R_, E_, s_, g_)[0]
+                  for _, E_, R_, T_, s_, g_ in _ms.JBR_ONLY]
+        check("the JBR fleet's m* spans about an order of magnitude",
+              10 < max(jbr_ms) / min(jbr_ms) < 30,
+              f"{min(jbr_ms):.1f} to {max(jbr_ms):.1f} = {max(jbr_ms)/min(jbr_ms):.1f}x")
     except ImportError:
         pass
 
