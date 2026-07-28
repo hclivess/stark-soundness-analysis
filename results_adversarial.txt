@@ -55,6 +55,9 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  a 100-constraint NADO circuit sits near 57 bits, not 63   [57.4]
   PASS  base-field alphas cap NADO below the migrated FRI commit term at any nc
   PASS  migrating the alphas lifts that term by exactly 64 bits
+  PASS  the headline claim flips sign depending on the QROM loss   [halving 51 PQ vs negligible 102 PQ]
+  PASS  PQ figures in this repo are LOWER bounds, not measurements
+  PASS  no consulted calculator publishes a post-quantum column   [soundcalc classical-only; risc0 soundness.rs has no quantum term]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -126,8 +129,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 118, suite has 118]
+  PASS  README's stated check count matches the suite   [README says 121, suite has 121]
 
 ========================================================================================
-118/118 PASS   no property broken
+121/121 PASS   no property broken
 ========================================================================================

@@ -44,6 +44,37 @@ Formal grounding for the round-by-round framework and the FS compilation of FRI:
 For round-by-round sound protocols the classical FS loss is LINEAR in Q rather
 than Q^mu, which is why the classical accounting above is just `bits_rbr`.
 
+UNVERIFIED AGAINST THE AUTHORITATIVE TREATMENT -- READ THIS FIRST
+-----------------------------------------------------------------
+The halving below is the standard ENGINEERING rule ("for lambda post-quantum
+bits, target 2*lambda classical"), derived here from Grover-over-transcripts.
+It is NOT verified against the paper that actually settles the question:
+
+    Chiesa, Di, Hu, Zheng, "How to Prove Post-Quantum Security for Succinct
+    Non-Interactive Reductions", eprint 2025/2166
+
+which is the reference Ethereum's own soundcalc points to for exactly this
+("this correspondence holds for classical adversaries, but is different for
+quantum adversaries in the QROM"). That work proves classical round-by-round
+security IMPLIES post-quantum state-restoration security, and describes itself
+as achieving "a post-quantum analogue of the classical security" via a framework
+that "mirrors classical security analyses". Both phrasings hint the concrete
+loss may be SMALLER than a full halving. I could not extract the quantitative
+statement -- eprint PDFs return HTTP 403 to this session and the abstract does
+not quantify it.
+
+THE SENSITIVITY IS NOT A DETAIL. At degree 4 the classical ceiling is 102 bits:
+
+    full halving (assumed here)  ->  51 PQ  -> nothing clears 100
+    ~10-bit loss                 ->  92 PQ  -> nothing clears 100
+    negligible loss              -> 102 PQ  -> most systems clear it
+
+So the repository's headline -- "no deployed system reaches 100 provable
+post-quantum bits" -- is TRUE under the halving and FALSE under a negligible
+loss. Every PQ figure in this file and in pq_design.py should be read as a
+conservative LOWER BOUND, not a measurement. Settling it requires reading
+2025/2166 directly.
+
 WHERE THIS IS CONSERVATIVE (stated so it is not oversold)
 ---------------------------------------------------------
 1. Grover parallelises poorly: k machines give only a sqrt(k) speedup, so a

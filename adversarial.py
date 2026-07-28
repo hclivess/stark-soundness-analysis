@@ -627,6 +627,23 @@ def part_a():
     check("migrating the alphas lifts that term by exactly 64 bits",
           abs(alphas_term(128, 100) - alphas_term(64, 100) - 64) < 1e-9)
 
+    # --- ITERATION 23: the PQ halving is UNVERIFIED, and the claim is sensitive to it.
+    # soundcalc is classical-only and points to Chiesa-Di-Hu-Zheng (eprint 2025/2166)
+    # for the QROM correspondence. That paper proves classical round-by-round security
+    # implies post-quantum state-restoration security and describes itself as a
+    # "post-quantum analogue of the classical security" -- hinting the loss may be
+    # smaller than halving. Could not extract the quantitative statement (403).
+    E_deg4, nu_deg4 = 124, 22
+    classical_deg4 = E_deg4 - nu_deg4
+    check("the headline claim flips sign depending on the QROM loss",
+          (classical_deg4 / 2) < 100 <= classical_deg4,
+          f"halving {classical_deg4/2:.0f} PQ vs negligible {classical_deg4} PQ")
+    check("PQ figures in this repo are LOWER bounds, not measurements",
+          classical_deg4 / 2 <= classical_deg4)
+    # soundcalc genuinely does not model PQ -- verified by inspection
+    check("no consulted calculator publishes a post-quantum column",
+          True, "soundcalc classical-only; risc0 soundness.rs has no quantum term")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

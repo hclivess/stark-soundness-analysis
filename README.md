@@ -32,7 +32,7 @@ fitting. `a = 2` would double every step.
 Total soundness is a **minimum** over all terms, so **the code layer always
 binds**. That single fact explains the rest of this repo.
 
-Run `python3 adversarial.py` — 118 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 121 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -47,6 +47,11 @@ no lattice. It is a configuration choice nobody has revisited.
 → `pq_design.py`, `quantum.py`
 
 **2. Under a quantum adversary, everything halves — not just grinding.**
+*(Caveat added iteration 23: the halving is the standard engineering rule, not
+verified against [eprint 2025/2166](https://eprint.iacr.org/2025/2166), the
+treatment soundcalc itself defers to. If the real QROM loss is small rather than
+a square root, degree-4 systems sit at ~102 PQ bits and this finding inverts.
+Treat every PQ number here as a conservative lower bound.)*
 Fiat–Shamir hands the adversary transcript control, so finding a favourable
 challenge is Grover-able. `PQ bits = classical / 2`, applied to commit phase,
 query phase, DEEP and grinding alike. **No deployed system reaches 100 bits of
@@ -104,7 +109,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **118 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **121 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `pq_design.py` | what 128 PQ bits actually costs to build |
