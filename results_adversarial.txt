@@ -53,6 +53,10 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  log-randomness leaves the exponent a = 1 unchanged   [both 1.0000 bits per doubling of n]
   PASS  Conjecture 1's d/2 radius yield IS the UDR yield for RS codes   [max dev 0.00e+00]
   PASS  Conjecture 1 would not change the exponent a
+  PASS  README's m_eq formula matches the implementation   [formula string present]
+  PASS  README's '52 -> 103 bits' ceiling claim is reproducible   [52 -> 103]
+  PASS  README's SP1 crossover (s*=112, s=124) is reproducible   [s*=112]
+  PASS  README's PQ = classical/2 claim matches quantum.py
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
   PASS  clustered queries are far cheaper than the model   [clustered 13 vs model 1893]
@@ -90,7 +94,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
+  PASS  README's stated check count matches the suite   [README says 86, suite has 86]
 
 ========================================================================================
-81/81 PASS   no property broken
+86/86 PASS   no property broken
 ========================================================================================

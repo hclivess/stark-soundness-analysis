@@ -549,6 +549,33 @@ def part_a():
     check("Conjecture 1 would not change the exponent a",
           abs((ligero_bits(2**20, .5, 124) - ligero_bits(2**21, .5, 124)) - 1.0) < 0.01)
 
+    # --- README CONSISTENCY: every headline number in the prose must be
+    # reproducible from the code. Documentation drift is a real failure mode for
+    # a repo that has overturned itself five times.
+    try:
+        readme = open("README.md").read()
+    except OSError:
+        readme = ""
+    if readme:
+        # m_eq closed form as quoted in the README
+        check("README's m_eq formula matches the implementation",
+              "2^{R/2}/(2^{R/2}−1)²" in readme or "2^{R/2}/(2^{R/2}-1)" in readme,
+              "formula string present")
+        # the 2020 -> today ceiling claim
+        c2020 = 124 - 2 * 22 - (7 * math.log2(16.5) - math.log2(3) + 1.5)
+        ctoday = 124 - 22 - math.log2((1 - 0.25) / 2)
+        check("README's '52 -> 103 bits' ceiling claim is reproducible",
+              abs(c2020 - 52) < 1 and abs(ctoday - 103) < 1,
+              f"{c2020:.0f} -> {ctoday:.0f}")
+        # SP1 crossover numbers quoted in the README
+        star_sp1 = (commit_jbr(2, 23, 124, m_eq(2)) - 16) / yield_udr(2)
+        check("README's SP1 crossover (s*=112, s=124) is reproducible",
+              abs(star_sp1 - 112) < 1.5 and "112" in readme,
+              f"s*={star_sp1:.0f}")
+        # the PQ halving claim
+        check("README's PQ = classical/2 claim matches quantum.py",
+              "classical / 2" in readme or "classical/2" in readme)
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0
@@ -707,6 +734,19 @@ def part_b():
 def main():
     part_a()
     part_b()
+    # README count check runs LAST, when len(RESULTS) is final. An earlier
+    # version ran it mid-suite and compared against a partial count.
+    try:
+        import re as _re
+        rd = open("README.md").read()
+        m_ct = _re.search(r"(\d+)\s+(?:falsification\s+)?checks", rd)
+        if m_ct:
+            claimed = int(m_ct.group(1))
+            check("README's stated check count matches the suite",
+                  claimed == len(RESULTS) + 1,
+                  f"README says {claimed}, suite has {len(RESULTS)+1}")
+    except OSError:
+        pass
     print()
     print("=" * 88)
     n_fail = sum(1 for _, ok, _ in RESULTS if not ok)

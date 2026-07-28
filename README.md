@@ -1,182 +1,156 @@
-# STARK soundness analysis — where the slack actually is
+# The provable-soundness ceiling of hash-based proof systems
 
-Concrete soundness modelling for FRI-based proof systems, a map of the
-post-quantum argument-system frontier, and an honest accounting of which
-parts of the security budget are improvable, which are conjecture-bound, and
-which are information-theoretically floored.
+Everything in this repository reduces to one equation and one classification.
 
 ```
-python3 real_configs.py       # START HERE -- source-verified configs, BCHKS25 bound
-python3 regimes.py            # four-regime model post the 2025 capacity disproof
-python3 verify_theorem.py     # numerical checks for THEOREM.md Parts I-II
-python3 stark_soundness.py    # original BCIKS20 model + landscape (superseded)
-python3 frontier.py           # quantum adjustment + frontier map + slack decomposition
+ceiling = E − a·ν − log₂C + g_commit
 ```
 
-No dependencies beyond the standard library.
+`E` = log₂ of the challenge field, `ν` = log₂ of the evaluation domain, `a` = the
+exponent on the domain size in the commit-phase error, `C` = the bound's constant
+factor, `g_commit` = commit-phase proof-of-work.
 
-## Read this first
-
-The analysis was revised twice as better information arrived, and the later
-revisions overturn earlier headlines. In order of authority:
-
-1. **`SOURCES.md`** — configurations and formulas read from upstream source on
-   2026-07-28, with verbatim quotes. Supersedes all recalled parameters.
-2. **`THEOREM.md` Part III** — what the real source changed.
-3. **`THEOREM.md` Part II** — the post-disproof regime model.
-4. **`THEOREM.md` Part I** and the findings below — built on BCIKS20, now
-   superseded by BCHKS25 in several numbers.
-
-Three headline corrections, in short:
-
-- **The RS up-to-capacity conjecture is not open — it was disproved in late
-  2025** (Crites–Stewart 2025/2046; Diamond–Gruen 2025/2010). An earlier
-  revision called proving it "the highest-leverage open problem in the field".
-  Johnson-bound soundness is untouched, and the repricing costs 1–3 queries.
-- **BCIKS20's `(m+½)⁷·n²` commit bound is superseded by BCHKS25's
-  `(2m'⁵+…)·n`** — exponent 7→5 and `n²→n`, worth ~+29 bits. Plonky3 ships this
-  today. Ceilings below that cite ~77 bits should read ~90+.
-- **Per-system blowup/query/grinding values were recalled, and mostly were not
-  real configs.** Only RISC Zero ships one (blowup 4, 50 queries, no grinding,
-  trace 2²⁰, 97-bit conjectured target — my recollection was right). Plonky3 and
-  Stwo take parameters from the caller.
-
-The most durable single number: **at their own deployed query counts these
-systems have ~50–60 bits of provable soundness against ~97–100 conjectured.**
-
-## Scope, honestly stated
-
-This repo does **not** contain a new proof system that surpasses STARKs. That
-is a multi-year research programme ending in a security proof, and anyone who
-tells you otherwise is selling something. What it contains is the work that
-has to come first: a quantitative account of where the exploitable slack in
-the current constructions is, so that effort aimed at surpassing them is
-aimed at the right term.
-
-The model follows **ethSTARK Documentation v1.2** (Ben-Sasson, Goldberg,
-Kopparty, Saraf), Sections 5–6, which instantiates **BCIKS20**, "Proximity
-Gaps for Reed–Solomon Codes" (Ben-Sasson, Carmon, Ishai, Kopparty, Saraf).
-
-## Findings
-
-### 1. The conjecture is worth exactly 2×, uniformly
-
-Per-query security yield, `R = log2(blowup)`:
-
-| regime | per-query yield | status |
+| layer | exponent `a` | numerator |
 |---|---|---|
-| unique decoding | `-log2((1+ρ)/2)` | unconditional |
-| Johnson (BCIKS20) | `≈ R/2` | proven |
-| capacity (ethSTARK Conj. 1) | `R` | conjectured |
+| sumcheck / zerocheck / RLC / Jagged | **0** | `O(log n)` or `O(constraints)` |
+| code proximity (FRI, WHIR, Ligero/Brakedown) | **≥ 1** | `O(n^a)` |
 
-The ratio is 2.19× at blowup 2 and converges to 2.05× at blowup 16. Every
-deployed STARK's headline security number depends on this conjecture, and the
-dependence is worth a factor of two in query count — no more, no less.
+Total soundness is a **minimum** over all terms, so **the code layer always
+binds**. That single fact explains the rest of this repo.
 
-### 2. Every 31-bit-field system is conjecture-bound *by construction*
+Run `python3 adversarial.py` — 86 checks written to falsify these claims, not
+confirm them. It has caught two real errors in my own work.
 
-The FRI commit phase contributes `E + log2(3) − 7·log2(m+½) − 1.5R − 2ν` bits,
-where `E = log2|F_ext|`. This term cannot be bought with queries. At a
-degree-4 extension of a 31-bit field (`E = 124`) and a 2²⁰ trace:
+---
 
-| system | E | proven ceiling | conjectured ceiling | E needed for 100 proven |
-|---|---|---|---|---|
-| Stwo (M31) | 124 | **78.0** | 102.0 | 147 |
-| Plonky3 (KoalaBear) | 124 | **78.0** | 102.0 | 147 |
-| RISC Zero (BabyBear) | 124 | **74.5** | 100.0 | 150 |
-| Plonky2 (Goldilocks) | 128 | **75.0** | 102.0 | 154 |
-| Winterfell / Miden | 192 | 139.0 | 166.0 | 154 |
-| Cairo / StarkNet | 251 | 194.5 | 223.0 | 157 |
+## The five findings that matter
 
-Those ceilings hold at *unlimited* query count. 100 bits of unconditional
-security is unreachable at `E = 124` — not at any query count, not at any
-grinding level, not at any blowup factor. The small-field performance win is
-paid for in assumption strength, and that is a design decision rather than a
-tuning oversight.
+**1. Extension degree 4 is a universal default, and it caps every deployed
+system near 50 post-quantum bits.** RISC Zero, SP1, OpenVM, OpenVM2, Pico,
+Airbender all use it. Degree 9–10 over a 31-bit base reaches 128 PQ bits for
+~800 KiB, resting on collision resistance plus the random oracle — no conjecture,
+no lattice. It is a configuration choice nobody has revisited.
+→ `pq_design.py`, `quantum.py`
 
-### 3. The Johnson parameter `m` is a free knob nobody exposes
+**2. Under a quantum adversary, everything halves — not just grinding.**
+Fiat–Shamir hands the adversary transcript control, so finding a favourable
+challenge is Grover-able. `PQ bits = classical / 2`, applied to commit phase,
+query phase, DEEP and grinding alike. **No deployed system reaches 100 bits of
+provable post-quantum soundness.** The quantum weakness of a hash-based STARK is
+not the hash — it is Fiat–Shamir.
+→ `quantum.py`
 
-`m` trades per-query yield against the commit term at rate `7·log2(m+½)`.
-Optimising it is free — it changes no protocol, only the analysis:
+**3. The regime crossover predicts real engineering decisions, 5/5.**
+Unique decoding beats the Johnson bound above `s* = (K_J(m_eq) − g)/y_UDR`, where
+`m_eq(R) = 2^{R/2}/(2^{R/2}−1)²`. Tested against five production zkVMs whose
+teams chose independently — two above the crossover in UDR, three below in JBR —
+the theorem calls every one. SP1's config literally declares `udr_only = true`
+at `s = 124` against a predicted `s* = 112`.
+→ `regime_crossover.py`, `THEOREM.md` Thm 7
 
-| system | m\* | bits at m\* | bits at m=16 | Δ |
-|---|---|---|---|---|
-| Boojum (zkSync) | 6 | 58.8 | 50.8 | **+8.0** |
-| Plonky2 | 9 | 55.8 | 50.8 | **+5.0** |
-| Plonky3 (BabyBear) | 10 | 54.8 | 50.3 | **+4.6** |
-| ethSTARK doc params | 1 | 5.5 | −18.7 | **+24.2** |
+**4. Two of the five levers are free, and belong to whoever last proved a
+theorem.** A system deployed in 2020 at 31-bit⁴ had a ceiling of 52 classical
+bits. The identical system today has 103 — no config change, no protocol change.
+The exponent went `a: 2 → 1` (BCIKS20 → BCHKS25) and the constant improved.
+Each decrement of `a` is worth `ν` bits, more than doubling the extension degree
+buys per unit of proof size.
+→ `ceiling_anatomy.py`
 
-### 4. Grinding is half-price against a quantum adversary
+**5. The `a ≥ 1` floor is provably tight, not a proof artifact.** For the
+interleaved linear-code test (Ligero, and hence Brakedown), Roth–Zémor give
+false-witness probability `(e+1)/q`, and Diamond–Posen Remark 2 proves it
+**cannot be decreased**, with an explicit counterexample attaining it. So the
+`2 → 1` improvement was real proof engineering; `1 → 0` is not available for this
+class of test. The only `a = 0` code route known is conditional on an unproven
+conjecture.
+→ `THEOREM.md`, `adversarial.py`
 
-Proof-of-work grinding costs the verifier nothing, which is why deployed
-systems lean on 16–24 bits of it. Grover gives a quadratic speedup on nonce
-search, so `g` bits of grinding are worth `g/2` post-quantum. Stwo's
-representative parameters lose 10 bits this way; recovering them costs 10 more
-FRI queries, which the verifier *does* pay for.
+---
 
-A system advertising 100 post-quantum bits while leaning on 20 bits of
-grinding is advertising ~90.
+## Where the cost actually is
 
-### 5. Where the slack is, ranked by impact-to-difficulty
+Soundness parameters are nearly free on the prover. **NTT is 90–91% of proof
+generation latency**, and front-end trace generation is 20–30% today and would
+exceed 90% at a 5× backend speedup. Query count governs proof size and verifier
+work, not prover time. The next order of magnitude in zkVM performance looks
+like systems engineering, not a better low-degree test.
+→ `EFFICIENCY.md`
 
-- **Commit-phase constant — best ratio on the list.** The `(m+½)⁷` factor in
-  BCIKS20 is an artifact of proof technique, not a lower bound. Nobody
-  believes exponent 7 is tight. Reducing it to 3 hands every small-field
-  system ~11 free bits. This is proof engineering on an existing theorem, not
-  a new assumption.
-- **The RS capacity conjecture — highest absolute impact.** Proving
-  Reed–Solomon codes list-decodable to capacity with polynomial list size
-  upgrades every deployed STARK by 2× simultaneously. Precise, known
-  statement; pure mathematics.
-- **Query count — already solved, adoption lag.** STIR shrinks the rate each
-  round rather than holding it fixed: `O(log d + λ log log d)` queries versus
-  FRI's `O(λ log d / log(1/ρ))`, worth 1.25–2.4× in practice. Anyone still on
-  vanilla FRI is leaving that on the table today.
-- **Arithmetization — widest open space.** Everyone optimises the polynomial
-  commitment; the encoding of computation into constraints is where Binius
-  (bit-level witnesses) and WHIR (native multilinear queries) found their
-  wins. More slack here than in FRI itself.
+Merkle authentication paths share prefixes, and the top `log₂ s` levels of the
+tree saturate entirely. Charging `s·depth` overcounts by 33–52% at the query
+counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
+→ `merkle_dedup.py`
 
-**Not slack:** an IOPP for a rate-ρ code has an information-theoretic floor
-around `λ/log(1/ρ)` queries in the correlated-agreement framework. You beat it
-by changing the *code* (Binius, Blaze, BaseFold) or the *proximity test*
-(STIR, WHIR) — never by tuning FRI. That is a cheap filter for anyone pitching
-you a scheme.
-
-## The three requirements do not jointly maximise
-
-Post-quantum + scaling + resilient is a Pareto frontier, not a checklist:
-
-- **Resilient** — hash-based IOPs rest on collision resistance plus the ROM,
-  the weakest assumption anyone knows how to build succinct arguments from.
-  FRI/STIR/WHIR are already at that floor. Nothing is *more* resilient.
-- **Scaling** — lattice systems (LaBRADOR ~50KB, Greyhound √n verifier)
-  produce far smaller proofs, paying with M-SIS: post-quantum, but a
-  structured assumption with a live cryptanalytic literature whose parameter
-  estimates have moved before.
-
-So "surpass STARKs, post-quantum, scaling, resilient" resolves to one of:
-take STIR/WHIR's query win and stay hash-based; move to lattices and accept a
-structured assumption; or attack the conjecture gap itself.
-
-## Caveats
-
-- Field and extension-degree parameters are exact. **Blowup, query count, and
-  grinding values per system are representative defaults from recollection,
-  not read from source.** They are the entries to verify before leaning on any
-  per-system conclusion.
-- Frontier asymptotics are transcribed from the cited literature, not
-  re-derived here.
-- The proof-size model counts Merkle authentication paths only, uncompressed —
-  no path sharing, no Merkle caps, no batching. Absolute sizes are therefore
-  overestimates; relative comparisons hold.
-- The 85.3-bit quantum hash cap is `256/3` (BHT), which requires implausible
-  quantum RAM. The defensible figure is `256/2 = 128`, which binds nothing in
-  these tables.
+---
 
 ## Files
 
-- `stark_soundness.py` — soundness terms, cost model, `m` optimiser, landscape
-  table, ceiling analysis, minimum-proof-size parameter search
-- `frontier.py` — quantum adjustment, frontier map (FRI → DEEP-FRI → Proximity
-  Gaps → STIR → WHIR → BaseFold → Binius → Blaze → lattices), slack decomposition
+| file | what |
+|---|---|
+| `adversarial.py` | **86 falsification checks + 26 forgery attacks.** Start here. |
+| `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
+| `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
+| `pq_design.py` | what 128 PQ bits actually costs to build |
+| `regime_crossover.py` | Thm 7, the UDR/JBR crossover, 5/5 prediction |
+| `real_configs.py` | source-verified configs; BCHKS25 vs BCIKS20 |
+| `merkle_dedup.py` | path deduplication, validated by simulation |
+| `lattice_compare.py` | why lattices escape the ceiling and what it costs |
+| `nado_audit.py` | audit of a live chain: 47 provable bits vs 146 claimed |
+| `nado_ext_fri_prototype.py` | GF(p²) FRI fold, 10/10 against real modules |
+| `THEOREM.md` | proofs, Parts I–IV |
+| `SOURCES.md` | verbatim upstream quotes for every parameter |
+| `EFFICIENCY.md` | the prover cost decomposition |
+| `HORIZONS.md` | multilinear vs lattice, and what each costs |
+
+Superseded but retained for the record: `stark_soundness.py`, `regimes.py`,
+`frontier.py`, `post_johnson.py`, `verify_theorem.py`.
+
+---
+
+## Corrections made along the way
+
+This repo overturned itself repeatedly. Recording it, because the correction
+rate is the main reason to trust what survived.
+
+1. **The RS up-to-capacity conjecture is not open — it was disproved in late
+   2025** (Crites–Stewart 2025/2046; Diamond–Gruen 2025/2010). An early revision
+   called proving it "the highest-leverage open problem in the field."
+2. **BCIKS20's `(m+½)⁷n²` bound is superseded by BCHKS25's `(2m'⁵+…)n`** —
+   exponent 7→5 and `n²→n`, worth +29 bits. Parts I and II were built on the
+   older bound.
+3. **Lattices escape the ceiling.** `HORIZONS.md` originally implied they only
+   trade resilience for speed.
+4. **"Exactly three levers" was wrong** — there are five, and two of them have
+   moved in the literature without anyone changing a config.
+5. **Per-system parameters were recalled, not read**, until `SOURCES.md`. Only
+   RISC Zero shipped a production config; Plonky3 and Stwo ship none.
+
+The adversarial suite additionally caught two numerical errors in my own math —
+a catastrophic-cancellation instability in Theorem 4's closed form, and a
+rate-dependent constant used at the wrong rate — neither of which re-reading the
+derivations would have found.
+
+---
+
+## Open, and not closeable from here
+
+- **Q2** (action-orbit, eprint 2026/861) would give `a = 0` on a code layer,
+  worth ~22 bits. Conditional on an unproven sparse-dominance conjecture.
+- **Diamond–Posen Conjecture 1**: does the interleaved test reach the
+  unique-decoding radius while keeping the sharp `(e+1)/q`? Worth ~37% of
+  queries. Open in the literature.
+
+Both are genuinely open problems, not gaps in this analysis.
+
+---
+
+## Caveats
+
+The model is FRI/code-layer only; soundcalc composes DEEP-ALI and LogUp terms
+this repo does not. It therefore **upper bounds** published totals — verified to
+never undershoot across five systems. Where FRI binds it matches to 0.1 bits;
+where another component binds it runs 3–5 high, and that residual is the
+untuned-`m` gap, measured.
+
+Asymptotics for systems outside the verified set are transcribed from cited
+literature, not re-derived. The NADO audit was read from source, not executed.
