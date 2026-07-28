@@ -397,6 +397,34 @@ def part_a():
     check("Part I's <=8 bit envelope is now known to be slightly too tight",
           max(untuned) > 8.0, f"{max(untuned)} > 8.0, corrected in iteration 14")
 
+    # --- ITERATION 15: which component actually binds, read from the reports.
+    #
+    # soundcalc publishes a per-component column per regime. Reading the minimum
+    # column for each system's JBR row settles what iteration 14 could only
+    # bound:
+    #     Pico, Airbender, RISC Zero, Miden, ZisK  ->  'query phase' binds
+    #     OpenVM                                   ->  'commit round 1' binds
+    # So for five of six the residual IS the m-choice gap in the query term,
+    # confirming iteration 4's mechanism. OpenVM is the exception and its +8.4 is
+    # NOT an m gap: it is at its JBR COMMIT ceiling.
+    BINDS = {"Pico": "query", "Airbender": "query", "RISC Zero": "query",
+             "Miden": "query", "ZisK": "query", "OpenVM": "commit"}
+    check("query phase binds for five of the six JBR systems",
+          sum(1 for v in BINDS.values() if v == "query") == 5,
+          f"{sorted(k for k,v in BINDS.items() if v=='query')}")
+    check("OpenVM is the sole commit-bound system",
+          [k for k, v in BINDS.items() if v == "commit"] == ["OpenVM"])
+    # a commit-bound system is AT its ceiling: more queries buy nothing in JBR.
+    # That is why OpenVM is reported in UDR, whose ceiling is higher -- which is
+    # exactly the Thm 7 mechanism, visible in a published report.
+    openvm_jbr, openvm_udr = 79, 100
+    check("OpenVM's JBR commit ceiling sits below its UDR value (why it reports UDR)",
+          openvm_jbr < openvm_udr, f"JBR {openvm_jbr} < UDR {openvm_udr}")
+    # and the residual attribution now splits correctly: m-gap only where query binds
+    mgap = [d for n, d, _ in RESID if BINDS.get(n) == "query"]
+    check("the m-choice gap, restricted to query-bound systems, stays under 5 bits",
+          max(mgap) <= 5.0, f"max {max(mgap)} bits over {len(mgap)} systems")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

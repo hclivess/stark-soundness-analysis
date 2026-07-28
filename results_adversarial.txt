@@ -25,6 +25,10 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  optimising m never LOSES to a fixed m (residuals all >= 0)
   PASS  measured JBR residual stays within a 9-bit envelope   [max measured 8.4 bits (OpenVM)]
   PASS  Part I's <=8 bit envelope is now known to be slightly too tight   [8.4 > 8.0, corrected in iteration 14]
+  PASS  query phase binds for five of the six JBR systems   [['Airbender', 'Miden', 'Pico', 'RISC Zero', 'ZisK']]
+  PASS  OpenVM is the sole commit-bound system
+  PASS  OpenVM's JBR commit ceiling sits below its UDR value (why it reports UDR)   [JBR 79 < UDR 100]
+  PASS  the m-choice gap, restricted to query-bound systems, stays under 5 bits   [max 4.8 bits over 5 systems]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -96,8 +100,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 88, suite has 88]
+  PASS  README's stated check count matches the suite   [README says 92, suite has 92]
 
 ========================================================================================
-88/88 PASS   no property broken
+92/92 PASS   no property broken
 ========================================================================================
