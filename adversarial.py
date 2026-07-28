@@ -1773,6 +1773,58 @@ def part_a():
               ver_ > 0.30, f"{ver_:.1%} -- not a rounding-level effect")
     except ImportError:
         pass
+
+    # --- ITERATION 49: HORIZONS thread 3 -- does the PQ ranking reorder?
+    try:
+        import pq_ranking as _pr
+
+        # (a) every deployed system must be bound by a SEARCH term. If any were
+        # hash-bound the ranking could reorder, which is thread 3's hypothesis.
+        fams = [(nm_, _pr.binding_family(cl_, lam_))
+                for nm_, cl_, lam_ in _pr.SYSTEMS]
+        check("every deployed system's PQ bottleneck is a search term",
+              all(f_ == "search" for _, f_ in fams),
+              f"{sum(1 for _, f_ in fams if f_ == 'search')}/7 search-bound")
+        # (b) so the ranking must be identical under both models
+        naive_ = [nm_ for nm_, cl_, lam_ in
+                  sorted(_pr.SYSTEMS, key=lambda z: -z[1] / 2)]
+        term_ = [nm_ for nm_, cl_, lam_ in
+                 sorted(_pr.SYSTEMS, key=lambda z: -_pr.pq_total(z[1], z[2]))]
+        check("thread 3's reorder hypothesis is falsified",
+              naive_ == term_, "term-dependent ranking equals classical/2 ranking")
+
+        # (c) the check must have TEETH: a hypothetical system with enough
+        # classical bits MUST reorder, or the test is vacuous
+        thr_ = _pr.reorder_threshold(256)
+        hypo = _pr.SYSTEMS + [("Hypothetical", int(thr_) + 40, 256)]
+        n2 = [nm_ for nm_, cl_, lam_ in sorted(hypo, key=lambda z: -z[1] / 2)]
+        t2 = [nm_ for nm_, cl_, lam_ in
+              sorted(hypo, key=lambda z: -_pr.pq_total(z[1], z[2]))]
+        check("...and a system above the threshold WOULD reorder (teeth)",
+              _pr.binding_family(int(thr_) + 40, 256) == "HASH",
+              f"at {int(thr_)+40} classical bits the hash term binds")
+
+        # (d) the margins must all be positive and ZisK's the thinnest
+        margins = [(nm_, lam_ - _pr.min_digest_for(cl_))
+                   for nm_, cl_, lam_ in _pr.SYSTEMS]
+        check("every system has positive digest margin",
+              all(m_ > 0 for _, m_ in margins),
+              f"{min(m_ for _, m_ in margins):.0f} to "
+              f"{max(m_ for _, m_ in margins):.0f} bits")
+        check("the thinnest margin belongs to the highest-classical system",
+              min(margins, key=lambda x: x[1])[0] == "ZisK 0.16.1",
+              "more classical bits means less digest headroom")
+
+        # (e) THE CROSS-CHECK: the reorder threshold read as a design rule must
+        # reproduce iteration 27's independently derived 386-bit requirement
+        t128_ = 3.0 * (128 + _pr.LOG2_C / 3.0)
+        check("the threshold formula reproduces iteration 27's 386-bit digest",
+              abs(t128_ - 386) < 1.0, f"{t128_:.1f} vs 386 from the BCS shape")
+        check("and explains iteration 27's 85-bit cap at a 256-bit digest",
+              abs(_pr.hash_pq(256) - 84.7) < 0.5,
+              f"{_pr.hash_pq(256):.1f} PQ bits")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

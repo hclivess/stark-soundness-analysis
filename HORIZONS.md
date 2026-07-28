@@ -151,10 +151,14 @@ conjecture on resilience grounds should not then adopt M-SIS to go faster.
    matches the verified round-0 commit term to 0.58 bits; `a = 1` is confirmed
    round-by-round across 21 verified rounds; and `merkle_dedup.py` predicts
    37.4% against a verified 38.1%, understating in the conservative direction.
-3. **The quantum column, redone.** `frontier.py`'s Grover adjustment predates
-   the UDR/JBR/T regime split. Grinding is still halved, but the *binding term*
-   differs per regime, so the post-quantum ranking may reorder. This is directly
-   on the stated brief and is the most under-analysed item in the repo.
+3. ~~**The quantum column, redone.**~~ — **PULLED, iteration 49. Hypothesis
+   falsified.** The ranking does *not* reorder: every deployed system is bound by
+   its query phase, which is a **search** term losing exactly a factor 2, so the
+   loss is uniform and order is preserved. The regime split decides which *field*
+   term binds, and every field term is a search term. A reorder needs a
+   **hash**-bound system, i.e. >169 classical bits at a 256-bit digest — the
+   highest deployed figure is ZisK's 128, with 62–182 bits of digest margin
+   across the fleet (`pq_ranking.py`).
 4. **LatticeFold+ concrete parameters** — M-SIS dimensions and proof sizes at
    64-bit fields, to price path (b) properly rather than qualitatively.
 

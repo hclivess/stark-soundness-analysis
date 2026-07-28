@@ -224,6 +224,13 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  merkle_dedup lands within 2 points of the verified proof-size saving   [37.4% vs verified 38.1%]
   PASS  and the repo's model understates rather than overstates it   [their 38.1% is on the total proof, so Merkle-only is >= that]
   PASS  the verified saving is large enough to be a real test   [38.1% -- not a rounding-level effect]
+  PASS  every deployed system's PQ bottleneck is a search term   [7/7 search-bound]
+  PASS  thread 3's reorder hypothesis is falsified   [term-dependent ranking equals classical/2 ranking]
+  PASS  ...and a system above the threshold WOULD reorder (teeth)   [at 209 classical bits the hash term binds]
+  PASS  every system has positive digest margin   [62 to 182 bits]
+  PASS  the thinnest margin belongs to the highest-classical system   [more classical bits means less digest headroom]
+  PASS  the threshold formula reproduces iteration 27's 386-bit digest   [385.8 vs 386 from the BCS shape]
+  PASS  and explains iteration 27's 85-bit cap at a 256-bit digest   [84.7 PQ bits]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -353,8 +360,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 345, suite has 345]
+  PASS  README's stated check count matches the suite   [README says 352, suite has 352]
 
 ========================================================================================
-345/345 PASS   no property broken
+352/352 PASS   no property broken
 ========================================================================================

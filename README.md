@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 345 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 352 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -147,11 +147,12 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **345 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **352 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
 | `capacity_frs.py` | capacity moved to folded RS — and buys ~0%, not 50% |
+| `pq_ranking.py` | HORIZONS thread 3: the PQ ranking does **not** reorder, and the threshold |
 | `sp1_verified.py` | SP1's components, machine-checked: the 100 is set by FRI query **and** lookup |
 | `soundcalc_lean.py` | the Lean formalization: `m` is derived, not free; Thm 7 robust to it |
 | `m_star.py` | the `m` hinge is the query budget; the `m≥3` floor costs **zero** (it 39 corrects it 38) |

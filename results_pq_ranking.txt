@@ -1,0 +1,62 @@
+
+============================================================================================
+1. EVERY DEPLOYED SYSTEM IS BOUND BY A SEARCH TERM
+============================================================================================
+  system           classical  lambda   hash PQ  search PQ  PQ total    binds
+  ------------------------------------------------------------------------
+  ZisK 0.16.1            128     256      84.7       64.0      64.0   search
+  SP1 6.1.0              100     248      82.1       50.0      50.0   search
+  OpenVM 1.5.0           100     256      84.7       50.0      50.0   search
+  Airbender               67     256      84.7       33.5      33.5   search
+  Miden                   55     256      84.7       27.5      27.5   search
+  Pico                    53     256      84.7       26.5      26.5   search
+  RISC Zero               48     256      84.7       24.0      24.0   search
+
+  The regime split thread 3 worried about decides which FIELD term binds -- and
+  every field term is a search term, losing exactly a factor 2 (Grover achieves,
+  BBBV forbids better). The hash term is the only one with a different exponent,
+  and it binds nowhere.
+
+============================================================================================
+2. SO THE RANKING DOES NOT REORDER
+============================================================================================
+  naive classical/2 : ZisK 0.16.1, SP1 6.1.0, OpenVM 1.5.0, Airbender, Miden, Pico, RISC Zero
+  term-dependent    : ZisK 0.16.1, SP1 6.1.0, OpenVM 1.5.0, Airbender, Miden, Pico, RISC Zero
+
+  IDENTICAL -- no reorder. A uniform factor preserves order, and the factor is uniform because
+  the binding family is uniform.
+
+============================================================================================
+3. WHAT WOULD CAUSE ONE, AND HOW FAR AWAY IT IS
+============================================================================================
+  the hash term binds when lambda < 3*(classical/2 + 0.60)
+
+  system           needs lambda >=    has    margin
+  --------------------------------------------------
+  ZisK 0.16.1                193.8    256      62.2
+  SP1 6.1.0                  151.8    248      96.2
+  OpenVM 1.5.0               151.8    256     104.2
+  Airbender                  102.3    256     153.7
+  Miden                       84.3    256     171.7
+  Pico                        81.3    256     174.7
+  RISC Zero                   73.8    256     182.2
+
+  ZisK has the thinnest margin precisely because it has the most classical bits.
+  A reorder needs a system above 169 classical bits at a 256-bit digest, and the
+  highest deployed figure is ZisK's 128.
+
+============================================================================================
+4. AN UNPLANNED CONSISTENCY CHECK WITH ITERATION 27
+============================================================================================
+
+  Read as a design rule: to reach T post-quantum bits from search terms, the
+  digest must satisfy lambda >= 3*(T + log2(3.5)/3). At T = 128 that is 385.8.
+
+  Iteration 27 derived the 128-PQ digest requirement independently, from the BCS
+  additive error's birthday shape, and got 386. Two routes, three significant
+  figures.
+
+  It also explains that earlier result in one line: a system built to 128 PQ
+  bits would be the first to cross the reorder threshold of 169 classical bits,
+  which is exactly why iteration 27 found a 256-bit digest caps such a design at
+  85 PQ bits.
