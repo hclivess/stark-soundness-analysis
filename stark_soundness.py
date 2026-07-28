@@ -105,10 +105,35 @@ def best_m(R, nu, E, s, g, regime, m_range=range(1, 129)):
     return max(((total_bits(R, nu, E, s, g, regime, m)[0], m) for m in m_range))
 
 
-def max_provable_bits(R, nu, E, regime="johnson", s_cap=100000, g=0):
-    """Ceiling on achievable soundness even with unlimited queries."""
-    return max(min(commit_bits(R, nu, E, regime, m), deep_bits(nu, E))
-               for m in range(1, 129))
+def m_min(R):
+    """
+    Admissibility threshold (THEOREM.md, Lemma 1): the Johnson bound is vacuous
+    unless alpha(m) = sqrt(rho)(1+1/2m) < 1, i.e. m > 1/(2(2^{R/2}-1)).
+    At R=1 this is 1.2071, so m=1 is INADMISSIBLE at blowup 2.
+    """
+    return 1.0 / (2 * (2 ** (R / 2) - 1))
+
+
+def max_provable_bits(R, nu, E, regime="johnson", m_floor=0.0):
+    """
+    Ceiling on achievable soundness with unlimited queries.
+
+    Closed form via THEOREM.md Theorem 2 rather than a search over integer m --
+    the earlier version searched m >= 1 without checking admissibility, which at
+    R=1 selected an m where the per-query yield is negative.
+    """
+    if regime == "conjectured":
+        return min(commit_bits(R, nu, E, regime), deep_bits(nu, E))
+    m_eff = max(m_min(R), m_floor) * (1 + 1e-12)
+    return min(commit_bits(R, nu, E, regime, m_eff), deep_bits(nu, E))
+
+
+def ceiling_f(R):
+    """Blowup-only contribution to the ceiling: Lam_max = (E - 2nu) + f(R)."""
+    return -5 * R + 7 * math.log2(2 ** (R / 2) - 1) + math.log2(3) + 7
+
+
+R_STAR = 2 * math.log2(10 / 3)      # THEOREM.md Thm 3: blowup 100/9, rate 9/100
 
 
 def required_ext_bits(R, nu, lam, regime="johnson"):
@@ -258,7 +283,23 @@ def report():
             print(f"    -> min proof: blowup {2**best[1]}, g={best[2]}, "
                   f"s={best[3]}, {best[0]:.1f} KiB")
 
-    sec("7. OUT OF MODEL SCOPE")
+    sec("7. OPTIMAL BLOWUP FOR THE PROVABLE CEILING  (THEOREM.md, Thm 3)")
+    print("Lam_max(R,nu,E) = (E - 2nu) + f(R), and f peaks at an interior point:")
+    print(f"  R* = 2*log2(10/3) = {R_STAR:.6f}   blowup = 100/9 = {100/9:.4f}   "
+          f"rate = 9/100 exactly\n")
+    print(f"  {'blowup':>9} {'R':>7} {'f(R)':>9} {'below optimum':>15}")
+    print("  " + "-" * 43)
+    f_star = ceiling_f(R_STAR)
+    for R in (1, 2, 3, R_STAR, 4, 5, 6, 8):
+        tag = "   <-- optimum" if abs(R - R_STAR) < 1e-9 else ""
+        print(f"  {2**R:>9.2f} {R:>7.3f} {ceiling_f(R):>9.3f} "
+              f"{ceiling_f(R)-f_star:>15.3f}{tag}")
+    print("\n  The curve is flat near the top (blowup 8 and 16 are both within 0.1")
+    print("  bits of optimal) and falls off sharply toward small blowup. Blowup 2")
+    print("  costs 5.1 bits of provable ceiling -- the practical reading is 'avoid")
+    print("  blowup 2 if you care about provable soundness', not 'retune to 11.111'.")
+
+    sec("8. OUT OF MODEL SCOPE")
     for name, family, note in OUT_OF_SCOPE:
         print(f"\n  {name}  [{family}]")
         print(f"    {note}")

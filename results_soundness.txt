@@ -49,15 +49,15 @@ Even with s -> infinity, the commit-phase term caps proven soundness.
 
 system                       E  proven ceiling   conj ceiling  E needed for 100
 --------------------------------------------------------------------------------
-Stwo (StarkWare)           124            78.0          102.0               147
-Plonky3 (KoalaBear)        124            78.0          102.0               147
-Plonky3 (BabyBear)         124            74.5          100.0               150
-RISC Zero                  124            74.5          100.0               150
-Plonky2                    128            75.0          102.0               154
-Winterfell / Miden         192           139.0          166.0               154
-Boojum (zkSync)            128            75.0          102.0               154
-ethSTARK doc params         62             5.5           34.0               157
-Cairo / StarkNet           251           194.5          223.0               157
+Stwo (StarkWare)           124            76.7          102.0               148
+Plonky3 (KoalaBear)        124            76.7          102.0               148
+Plonky3 (BabyBear)         124            78.6          100.0               146
+RISC Zero                  124            78.6          100.0               146
+Plonky2                    128            81.7          102.0               147
+Winterfell / Miden         192           145.7          166.0               147
+Boojum (zkSync)            128            81.7          102.0               147
+ethSTARK doc params         62            13.7           34.0               149
+Cairo / StarkNet           251           202.7          223.0               149
 
   Every 31-bit-field system sits far below 100 provable bits. Reaching
   100 unconditionally needs a substantially larger extension -- i.e. the
@@ -99,12 +99,34 @@ Cairo / StarkNet          128        59.8          58.7    +1.2
 
   regime = johnson
      blowup    g     s  proof KiB   v-hashes  prover FFT cost
-    NO FEASIBLE CONFIG -- ceiling is 78.0 bits at E=2^124.
+    NO FEASIBLE CONFIG -- ceiling is 78.6 bits at E=2^124.
     100-bit johnson security is unreachable at this field size,
     at any query count or grinding level.
 
 ====================================================================================================
-7. OUT OF MODEL SCOPE
+7. OPTIMAL BLOWUP FOR THE PROVABLE CEILING  (THEOREM.md, Thm 3)
+====================================================================================================
+Lam_max(R,nu,E) = (E - 2nu) + f(R), and f peaks at an interior point:
+  R* = 2*log2(10/3) = 3.473931   blowup = 100/9 = 11.1111   rate = 9/100 exactly
+
+     blowup       R      f(R)   below optimum
+  -------------------------------------------
+       2.00   1.000    -5.316          -5.088
+       4.00   2.000    -1.415          -1.187
+       8.00   3.000    -0.321          -0.093
+      11.11   3.474    -0.228           0.000   <-- optimum
+      16.00   4.000    -0.320          -0.092
+      32.00   5.000    -0.880          -0.652
+      64.00   6.000    -1.764          -1.536
+     256.00   8.000    -4.067          -3.839
+
+  The curve is flat near the top (blowup 8 and 16 are both within 0.1
+  bits of optimal) and falls off sharply toward small blowup. Blowup 2
+  costs 5.1 bits of provable ceiling -- the practical reading is 'avoid
+  blowup 2 if you care about provable soundness', not 'retune to 11.111'.
+
+====================================================================================================
+8. OUT OF MODEL SCOPE
 ====================================================================================================
 
   Binius  [binary tower fields GF(2^k)]

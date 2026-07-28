@@ -1,0 +1,87 @@
+================================================================================================
+VERIFICATION OF PROPOSITION 1 AND THEOREM 2
+================================================================================================
+
+[1] Algebraic identity  m_min+1/2 = 2^(R/2)/(2(2^(R/2)-1))
+    max abs error over R in [0.25, 10]: 2.220e-16   PASS
+
+[2] Proposition 1(a,b): monotonicity of Q (up) and K (down)
+    violations: 0   PASS
+
+[3] Proposition 1(c): grid argmax vs bisection root
+    worst (grid_best - closed_form_best): +0.000000 bits   PASS
+
+[4] Theorem 2: ceiling closed form vs brute force over (s, m)
+
+     R     E   nu   brute sup  closed form  simplified       gap
+    --------------------------------------------------------------
+     1   124   21     76.6698      76.6841     76.6841  +0.01427
+     1   128   23     76.6698      76.6841     76.6841  +0.01427
+     1   192   23    140.6698     140.6841    140.6841  +0.01427
+     1   251   24    197.6698     197.6841    197.6841  +0.01427
+     2   124   21     80.5749      80.5850     80.5850  +0.01009
+     2   128   23     80.5749      80.5850     80.5850  +0.01009
+     2   192   23    144.5749     144.5850    144.5850  +0.01009
+     2   251   24    201.5749     201.5850    201.5850  +0.01009
+     3   124   21     81.6720      81.6792     81.6792  +0.00714
+     3   128   23     81.6720      81.6792     81.6792  +0.00714
+     3   192   23    145.6720     145.6792    145.6792  +0.00714
+     3   251   24    202.6720     202.6792    202.6792  +0.00714
+     4   124   21     81.6747      81.6797     81.6797  +0.00505
+     4   128   23     81.6747      81.6797     81.6797  +0.00505
+     4   192   23    145.6747     145.6797    145.6797  +0.00505
+     4   251   24    202.6747     202.6797    202.6797  +0.00505
+
+    PASS  (gap >= 0 means the closed form is a true upper bound; gap ~ 0 means it is tight)
+
+================================================================================================
+CONSEQUENCE: corrected provable ceilings
+================================================================================================
+The earlier ceiling computation maximised K over integer m >= 1 without
+checking admissibility, so at blowup 2 it used m = 1, where the per-query
+yield is NEGATIVE (alpha > 1) and unlimited queries buy nothing.
+
+    system                    R     E   nu  old (m=1)  corrected   delta
+    --------------------------------------------------------------------
+    Stwo (M31)                1   124   21       78.0       76.7    -1.3
+    Plonky3 (KoalaBear)       1   124   21       78.0       76.7    -1.3
+    Plonky3 (BabyBear)        2   124   22       74.5       78.6    +4.1
+    RISC Zero                 2   124   22       74.5       78.6    +4.1
+    Plonky2                   3   128   23       75.0       81.7    +6.7
+    Winterfell / Miden        3   192   23      139.0      145.7    +6.7
+    Boojum (zkSync)           3   128   23       75.0       81.7    +6.7
+    Cairo / StarkNet          4   251   24      194.5      202.7    +8.2
+
+    At R=1 the old figure was not merely loose, it was INVALID:
+    alpha(R=1, m=1) = 1.0607 > 1.
+    Admissibility requires m > 1.2071 at blowup 2.
+
+================================================================================================
+THEOREM 3: the ceiling is NON-MONOTONIC in blowup, with an interior optimum
+================================================================================================
+
+    grid argmax        R = 3.4500   f = -0.228160
+    claimed optimum    R* = 2*log2(10/3) = 3.473931   f = -0.227946
+    closed form f(R*)                       = -0.227946
+    |grid - claimed| = 0.0239 (grid step 0.05)   PASS
+    |f(R*) - closed form| = 1.78e-15   PASS
+
+    Optimal blowup factor = 2^R* = 11.111
+    Ceiling there         = (E - 2nu) -0.2279 bits
+
+      blowup       R       f(R)   loss vs optimum
+    ----------------------------------------------
+        2.00   1.000     -5.316            -5.088
+        4.00   2.000     -1.415            -1.187
+        8.00   3.000     -0.321            -0.093
+       11.11   3.474     -0.228             0.000  <-- optimum
+       16.00   4.000     -0.320            -0.092
+       32.00   5.000     -0.880            -0.652
+       64.00   6.000     -1.764            -1.536
+      256.00   8.000     -4.067            -3.839
+
+    Deployed systems at blowup 2 (Stwo, Plonky3/KoalaBear) sit ~5.1 bits
+    below the achievable provable ceiling. Blowup 16 sits ~0.6 below.
+    NOTE: this optimises the CEILING (commit term) only. Query cost falls
+    with larger blowup and prover cost rises, so the joint optimum differs;
+    this says where the provable ceiling itself peaks.
