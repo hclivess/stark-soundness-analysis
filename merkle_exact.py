@@ -50,9 +50,9 @@ v cannot land on its sibling), so the independent form should underestimate.
 
 It does, and the effect is negligible:
 
-    s=124 d=21     mine 1631.3     exact 1632.0     gap 0.7 nodes  (0.04%)
-    s=193 d=23     mine 2801.9     exact 2802.6     gap 0.7 nodes  (0.03%)
-    s=27  d=18     mine  333.6     exact  334.3     gap 0.7 nodes  (0.21%)
+    s=124 d=23     mine 1879.3     exact 1880.0     gap 0.72 nodes  (0.04%)
+    s=193 d=24     mine 2994.9     exact 2995.6     gap 0.72 nodes  (0.02%)
+    s=27  d=21     mine  414.6     exact  415.3     gap 0.73 nodes  (0.18%)
 
 The bias is bounded because the two forms agree at both ends: where m >> k the
 occupancy is rare and both reduce to k(1 - ...), and where m << k both saturate
@@ -70,10 +70,10 @@ Rounding up per level, over `depth` levels, adds up to `depth` phantom hashes
 per Merkle tree. Against Monte Carlo:
 
     system        soundcalc   simulation    bias
-    SP1  s=124        1642        1635.8    +0.38%
-    ZisK s=229        2821        2812.4    +0.31%
-    R0   s=50          734         724.5    +1.32%
-    Miden s=27         341         333.4    +2.27%
+    SP1  s=124        1890        1883.8    +0.33%
+    ZisK s=229        3050        3041.4    +0.28%
+    R0   s=50          834         824.5    +1.16%
+    Miden s=27         422         414.4    +1.83%
 
 Always positive, so it overstates proof size -- the safe direction, and
 consistent with everything else soundcalc does. But it is systematic rather than
@@ -90,23 +90,33 @@ deployed system uses.
 
 Across the seven configurations that actually ship, the overcount is:
 
-    Airbender  30.1%     Miden      29.8%     RISC Zero  30.1%
-    Pico       32.5%     OpenVM     36.6%     SP1        36.9%
-    ZisK       41.3%
+    Airbender  28.9%     Miden      25.6%     RISC Zero  27.5%
+    Pico       31.1%     OpenVM     35.1%     SP1        33.7%
+    ZisK       39.5%
 
-30-44% including NADO's 320 queries (43.7%), and 30-41% for the seven zkVMs.
-The old band's floor was too high -- three deployed systems fall below 33% --
+26-40% including NADO's 320 queries (41.7%), and 26-40% for the seven zkVMs.
+The old band's floor was too high -- five deployed systems fall below 33% --
 and its ceiling is unreachable in deployment. README now states the deployed
 range and marks the wider one as a sweep.
+
+ITERATION 61 CORRECTED THESE NUMBERS. As first written this table used the
+TRACE length as the tree depth; the tree is over the LDE domain, 2^(T+R). Every
+figure was 1.2-4.3 points too high. The direction of iteration 60's correction
+to README stands -- 33-52% was too high -- but its replacement band was wrong
+too, and is now 26-40%.
 """
 
 import math
 from merkle_dedup import expected_auth_nodes, naive_auth_nodes, simulate_auth_nodes
 
-# (name, queries, log2 domain size) -- from systems.py, T + R
-CONFIGS = [("SP1", 124, 21), ("OpenVM", 193, 23), ("Airbender", 87, 24),
-           ("Pico", 84, 22), ("ZisK", 229, 21), ("RISC Zero", 50, 21),
-           ("Miden", 27, 18), ("NADO", 320, 21)]
+# (name, queries, tree depth). CORRECTED IN ITERATION 61: the depth is log2 of
+# the LDE DOMAIN, nu = T + R, not the trace length T. This list originally said
+# "T + R" in the comment and then listed T, so every depth was short by R.
+# Confirmed against the tomls: Pico's riscv is trace_length 2^22 at rho 0.5, so
+# D = 2^23 and its initial Merkle tree has depth 23. See proof_size_exact.py.
+CONFIGS = [("SP1", 124, 23), ("OpenVM", 193, 24), ("Airbender", 87, 25),
+           ("Pico", 84, 23), ("ZisK", 229, 22), ("RISC Zero", 50, 23),
+           ("Miden", 27, 21), ("NADO", 320, 22)]
 
 # soundcalc reports/summary.md, expected / worst-case proof size in KiB
 SUMMARY_KIB = [("Airbender", 1836, 1951), ("OpenVM", 7687, 8231),
@@ -219,10 +229,10 @@ def report():
         sc = soundcalc_auth_nodes(s, d)
         print(f"  {n:<11} {s:>5} {d:>4} {nv:>9} {sc:>9.0f} {1 - sc / nv:>10.1%}")
     print(f"""
-  {lo:.0%}-{hi:.0%} across the seven zkVMs, {lo:.0%}-44% including NADO. The old band's
-  floor was too high -- Miden, RISC Zero and Airbender all fall below 33% -- and
-  its ceiling is unreachable in deployment. README now gives the deployed range
-  and marks the wider one as a sweep.""")
+  {lo:.0%}-{hi:.0%} across the seven zkVMs. The old 33% floor sat above five of them.
+  Its 52% ceiling is unreachable in deployment. These figures are ITERATION 61's:
+  iteration 60 used the trace length as the tree depth instead of the LDE
+  domain and every entry was 1.2-4.3 points too high.""")
 
 
 if __name__ == "__main__":

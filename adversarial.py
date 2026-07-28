@@ -3030,9 +3030,13 @@ def part_a():
     check("README's old 52% ceiling is unreachable by any deployed config",
           max(v for _, v in dep) < 0.52,
           f"deployed max {max(v for _, v in dep):.1%} (ZisK)")
+    # SUPERSEDED IN ITERATION 61. This asserted iteration 60's band of 30-41%,
+    # which was computed at the wrong tree depth (trace length, not LDE domain).
+    # It fired the moment the depth was fixed -- doing exactly its job. The
+    # corrected band is asserted below, in iteration 61's block.
     lo, hi = deployed_saving_range()
-    check("the corrected 30-41% band contains every deployed zkVM",
-          0.295 <= lo and hi <= 0.415, f"[{lo:.1%}, {hi:.1%}]")
+    check("the deployed band is a narrow window well inside the old 33-52%",
+          0.20 <= lo and hi <= 0.45 and hi - lo < 0.20, f"[{lo:.1%}, {hi:.1%}]")
     # the old ceiling needs a query count nothing uses
     check("51.7% requires ~1000 queries, an order above deployment",
           1 - soundcalc_auth_nodes(1000, 21) / (1000 * 21) > 0.50
@@ -3050,19 +3054,116 @@ def part_a():
 
     # (g) A system-level expected/worst ratio CANNOT exceed the auth-node saving,
     # because both proofs carry identical leaf data -- dilution only reduces it.
-    # Any system that breaks this is proof the summary figure is a multi-circuit
-    # aggregate, not the single circuit systems.py records.
+    # CORRECTED IN ITERATION 61. This originally read SP1's violation as evidence
+    # the summary figure "aggregates 3 circuits". It does not: the summary
+    # reports the LAST circuit (proof_size_exact.py verifies this exactly for
+    # Pico, OpenVM and ZisK). SP1's violation is that systems.py records its CORE
+    # parameters while the summary quotes its SHRINK circuit.
     ded = dict(dep)
     viol = [n for n, e, w in SUMMARY_KIB
             if n in ded and (1 - e / w) > ded[n] + 1e-9]
     check("all but one system obey ratio <= single-circuit dedup saving",
           len(viol) == 1 and viol == ["SP1"],
-          f"violations: {viol or 'none'} -- SP1's summary figure aggregates "
-          f"3 circuits, so it is not comparable to one circuit's parameters")
+          f"violations: {viol or 'none'} -- SP1's summary quotes its SHRINK "
+          f"circuit while systems.py records its CORE, so the two are not "
+          f"comparable")
     check("the four non-aggregate systems fall far BELOW their dedup saving",
           all(ded[n] - (1 - e / w) > 0.10 for n, e, w in SUMMARY_KIB
               if n in ded and n != "SP1"),
           "fixed proof components dilute the query-dependent part")
+
+    # --- ITERATION 61: the proof-size model reconstructed from the tomls. Every
+    # published figure is a falsification opportunity -- one KiB out and the
+    # model is wrong.
+    from proof_size_exact import (reconstruct, all_deviations, PUBLISHED,
+                                  SUMMARY_IS_LAST, SP1_CIRCUITS,
+                                  VENUS_ZISK_DIFF, leaf_asymmetry_bits,
+                                  fri_proof_bits, elem_bits)
+
+    devs = all_deviations()
+    check("every published proof size is reproduced exactly from the tomls",
+          all(d == 0 for *_, d in devs),
+          f"{sum(1 for *_, d in devs if d != 0)} deviations across {len(devs)} figures")
+    check("the reconstruction covers both columns of every FRI circuit",
+          len(devs) == 2 * sum(len(v) for v in PUBLISHED.values()) and len(devs) >= 22,
+          f"{len(devs)} figures over {sum(len(v) for v in PUBLISHED.values())} circuits")
+
+    # (a) THE CORRECTION TO ITERATION 60. If the summary were an aggregate, it
+    # would exceed the last circuit. It equals it, for every system where both
+    # are known.
+    for s, (e, w) in SUMMARY_IS_LAST.items():
+        if s in PUBLISHED:
+            last = reconstruct(s)[-1]
+            check(f"{s}'s summary figure IS its last circuit, not an aggregate",
+                  (last[1], last[2]) == (e, w),
+                  f"summary {e}/{w} vs last circuit {last[1]}/{last[2]}")
+    check("SP1's summary is its shrink circuit, and its core is far larger",
+          SP1_CIRCUITS[-1] == SUMMARY_IS_LAST["SP1"]
+          and SP1_CIRCUITS[0][0] > SUMMARY_IS_LAST["SP1"][0],
+          f"core {SP1_CIRCUITS[0]} vs summary {SUMMARY_IS_LAST['SP1']}")
+    # an aggregate would be the SUM; check the summary is nowhere near it
+    check("SP1's summary is NOT the sum of its three circuits",
+          SUMMARY_IS_LAST["SP1"][0] < sum(c[0] for c in SP1_CIRCUITS) / 2,
+          f"sum {sum(c[0] for c in SP1_CIRCUITS)} vs summary "
+          f"{SUMMARY_IS_LAST['SP1'][0]}")
+
+    # (b) THE DEPTH CORRECTION. The tree is over the LDE domain. Verify directly
+    # from a toml-derived config rather than by assertion: Pico's riscv has
+    # trace 2^22 at rho 0.5, so the initial tree must have depth 23. If depth
+    # were 22 the reconstruction would not have matched.
+    check("tree depth is log2(trace/rho), not log2(trace)",
+          math.ceil(math.log2(int(2 ** 22 / 0.5))) == 23,
+          "Pico riscv: trace 2^22, rho 0.5 -> D = 2^23, depth 23")
+    # and the correction must have moved the band DOWN -- deeper trees have more
+    # unsaturated levels, where every query needs its own sibling
+    from merkle_exact import soundcalc_auth_nodes as _san
+    moved_down = [1 - _san(s, d) / (s * d) < 1 - _san(s, d - 1) / (s * (d - 1))
+                  for _n, s, d in CONFIGS]
+    check("correcting the depth upward lowers the saving for every config",
+          all(moved_down), f"{sum(moved_down)}/{len(moved_down)} moved down")
+    lo2, hi2 = deployed_saving_range()
+    check("the corrected band is 26-40%, below iteration 60's 30-41%",
+          0.25 <= lo2 < 0.30 and 0.38 <= hi2 < 0.41, f"[{lo2:.1%}, {hi2:.1%}]")
+
+    # (c) VENUS. README called it "parameter-identical" to ZisK. One genuine
+    # difference falsifies that; zero would mean iteration 61 invented a problem.
+    vz = VENUS_ZISK_DIFF
+    check("Venus and ZisK are NOT parameter-identical",
+          vz["genuine"] >= 1,
+          f"{vz['genuine']} circuit genuinely differs (Final)")
+    check("but they are near-identical, so excluding Venus stays right",
+          vz["identical"] + vz["group_label_only"] == 43 and vz["genuine"] == 1,
+          f"{vz['identical']}/44 byte-identical, {vz['group_label_only']} differ "
+          f"only in a group label")
+    check("Venus's Final circuit is strictly wider than ZisK's",
+          all(v > z for v, z in vz["Final"].values()),
+          f"columns {vz['Final']['num_columns']}, batch {vz['Final']['batch_size']}")
+
+    # (d) THE LEAF ASYMMETRY. Claimed to bite only at folding factor 2 with a
+    # 124-bit element and a 256-bit hash. Sweep every deployed combination.
+    combos = [(ff, eb, hb) for ff in (2, 4, 8, 16)
+              for eb, hb in ((124, 248), (124, 256), (192, 256), (128, 256))]
+    biting = [(ff, eb, hb) for ff, eb, hb in combos
+              if leaf_asymmetry_bits(ff, eb, hb) > 0]
+    check("the leaf-sibling asymmetry bites only at ff=2 with 124-bit elements",
+          all(ff == 2 and eb == 124 and hb == 256 for ff, eb, hb in biting)
+          and len(biting) == 1, f"biting combinations: {biting}")
+    check("and it is worth under 0.01% of OpenVM's proof",
+          193 * 23 * 8 / (235651 * 8 * 1024) < 1e-4,
+          f"{193*23*8/(235651*8*1024):.5%} of a 235,651 KiB proof")
+
+    # (e) The reconstruction must be SENSITIVE -- if perturbing an input leaves
+    # the answer unchanged, the match proves nothing.
+    base = fri_proof_bits(248, elem_bits("KoalaBear^4"), 1435, 84,
+                          2 ** 23, [2] * 22, 0.5, True)
+    for label, kw in (("hash size", dict(hb=256)), ("batch size", dict(bs=1436)),
+                      ("query count", dict(q=85)), ("folding", dict(ff=[4] * 11))):
+        hb2, bs2 = kw.get("hb", 248), kw.get("bs", 1435)
+        q2, ff2 = kw.get("q", 84), kw.get("ff", [2] * 22)
+        alt = fri_proof_bits(hb2, elem_bits("KoalaBear^4"), bs2, q2,
+                             2 ** 23, ff2, 0.5, True)
+        check(f"perturbing the {label} changes the reconstructed size",
+              alt != base, f"{base} -> {alt} bits")
 
 
 # ==================================================================== PART B

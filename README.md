@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 432 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 451 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -97,8 +97,12 @@ teams chose independently — two above the crossover in UDR, five below in JBR 
 the theorem calls every one. SP1's config literally declares `udr_only = true`
 at `s = 124` against a predicted `s* = 112`. Where soundcalc publishes the UDR
 figure too — all seven — the model reproduces it within 1 bit (max deviation
-+0.9, never undershooting). Venus is excluded as a parameter-identical
-duplicate of ZisK.
++0.9, never undershooting). Venus is excluded as the **same codebase at a
+different version** (0.1.6 vs ZisK 0.16.1) — not an independent design decision,
+which is what the test needs. *(Iteration 61: this said "parameter-identical",
+which is false — 40 of 44 circuits are byte-identical, 3 differ only in a
+`group` label, and Venus's `Final` circuit is genuinely wider: 135 columns and
+batch 158 against ZisK's 114 and 139.)*
 → `regime_crossover.py`, `THEOREM.md` Thm 7
 
 **4. Two of the five levers are free, and belong to whoever last proved a
@@ -140,13 +144,22 @@ like systems engineering, not a better low-degree test.
 → `EFFICIENCY.md`
 
 Merkle authentication paths share prefixes, and the top `log₂ s` levels of the
-tree saturate entirely. Charging `s·depth` overcounts by **30–41% across the
-seven deployed zkVMs** (44% at NADO's 320 queries). *(Iteration 60: this said
-33–52%, which is the range of a hypothetical `s = 32…1000` sweep — 51.7% needs
-1000 queries, and three shipping systems fall below 33%.)* The model's
+tree saturate entirely. Charging `s·depth` overcounts by **26–40% across the
+seven deployed zkVMs** (42% at NADO's 320 queries). *(Iteration 60: this said
+33–52%, the range of a hypothetical `s = 32…1000` sweep — 51.7% needs 1000
+queries, and five shipping systems fall below 33%. Iteration 60's own
+replacement, 30–41%, was also wrong: it used the trace length as the tree depth
+when the tree is over the LDE domain, `2^{T+R}`.)* The model's
 independent-sibling approximation is validated to <1 node per tree against
 soundcalc's exact formula, and to 0.3% against Monte Carlo.
 → `merkle_dedup.py`, `merkle_exact.py`
+
+**The whole proof-size model is exact.** Reconstructing
+`get_FRI_proof_size_bits` from the tomls alone reproduces all **110 published
+figures** — 55 FRI circuits across six systems, expected and worst case — with
+zero deviation. This also shows each system's headline size is its *last*
+circuit, not an aggregate, and that Venus differs from ZisK in one circuit.
+→ `proof_size_exact.py`
 
 ---
 
@@ -154,7 +167,7 @@ soundcalc's exact formula, and to 0.3% against Monte Carlo.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **432 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **451 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
