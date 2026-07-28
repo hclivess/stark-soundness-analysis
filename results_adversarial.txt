@@ -15,6 +15,9 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  Thm 7(a): m_eq is NOT rational at odd R
   PASS  UDR commit term agrees with soundcalc-lean Regime.lean errLinear   [max dev 0.00e+00]
   PASS  Thm 7(b): s* = (K_J(m_eq) - g)/y_UDR matches directed scan   [max |scan - closed form| = 0.9 queries]
+  PASS  SP1 v6.1.0: model reproduces the published 100-bit UDR figure   [model 100.08 vs published 100]
+  PASS  Thm 7(b) predicts SP1 sits above the crossover (hence udr_only=true)   [s*=112, SP1 s=124]
+  PASS  SP1: UDR strictly beats JBR at their own parameters   [UDR 100.1 vs JBR 93.0]
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
   PASS  clustered queries are far cheaper than the model   [clustered 13 vs model 1893]
@@ -54,5 +57,5 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
 
 ========================================================================================
-43/43 PASS   no property broken
+46/46 PASS   no property broken
 ========================================================================================
