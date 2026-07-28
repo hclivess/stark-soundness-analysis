@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 419 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 432 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -140,9 +140,13 @@ like systems engineering, not a better low-degree test.
 → `EFFICIENCY.md`
 
 Merkle authentication paths share prefixes, and the top `log₂ s` levels of the
-tree saturate entirely. Charging `s·depth` overcounts by 33–52% at the query
-counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
-→ `merkle_dedup.py`
+tree saturate entirely. Charging `s·depth` overcounts by **30–41% across the
+seven deployed zkVMs** (44% at NADO's 320 queries). *(Iteration 60: this said
+33–52%, which is the range of a hypothetical `s = 32…1000` sweep — 51.7% needs
+1000 queries, and three shipping systems fall below 33%.)* The model's
+independent-sibling approximation is validated to <1 node per tree against
+soundcalc's exact formula, and to 0.3% against Monte Carlo.
+→ `merkle_dedup.py`, `merkle_exact.py`
 
 ---
 
@@ -150,7 +154,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **419 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **432 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |

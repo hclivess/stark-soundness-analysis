@@ -2976,6 +2976,94 @@ def part_a():
     print(f"         derived so uniform is right for EXPECTED size, but a")
     print(f"         worst-case bound must use ~{spread/mod:.2f}x the model.")
 
+    # --- ITERATION 60: soundcalc ships an EXACT auth-node formula. Use it to
+    # attack this repo's independent-sibling approximation, and to attack
+    # README's 33-52% band. Each check below is written to fail if iteration
+    # 60's claims are wrong.
+    from merkle_exact import (soundcalc_auth_nodes, ceil_bias_nodes,
+                              independence_gap, deployed_saving_range,
+                              CONFIGS, SUMMARY_KIB)
+    from merkle_dedup import expected_auth_nodes, simulate_auth_nodes
+
+    # (a) DIRECTION. Siblings are negatively correlated, so the independent form
+    # must UNDERestimate. A single negative gap falsifies the reasoning.
+    sweep = [(s, d) for s in (16, 27, 50, 84, 124, 193, 229, 320, 700, 1000)
+             for d in (14, 18, 21, 22, 23, 24, 26)]
+    gaps = [independence_gap(s, d) for s, d in sweep]
+    check("independent-sibling form never exceeds the exact one",
+          min(gaps) >= 0.0,
+          f"min gap {min(gaps):+.4f} nodes over {len(sweep)} (s, d) pairs")
+    # (b) MAGNITUDE. The file claims "under one node per tree". Falsifiable.
+    check("the independence approximation costs under 1 node per tree",
+          max(gaps) < 1.0,
+          f"max gap {max(gaps):.3f} nodes at "
+          f"{sweep[gaps.index(max(gaps))]}")
+
+    # (c) soundcalc's per-level math.ceil adds phantom hashes, bounded by depth.
+    biases = [(ceil_bias_nodes(s, d), d) for s, d in sweep]
+    check("soundcalc's per-level ceil bias is non-negative",
+          min(b for b, _ in biases) >= 0.0, f"min {min(b for b, _ in biases):+.2f}")
+    check("soundcalc's per-level ceil bias never exceeds the tree depth",
+          all(b <= d for b, d in biases),
+          f"worst {max(b - d for b, d in biases):+.2f} over depth")
+
+    # (d) Both formulas must track ground truth. If either drifts from Monte
+    # Carlo by more than half a percent on a deployed config, the claim dies.
+    worst_mine = worst_sc = 0.0
+    for _n, s, d in CONFIGS:
+        sim = simulate_auth_nodes(s, d, trials=60, seed=7)
+        worst_mine = max(worst_mine, abs(expected_auth_nodes(s, d) - sim) / sim)
+        worst_sc = max(worst_sc, abs(soundcalc_auth_nodes(s, d) - sim) / sim)
+    check("this repo's model tracks Monte Carlo within 0.5% on every deployed config",
+          worst_mine < 0.005, f"worst deviation {worst_mine:.3%}")
+    check("soundcalc's ceil'd figure is looser than this repo's against simulation",
+          worst_sc > worst_mine,
+          f"soundcalc {worst_sc:.2%} vs this repo {worst_mine:.2%} -- the ceil")
+
+    # (e) THE README CORRECTION. The old floor was 33%. If no deployed system
+    # falls below it, iteration 60 corrected something that was not wrong.
+    dep = [(n, 1 - soundcalc_auth_nodes(s, d) / (s * d))
+           for n, s, d in CONFIGS if n != "NADO"]
+    below = [n for n, v in dep if v < 0.33]
+    check("README's old 33% floor was above at least three shipping systems",
+          len(below) >= 3, f"below 33%: {', '.join(below)}")
+    check("README's old 52% ceiling is unreachable by any deployed config",
+          max(v for _, v in dep) < 0.52,
+          f"deployed max {max(v for _, v in dep):.1%} (ZisK)")
+    lo, hi = deployed_saving_range()
+    check("the corrected 30-41% band contains every deployed zkVM",
+          0.295 <= lo and hi <= 0.415, f"[{lo:.1%}, {hi:.1%}]")
+    # the old ceiling needs a query count nothing uses
+    check("51.7% requires ~1000 queries, an order above deployment",
+          1 - soundcalc_auth_nodes(1000, 21) / (1000 * 21) > 0.50
+          and 1 - soundcalc_auth_nodes(320, 21) / (320 * 21) < 0.45,
+          "s=1000 clears 50%, s=320 does not clear 45%")
+
+    # (f) soundcalc's "worst case" is num_openings independent paths (utils.py:77),
+    # i.e. s*depth. It is therefore NOT the true adversarial worst case, which is
+    # capped by level width. Iteration 60 relies on the identification with
+    # naive_auth_nodes; this checks it is genuinely the looser of the two.
+    true_worst = sum(min(124, 2 ** i) for i in range(1, 22))
+    check("soundcalc's 'worst case' exceeds the true adversarial worst case",
+          124 * 21 > true_worst,
+          f"s*depth {124*21} vs level-capped {true_worst}")
+
+    # (g) A system-level expected/worst ratio CANNOT exceed the auth-node saving,
+    # because both proofs carry identical leaf data -- dilution only reduces it.
+    # Any system that breaks this is proof the summary figure is a multi-circuit
+    # aggregate, not the single circuit systems.py records.
+    ded = dict(dep)
+    viol = [n for n, e, w in SUMMARY_KIB
+            if n in ded and (1 - e / w) > ded[n] + 1e-9]
+    check("all but one system obey ratio <= single-circuit dedup saving",
+          len(viol) == 1 and viol == ["SP1"],
+          f"violations: {viol or 'none'} -- SP1's summary figure aggregates "
+          f"3 circuits, so it is not comparable to one circuit's parameters")
+    check("the four non-aggregate systems fall far BELOW their dedup saving",
+          all(ded[n] - (1 - e / w) > 0.10 for n, e, w in SUMMARY_KIB
+              if n in ded and n != "SP1"),
+          "fixed proof components dilute the query-dependent part")
+
 
 # ==================================================================== PART B
 
