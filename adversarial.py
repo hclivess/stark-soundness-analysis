@@ -516,6 +516,39 @@ def part_a():
     check("no unconditional a = 0 code test is known in the verified set",
           all(v >= 1 for k, v in code_layers.items() if "Q2" not in k))
 
+    # --- Diamond-Posen Thm 2: the log-randomness variant is a log2(C) lever.
+    # Pr[...] > 2*l*(e+1)/q with l = log2(m), against the standard (e+1)/q.
+    # So it multiplies C by 2*log2(m) and never touches the exponent a.
+    def logrand_cost_bits(log_m):
+        return math.log2(2 * log_m)
+    check("log-randomness costs 1 + log2(log2 m) bits",
+          abs(logrand_cost_bits(20) - (1 + math.log2(20))) < 1e-12,
+          f"{logrand_cost_bits(20):.2f} bits at m=2^20")
+    # it is a C lever, not an `a` lever: the n-scaling must be untouched
+    def ligero_bits(n, delta, q_bits, log_m=None):
+        e = (delta * n - 1) / 3.0
+        c = 2 * log_m if log_m else 1
+        return q_bits - math.log2(c * (e + 1))
+    slope_std = ligero_bits(2**20, .5, 124) - ligero_bits(2**21, .5, 124)
+    slope_log = ligero_bits(2**20, .5, 124, 20) - ligero_bits(2**21, .5, 124, 20)
+    check("log-randomness leaves the exponent a = 1 unchanged",
+          abs(slope_std - slope_log) < 1e-9 and abs(slope_std - 1.0) < 0.01,
+          f"both {slope_std:.4f} bits per doubling of n")
+
+    # --- Conjecture 1 asks for the UNIQUE-DECODING radius with the sharp bound.
+    # At radius d/2 and relative distance delta = 1 - rho (Reed-Solomon), the
+    # per-query yield -log2(1 - delta/2) equals -log2((1+rho)/2) = yield_udr.
+    worstc = 0.0
+    for R in (1, 2, 3, 4):
+        rho = 2.0 ** -R
+        delta = 1 - rho
+        worstc = max(worstc, abs(-math.log2(1 - delta / 2) - yield_udr(R)))
+    check("Conjecture 1's d/2 radius yield IS the UDR yield for RS codes",
+          worstc < 1e-12, f"max dev {worstc:.2e}")
+    # and it is a query-phase win only: the field term (e+1)/q keeps a = 1
+    check("Conjecture 1 would not change the exponent a",
+          abs((ligero_bits(2**20, .5, 124) - ligero_bits(2**21, .5, 124)) - 1.0) < 0.01)
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0
