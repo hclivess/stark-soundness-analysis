@@ -3633,6 +3633,89 @@ def part_a():
           "Binding for 0 of the 5" in _mtxt,
           "0 of the 5 systems that have an m; the other 2 are UDR")
 
+    # --- ITERATION 70: PROPOSITION 9. The a-floor gap has an irreducible floor
+    # of nu + log2(folding) + 1, because the two bounds bound different things.
+    # Every check here is written to break the proposition if it is wrong.
+    from regimes import m_min as _m_min_afs
+    from headroom_split import (commit_branches, mca_floor, structural_gap,
+                                predicted_structural, linear_slack, split,
+                                nq_binding_points, sweep_size, JBR_SYSTEMS)
+
+    # (a) THE IDENTITY. It must hold across E, R, nu AND m -- the algebra says
+    # m and rho cancel exactly, so a residual m dependence falsifies it.
+    # CORRECTED MID-ITERATION. My first two checks here asserted the leading
+    # term is EXACT in m. They failed on the first run -- the +1 in log2(L+1)
+    # leaves a residual log2(1 + sqrt(rho)/(m+0.5)), worth 0.357 bits at m=2.
+    # The exact closed form is checked instead, and the leading term is checked
+    # only where the proposition claims it: at deployed m.
+    from headroom_split import (predicted_structural_exact, structural_residual)
+    _pts = [(E_, R_, nu_, m_) for E_ in (64, 124, 192, 256) for R_ in (1, 2, 3)
+            for nu_ in (14, 21, 25, 30) for m_ in (2, 15, 50, 500)
+            if m_ > _m_min_afs(R_)]
+    _errs = [abs(structural_gap(E_, R_, nu_, m_)
+                 - predicted_structural_exact(R_, nu_, m_)) for E_, R_, nu_, m_ in _pts]
+    check("Proposition 9's exact form is exact across E, R, nu and m",
+          max(_errs) < 1e-9,
+          f"worst deviation {max(_errs):.2e} over {len(_pts)} admissible points")
+    # the leading term is asymptotic in m -- it must CONVERGE, not be constant
+    _at = [structural_gap(124, 1, 25, m_) for m_ in (2, 15, 50, 500, 5000)]
+    _dev = [abs(v - predicted_structural(25)) for v in _at]
+    check("the leading term is approached as m grows, monotonically",
+          all(a > b for a, b in zip(_dev, _dev[1:])),
+          f"residual falls {_dev[0]:.3f} -> {_dev[-1]:.4f} bits as m goes 2 -> 5000")
+    check("and the residual is under 0.07 bits at every deployed m",
+          max(structural_residual(R_, 25, m_)
+              for R_ in (1, 2, 3) for m_ in (15, 20, 29, 50)) < 0.07,
+          f"{max(structural_residual(R_, 25, m_) for R_ in (1,2,3) for m_ in (15,20,29,50)):.4f} bits")
+    # ...and of rho
+    _ar = [structural_gap(124, R_, 25, 15) - predicted_structural(25)
+           for R_ in (1, 2, 3, 4)]
+    check("and independent of rho once nu is fixed",
+          max(_ar) - min(_ar) < 0.1,
+          f"R from 1 to 4 moves the residual {max(_ar)-min(_ar):.4f} bits")
+    # it must SCALE with nu, or it is not the domain factor it claims to be
+    _s1, _s2 = structural_gap(124, 1, 20, 15), structural_gap(124, 1, 30, 15)
+    check("the structural gap tracks nu one-for-one",
+          abs((_s2 - _s1) - 10.0) < 0.1,
+          f"nu 20 -> 30 moves it {_s2-_s1:.3f} bits")
+
+    # (b) THE SPLIT. Both parts must be positive and must sum to the headroom,
+    # or the decomposition is not a decomposition.
+    for _nm, _E, _R, _T in JBR_SYSTEMS:
+        _m, _lin, _nq, _f, _h, _st, _sl = split(_nm, _E, _R, _T)
+        check(f"{_nm}'s headroom splits into two positive parts summing to it",
+              _st > 0 and _sl > 0 and abs(_st + _sl - _h) < 1e-9,
+              f"{_st:.1f} structural + {_sl:.1f} slack = {_h:.1f}")
+    _sts = [split(*j)[5] for j in JBR_SYSTEMS]
+    _sls = [split(*j)[6] for j in JBR_SYSTEMS]
+    check("the structural part is the MAJORITY of the gap",
+          sum(_sts) > sum(_sls),
+          f"{100*sum(_sts)/(sum(_sts)+sum(_sls)):.0f}% structural vs "
+          f"{100*sum(_sls)/(sum(_sts)+sum(_sls)):.0f}% slack")
+    check("so at most about half the headline gap is a target for a theorem",
+          max(_sls) < 0.55 * max(split(*j)[4] for j in JBR_SYSTEMS),
+          f"slack {min(_sls):.1f}-{max(_sls):.1f} against headroom "
+          f"{min(split(*j)[4] for j in JBR_SYSTEMS):.1f}-"
+          f"{max(split(*j)[4] for j in JBR_SYSTEMS):.1f}")
+
+    # (c) THE BRANCH CLAIM. If the n/q branch bound at realistic m, the slack
+    # would not be where this file says it is.
+    _pts = nq_binding_points()
+    check("the n/q commit branch binds only at m below 1",
+          all(p[3] < 1.0 for p in _pts),
+          f"{len(_pts)} of {sweep_size()} swept points, all at m in "
+          f"{sorted({p[3] for p in _pts})}")
+    check("and where it binds the two branches agree to under 0.01 bits",
+          all(abs(p[4] - p[5]) < 0.01 for p in _pts),
+          f"worst separation {max((abs(p[4]-p[5]) for p in _pts), default=0):.5f}")
+    check("at every deployed m the LINEAR branch is the operative one",
+          all(commit_branches(R_, T_ + R_, E_,
+                              float(__import__('soundcalc_lean').jbr_m(2.0 ** -R_, E_)))[0]
+              < commit_branches(R_, T_ + R_, E_,
+                                float(__import__('soundcalc_lean').jbr_m(2.0 ** -R_, E_)))[1]
+              for _n, E_, R_, T_ in JBR_SYSTEMS),
+          "K_linear < K_nq for all five Johnson-regime systems")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")

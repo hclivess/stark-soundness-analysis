@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 526 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 541 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -122,7 +122,18 @@ deployed system whose soundness actually *rests* on mutual correlated
 agreement — OpenVM2, which **declares** its list parameter — the headroom is
 **18.2–22.0 bits, the narrowest of any shipping system**: WHIR extracts more of
 the provably available room than FRI, and has correspondingly less left to gain
-(`mca_headroom.py`). For the
+(`mca_headroom.py`).
+
+**But most of that gap is not a target.** The MCA floor bounds a *per-instance*
+list quantity; BCHKS25's commit bound unions over the evaluation domain and
+carries an explicit factor `n`. Subtracting gives **Proposition 9**:
+`F − K_nq = ν + log₂(fold) + 1` (exact, to within 0.07 bits at deployed `m`).
+The leading term carries no `m`, no `ρ` and no `E` — it is a property of the two
+bounds' *shapes*, and no proximity-gaps theorem can close it. So the gap splits
+**59% structural / 41% slack**: of 39–45 bits, only **14–21** are available even
+in principle, and only to a sharper *linear* term — the `n/q` branch is already
+slack, binding at just 25 of 700 swept points, all at `m < 1`.
+→ `headroom_split.py` For the
 interleaved linear-code test (Ligero, and hence Brakedown), Roth–Zémor's
 Theorem 1 gives false-witness probability `(e+1)/q` for `e ≤ (d−1)/3`. Since
 `d = Θ(n)`, the numerator is `Θ(n)` — **`a = 1`, not the `O(1)` of folklore**,
@@ -172,7 +183,7 @@ circuit, not an aggregate, and that Venus differs from ZisK in one circuit.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **526 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **541 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
