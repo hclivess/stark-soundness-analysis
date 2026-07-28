@@ -34,7 +34,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 194 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 202 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -131,11 +131,12 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **194 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **202 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
 | `capacity_frs.py` | capacity moved to folded RS — and buys ~0%, not 50% |
+| `open_zone.py` | evidence tiers of the BOUNDS table; what room is left above Johnson |
 | `capacity_routes.py` | all three capacity routes; each closed, for two different reasons |
 | `interleaved_proximity.py` | the interleaved/Ligero case resolved: `a = 1`, sharp |
 | `merkle_extraction.py` | ε_MT expanded; the 3.5 constant derived; 256 bits ≠ 128 |
@@ -213,8 +214,13 @@ derivations would have found.
 ## Open, and not closeable from here
 
 - **Q2** (action-orbit, eprint 2026/861) would give `a = 0` on a code layer,
-  worth ~22 bits. Conditional on an unproven sparse-dominance conjecture. Note
-  that capacity-radius FRS gaps do **not** deliver this: they keep `a = 1`.
+  worth ~22 bits. Conditional on an unproven sparse-dominance conjecture — *and*
+  on the open zone above Johnson being non-empty, which Kambiré 2026 squeezes
+  from above at an unpinned rate (`open_zone.py`). **Two** unknowns, not one.
+  This is the repo's largest claimed win and rests on its weakest source: an
+  unreviewed preprint, abstract verified but PDF unreachable, uncited by the
+  subsequent literature. Capacity-radius FRS gaps do **not** deliver it either —
+  they keep `a = 1`.
 - **Diamond–Posen Conjecture 1**: does the interleaved test reach the
   unique-decoding radius `(d−1)/2` while keeping the sharp `(e+1)/q`, instead of
   stopping at `(d−1)/3`? Worth a **37–40%** query cut, rising with blowup

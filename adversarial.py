@@ -1126,6 +1126,55 @@ def part_a():
     check("every known capacity route is blocked at its own break-even slack",
           all(blocked_), f"{sum(blocked_)}/{len(blocked_)} route-rate pairs blocked")
 
+    # --- ITERATION 31: evidence tiers, and the surviving open zone above Johnson.
+    #
+    # Verified both remembered eprint citations against their abstract pages:
+    #   2026/858  "eps_FRI <= nR/|F| + (1-delta/2)^q"            -> a=1, C=rounds
+    #   2026/861  "first rigorous O(1)/|F| ... above the Johnson radius ...
+    #              reduces to a single sparse-worst-case dominance conjecture"
+    # Both match the BOUNDS table. But they are tier-3 sources (unreviewed, one
+    # group) carrying the repo's LARGEST claimed win, which was never declared.
+    def zone_w_(rho_, c_, log2n_=22.0):
+        return max(0.0, (math.sqrt(rho_) - rho_) - c_ / log2n_)
+
+    def c_empty_(rho_, log2n_=22.0):
+        return (math.sqrt(rho_) - rho_) * log2n_
+
+    # (a) the open zone must shrink as Kambire's constant grows, and vanish
+    for R_ in (1, 2, 3):
+        rho_ = 2.0 ** -R_
+        ws = [zone_w_(rho_, c_) for c_ in (1, 2, 5, 10)]
+        check(f"the open zone above Johnson shrinks monotonically in c, rate 1/{2**R_}",
+              ws == sorted(ws, reverse=True) and ws[-1] == 0.0,
+              f"{[round(w, 4) for w in ws]}")
+    # (b) the emptying constant must be small enough to be a live possibility --
+    # if it were astronomically large the concern would be idle
+    cs = [c_empty_(2.0 ** -R_) for R_ in (1, 2, 3)]
+    check("the zone empties at a constant small enough to matter (c ~ 5)",
+          all(4.0 < c_ < 6.0 for c_ in cs), f"c* = {[round(c_, 2) for c_ in cs]}")
+    # (c) the zone WIDENS with n -- the direction that favours the claim at
+    # Ethereum scale. A file that got this backwards would fail here.
+    widths = [zone_w_(0.25, 5.0, l_) for l_ in (16, 20, 22, 24, 28)]
+    check("the open zone widens with trace size, it does not shrink",
+          widths == sorted(widths), f"{[round(w, 4) for w in widths]}")
+    check("at rate 1/4 and c=5 the zone is empty below n = 2^22",
+          zone_w_(0.25, 5.0, 20.0) == 0.0 and zone_w_(0.25, 5.0, 24.0) > 0,
+          "so the claim needs large traces even to have a radius to apply to")
+    # (d) the action-orbit win is conditional on TWO unknowns, not one. Encode
+    # that as: there exists an admissible c for which the win is unavailable
+    # even if Q2 holds.
+    check("a = 0 is worth nothing if the open zone is empty, Q2 or not",
+          zone_w_(0.25, 6.0) == 0.0,
+          "conditional on Q2 AND on a non-empty zone -- two unknowns")
+    # (e) the tier declaration must actually be present in the table
+    try:
+        _ca2 = open("ceiling_anatomy.py").read()
+        check("ceiling_anatomy.py now declares the evidence tier of its rows",
+              "EVIDENCE TIER" in _ca2 and "tier 3" in _ca2,
+              "the largest claimed win is tier 3 and now says so")
+    except OSError:
+        pass
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

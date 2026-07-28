@@ -131,6 +131,14 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the field requirement is exponential in 1/eta, not polynomial   [halving eta multiplies it by 16.0]
   PASS  larger curve degree l makes the unfolded routes worse, not better   [exp(l^2) and exp(l^4) respectively]
   PASS  every known capacity route is blocked at its own break-even slack   [9/9 route-rate pairs blocked]
+  PASS  the open zone above Johnson shrinks monotonically in c, rate 1/2   [[0.1617, 0.1162, 0.0, 0.0]]
+  PASS  the open zone above Johnson shrinks monotonically in c, rate 1/4   [[0.2045, 0.1591, 0.0227, 0.0]]
+  PASS  the open zone above Johnson shrinks monotonically in c, rate 1/8   [[0.1831, 0.1376, 0.0013, 0.0]]
+  PASS  the zone empties at a constant small enough to matter (c ~ 5)   [c* = [4.56, 5.5, 5.03]]
+  PASS  the open zone widens with trace size, it does not shrink   [[0.0, 0.0, 0.0227, 0.0417, 0.0714]]
+  PASS  at rate 1/4 and c=5 the zone is empty below n = 2^22   [so the claim needs large traces even to have a radius to apply to]
+  PASS  a = 0 is worth nothing if the open zone is empty, Q2 or not   [conditional on Q2 AND on a non-empty zone -- two unknowns]
+  PASS  ceiling_anatomy.py now declares the evidence tier of its rows   [the largest claimed win is tier 3 and now says so]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -202,8 +210,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 194, suite has 194]
+  PASS  README's stated check count matches the suite   [README says 202, suite has 202]
 
 ========================================================================================
-194/194 PASS   no property broken
+202/202 PASS   no property broken
 ========================================================================================

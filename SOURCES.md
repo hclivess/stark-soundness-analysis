@@ -585,3 +585,33 @@ The field requirements are what close these routes:
 against Jeronimo–Liu–Rajpal Thm 5.12 for FRS, where "`q` is at least a fixed
 **polynomial** in `n` and `1/η`". So folding buys a polynomial field; removing it
 makes the field exponential in `1/η`.
+
+## The two Chai–Fan preprints (iteration 31)
+
+Abstract pages fetched directly (eprint abstract pages serve fine; only PDFs are
+behind Cloudflare). Both had been carried in `ceiling_anatomy.py`'s BOUNDS table
+from memory, with no entry here.
+
+**eprint 2026/858** — Raullen Chai, Xinxin Fan (IoTeX Network), "FRI Soundness
+Above the Johnson Bound via Threshold Halving":
+
+> "For `RS[F, L, k]` … for every `δ ∈ (δ_J, 1−ρ)`:
+> `ε_FRI ≤ nR/|F| + (1 − δ/2)^q`."
+> "(B) The ~2× query overhead is optimal within the correlated-agreement (CA)
+> framework."
+
+**eprint 2026/861** — same authors, "Action–Orbit FRI Soundness Above the Johnson
+Radius: A Rigorous `O(1)/|F|` Bound on Plain Reed–Solomon…":
+
+> "the first rigorous `O(1)/|F|` FRI commit-phase soundness bound for plain
+> Reed–Solomon above the Johnson radius … The construction is unconditional for
+> sparse adversary inputs; for general inputs it reduces to a single
+> sparse-worst-case dominance conjecture (Q2)."
+
+Both match the table's `a = 1` (C = rounds) and `a = 0` (conditional) entries —
+**the numbers were recorded correctly.** The provenance was not: these are
+unreviewed preprints by one group, cited by neither the ABF 2026 survey nor
+Goyal–Guruswami–Sun–Wootters (arXiv 2607.08516, 2026-07-09, 37 refs on this exact
+topic), and unindexed in OpenAlex. Both signals are weak individually. See
+`open_zone.py` for the tier grading and for how much radius is left above Johnson
+once Kambiré's counterexamples are accounted for.

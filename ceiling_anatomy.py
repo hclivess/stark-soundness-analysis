@@ -53,6 +53,21 @@ def ceiling(E, nu, a, log2C, g_commit=0):
 
 
 # (label, a, log2C at m=16 / typical, source)
+#
+# EVIDENCE TIER (added iteration 31, see open_zone.py). These rows are NOT
+# equally supported and the table used to imply they were:
+#   tier 1  BCIKS20, BCHKS25, UDR   -- in Ethereum's soundcalc, cross-validated
+#                                      against 7 deployed zkVMs, reproduced here
+#                                      to 0.1 bits where FRI binds
+#   tier 3  threshold halving, action-orbit -- eprint 2026/858 and 2026/861,
+#                                      same two authors at one organisation,
+#                                      unreviewed, abstracts verified but PDFs
+#                                      unreachable; cited by neither the ABF
+#                                      2026 survey nor Goyal-Guruswami-Sun-
+#                                      Wootters (2026-07), and unindexed in
+#                                      OpenAlex. The numbers below match their
+#                                      abstracts exactly; the CONFIDENCE should
+#                                      not match tier 1.
 BOUNDS = [
     ("BCIKS20 (2020)",        2, 7 * math.log2(16.5) - math.log2(3) + 1.5, "eprint 2020/654"),
     ("BCHKS25 JBR (2025)",    1, 5 * math.log2(16.5) + 1 - math.log2(3) + 1.5, "eprint 2025/2055"),

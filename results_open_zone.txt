@@ -1,0 +1,71 @@
+
+============================================================================================
+1. THE TWO REMEMBERED CITATIONS CHECK OUT
+============================================================================================
+
+  2026/858  "eps_FRI <= nR/|F| + (1 - delta/2)^q"        -> a = 1, C = rounds
+  2026/861  "first rigorous O(1)/|F| ... above the Johnson radius ...
+             reduces to a single sparse-worst-case dominance conjecture (Q2)"
+                                                          -> a = 0, conditional
+
+  Both match the BOUNDS table in ceiling_anatomy.py. No numbers change. This is
+  the first time either has been checked against its source rather than recalled.
+
+============================================================================================
+2. BUT THE TABLE MIXES EVIDENCE TIERS
+============================================================================================
+  bound                     tier  support
+  ------------------------------------------------------------------------------------
+  BCIKS20                      1  soundcalc + 7 zkVMs, model reproduces to 0.1b
+  BCHKS25 JBR                  1  soundcalc + 7 zkVMs, model reproduces to 0.1b
+  UDR (BCHKS25 Cor 1.4)        1  soundcalc + 7 zkVMs, constant fixed at -2
+  Roth-Zemor / D-P             2  IACR CiC 1(1) 2024, fetched and read
+  Jeronimo-Liu-Rajpal          2  arXiv 2601.10047, fetched and read
+  Goyal-Guruswami+             2  arXiv 2607.08516, fetched and read
+  Kambire                      2  arXiv 2604.09724, abstract read
+  threshold halving            3  eprint 2026/858, abstract only, unreviewed
+  action-orbit (Q2)            3  eprint 2026/861, abstract only, unreviewed
+
+  The repository's single largest claimed win -- 22 bits from a = 0 -- sits in
+  tier 3, and the table never said so. Neither Chai-Fan paper is cited by
+  Goyal-Guruswami-Sun-Wootters (2026-07-09), a 37-reference treatment of this
+  exact literature that does cite the limitation results and the ABF survey;
+  neither is indexed in OpenAlex. Both signals are weak. The conclusion is not
+  that the results are wrong -- it is that they should not be quoted with the
+  same confidence as a bound Ethereum ships in its reference calculator.
+
+============================================================================================
+3. HOW MUCH ROOM IS LEFT ABOVE JOHNSON, AND FOR HOW LONG
+============================================================================================
+  open zone = [1-sqrt(rho), 1-rho-c/log n],  n = 2^22
+
+    rate   Johnson  capacity  full gap      c=1      c=2      c=5     c=10
+  --------------------------------------------------------------------------
+     1/2    0.2929    0.5000    0.2071   0.1617   0.1162   0.0000   0.0000
+     1/4    0.5000    0.7500    0.2500   0.2045   0.1591   0.0227   0.0000
+     1/8    0.6464    0.8750    0.2286   0.1831   0.1376   0.0013   0.0000
+
+    rate    c that empties the zone
+  ----------------------------------
+     1/2                       4.56
+     1/4                       5.50
+     1/8                       5.03
+
+  Kambire's constant is unspecified. At c around 5 there is nothing left above
+  the Johnson radius at n = 2^22, and an O(1)/|F| bound in that zone would have
+  no radius to apply to. So the 22-bit action-orbit figure is conditional on TWO
+  unknowns -- Q2, and a non-empty open zone -- where this repo previously
+  flagged only the first.
+
+  Note the zone WIDENS with n: c/log n falls as n grows, so the zone is widest
+  for large traces and empty for small ones. At c = 5 and rate 1/4 it opens up
+  only past n = 2^22. That direction favours the claim at Ethereum scale, which
+  is where 2026/861 pitches it.
+
+    log2 n    zone width at rate 1/4, c=5
+  ----------------------------------------
+        16                         0.0000
+        20                         0.0000
+        22                         0.0227
+        24                         0.0417
+        28                         0.0714
