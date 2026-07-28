@@ -158,6 +158,17 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  but OpenVM's query phase still binds, so proofs do not shrink   [query 100.1 < old ceiling 102.0]
   PASS  no deployed system sits above the Johnson radius   [the n^1.99 and n^tau counterexamples cannot touch a deployed config]
   PASS  an O(1) bound beyond Johnson must beat a proved Omega(n^1.99) floor   [O(1) vs 1.51e+13 exceptions -- and result 5 makes improved RS list-decoding a prerequisite]
+  PASS  the Thm 7 crossover is invariant to the UDR ceiling   [a=1 [113, 153, 132, 165, 332, 136, 103] vs a=0 [113, 153, 132, 165, 332, 136, 103]]
+  PASS  ...and the invariance test has teeth (a low ceiling DOES move it)   [K_UDR=60 gives None, K_UDR=102/124 gives 113]
+  PASS  Thm 7 still predicts 7/7 under the corrected a = 0 UDR ceiling   [7/7]
+  PASS  SP1 gains no proof-size reduction from a = 0 at UDR   [query 100.1 already binds below the OLD ceiling 102.4]
+  PASS  OpenVM gains no proof-size reduction from a = 0 at UDR   [query 100.1 already binds below the OLD ceiling 102.0]
+  PASS  a = 0 makes targets above the old ceiling reachable at all   [120 bits impossible at a=1 (cap 102.4), reachable at a=0]
+  PASS  reaching 120 bits costs about 25% more queries than SP1 makes now   [153 vs 124 queries]
+  PASS  proximity loss strictly reduces per-query yield   [[0.678, 0.633, 0.567, 0.464]]
+  PASS  a = 0 beats a = 1 only below a threshold on the unknown constant   [log2 C < 24.4]
+  PASS  polynomial C(eps*) is harmless at every useful eps*   [1/eps*^2 stays far below the threshold]
+  PASS  an exponential C(eps*) FAILS at small eps*, inverting the intuition   [exp(1/eps*) fails below eps* ~ 0.07 -- useful range bounded BELOW]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -229,8 +240,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 221, suite has 221]
+  PASS  README's stated check count matches the suite   [README says 232, suite has 232]
 
 ========================================================================================
-221/221 PASS   no property broken
+232/232 PASS   no property broken
 ========================================================================================

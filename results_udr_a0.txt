@@ -1,0 +1,64 @@
+
+============================================================================================
+1. THEOREM 7 IS INVARIANT TO THE UDR CEILING (the real risk, checked)
+============================================================================================
+  system           K_UDR a=1  K_UDR a=0    K_JBR       s*      s   pred  reported
+  ------------------------------------------------------------------------------
+  SP1 6.1.0            102.4      124.0     92.0    112.0    124    UDR       UDR
+  OpenVM 1.5.0         102.0      124.0     83.4    152.9    193    UDR       UDR
+  Airbender            101.0      124.0     82.4    131.2     87    JBR       JBR
+  Pico                 103.0      124.0     84.4    164.9     84    JBR       JBR
+  ZisK 0.16.1          172.0      192.0    153.4    331.2    229    JBR       JBR
+  RISC Zero            102.4      124.0     92.0    135.6     50    JBR       JBR
+  Miden                108.2      128.0    100.9    102.3     27    JBR       JBR
+
+  7/7 correct, unchanged. s* = (K_JBR - g)/y_UDR contains no K_UDR term,
+  so raising the UDR ceiling cannot move the crossover -- it only extends how
+  far UDR can be pushed afterwards. The 7/7 result never rested on the stale
+  bound.
+
+============================================================================================
+2. WHAT IT IS WORTH: TARGETS THAT WERE UNREACHABLE AT ANY QUERY COUNT
+============================================================================================
+  SP1: E=124, nu=23, rho=1/4, g=16. a=1 ceiling 102.4, a=0 ceiling 124.0
+
+   target              a=1   a=0 queries  vs current 124
+  --------------------------------------------------------
+      100        reachable           124            -0%
+      110      UNREACHABLE           139           +12%
+      120      UNREACHABLE           153           +24%
+      124      UNREACHABLE           159           +28%
+
+  At today's ~100-bit target nothing changes: the query phase binds first. The
+  correction converts previously-impossible targets into merely expensive ones.
+
+============================================================================================
+3. THE PROXIMITY LOSS COSTS QUERIES
+============================================================================================
+   target   eps*=0.00   eps*=0.02   eps*=0.05   eps*=0.10
+  --------------------------------------------------------
+      100         124         133         148         181
+      110         139         149         166         203
+      120         153         164         183         224
+
+  A proximity loss of 0.10 costs about 45% more queries at every target. So eps*
+  wants to be small -- which is exactly where the unspecified constant bites.
+
+============================================================================================
+4. WHETHER a = 0 WINS AT ALL DEPENDS ON THE UNSPECIFIED CONSTANT
+============================================================================================
+  a = 0 beats a = 1 iff log2 C(eps*) < nu + log2(1/gamma) = 24.4  (C < 2.24e+07)
+
+     eps*     C = 1/eps*    C = 1/eps*^2    C = exp(1/eps*)
+  ------------------------------------------------------------
+     0.02     5.6     ok     11.3     ok        72.1  FAILS
+     0.05     4.3     ok      8.6     ok        28.9  FAILS
+     0.10     3.3     ok      6.6     ok        14.4     ok
+     0.20     2.3     ok      4.6     ok         7.2     ok
+
+  Polynomial dependence is harmless. An exponential one -- exp(1/eps*) -- fails
+  below eps* ~ 0.07, which would mean the theorem's useful range is bounded
+  BELOW, not above: you would need a LARGE proximity loss for a = 0 to pay, and
+  a large proximity loss is what section 3 shows is expensive.
+
+  That is the whole uncertainty, and it sits in one unstated constant.

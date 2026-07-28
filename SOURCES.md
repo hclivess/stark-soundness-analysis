@@ -680,3 +680,13 @@ So `a = 0` is **proved** at the unique-decoding radius (result 1) — soundcalc
 still implements the superseded `O(n)` bound there — and `a` is **unbounded**
 beyond Johnson (results 3–4), which retracts iteration 32's "nothing forbids
 `a = 0` above the Johnson radius".
+
+## Note on BCHKS25 result 1's constant (iteration 34)
+
+Result 1 gives `O_{ε*}(1)` exceptional z's at the unique-decoding radius. The
+abstract does **not** state how the constant depends on the proximity loss `ε*`,
+and the PDF is Cloudflare-walled. That single unstated dependence decides whether
+the result is usable: `a = 0` beats soundcalc's `a = 1` only while
+`log₂C(ε*) < ν + log₂(1/γ)` ≈ 24.4 bits at `ν = 23, ρ = 1/4`. Polynomial growth
+(`1/ε*`, `1/ε*²`) clears that comfortably; `exp(1/ε*)` fails below `ε* ≈ 0.07`.
+See `udr_a0.py` §4.

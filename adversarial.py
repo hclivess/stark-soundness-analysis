@@ -1317,6 +1317,95 @@ def part_a():
           f"O(1) vs {n_dep**1.99:.3g} exceptions -- and result 5 makes improved "
           f"RS list-decoding a prerequisite")
 
+    # --- ITERATION 34: does the a=0 UDR correction break anything, and is it
+    # worth anything? (udr_a0.py)
+    #
+    # THE REAL RISK: Theorem 7 called 7/7 using the a=1 UDR ceiling. If raising
+    # that ceiling moved the crossover, the headline prediction was an artifact
+    # of a superseded bound.
+    def y_udr_e(rho_, eps_=0.0):
+        return -math.log2((1 + rho_) / 2.0 + eps_)
+
+    def ceil_a1_(E_, nu_, rho_):
+        return E_ - math.log2(((1 - rho_) / 2.0) * 2.0 ** nu_ + 1)
+
+    # (a) INVARIANCE, tested by SEARCHING the crossover under two genuinely
+    # different UDR ceilings (a=1 and a=0) rather than reusing one formula.
+    def crossover_search(R_, nu_, E_, g_, K_udr_):
+        """Smallest integer s at which the UDR total beats the JBR total."""
+        kJ_ = commit_jbr(R_, nu_, E_, m_eq(R_))
+        yu_, yj_ = y_udr_(R_), y_jbr_(R_, 1000.0)
+        for s_ in range(1, 4000):
+            tu_ = min(s_ * yu_ + g_, K_udr_)
+            tj_ = min(s_ * yj_ + g_, kJ_)
+            if tu_ > tj_:
+                return s_
+        return None
+
+    star_base, star_pert = [], []
+    for nm_, E_, R_, T_, s_, g_, repbits_, repreg_ in ZKVMS:
+        nu_ = T_ + R_
+        rho_ = 2.0 ** -R_
+        k1_ = ceil_a1_(E_, nu_, rho_)          # a = 1, soundcalc's bound
+        k0_ = float(E_)                        # a = 0, BCHKS25 result 1
+        star_base.append(crossover_search(R_, nu_, E_, g_, k1_))
+        star_pert.append(crossover_search(R_, nu_, E_, g_, k0_))
+    check("the Thm 7 crossover is invariant to the UDR ceiling",
+          star_base == star_pert,
+          f"a=1 {star_base} vs a=0 {star_pert}")
+    # the check must have TEETH: a UDR ceiling below K_JBR does move it
+    moved = crossover_search(2, 23, 124, 16, 60.0)
+    check("...and the invariance test has teeth (a low ceiling DOES move it)",
+          moved != star_base[0],
+          f"K_UDR=60 gives {moved}, K_UDR=102/124 gives {star_base[0]}")
+    # and the prediction must still be 7/7 with K_UDR = E (a = 0)
+    wrong34 = []
+    for (nm_, E_, R_, T_, s_, g_, repbits_, repreg_), st_ in zip(ZKVMS, star_base):
+        if ("UDR" if s_ > st_ else "JBR") != repreg_:
+            wrong34.append(nm_)
+    check("Thm 7 still predicts 7/7 under the corrected a = 0 UDR ceiling",
+          not wrong34, f"{7-len(wrong34)}/7")
+
+    # (b) the correction must NOT shrink proofs at today's targets -- the query
+    # phase binds below even the old ceiling for both UDR systems
+    for nm_, E_, R_, T_, s_, g_ in (("SP1", 124, 2, 21, 124, 16),
+                                    ("OpenVM", 124, 1, 23, 193, 20)):
+        nu_, rho_ = T_ + R_, 2.0 ** -R_
+        q_ = s_ * y_udr_e(rho_) + g_
+        check(f"{nm_} gains no proof-size reduction from a = 0 at UDR",
+              q_ < ceil_a1_(E_, nu_, rho_),
+              f"query {q_:.1f} already binds below the OLD ceiling "
+              f"{ceil_a1_(E_, nu_, rho_):.1f}")
+    # what it does buy: previously unreachable targets
+    nu_s, rho_s, g_s = 23, 0.25, 16
+    cap1_s = ceil_a1_(124, nu_s, rho_s)
+    check("a = 0 makes targets above the old ceiling reachable at all",
+          cap1_s < 120 <= 124.0,
+          f"120 bits impossible at a=1 (cap {cap1_s:.1f}), reachable at a=0")
+    q120 = (120 - g_s) / y_udr_e(rho_s)
+    check("reaching 120 bits costs about 25% more queries than SP1 makes now",
+          1.15 < q120 / 124 < 1.35, f"{q120:.0f} vs 124 queries")
+
+    # (c) the proximity loss must cost yield monotonically -- if a future edit
+    # makes eps* free, it has dropped the radius degradation
+    ys = [y_udr_e(0.25, e_) for e_ in (0.0, 0.02, 0.05, 0.10)]
+    check("proximity loss strictly reduces per-query yield",
+          ys == sorted(ys, reverse=True) and ys[-1] < ys[0],
+          f"{[round(y_, 3) for y_ in ys]}")
+
+    # (d) THE DECIDING UNKNOWN: a=0 wins only if log2 C(eps*) < nu + log2(1/gamma).
+    # An exponential constant fails at SMALL eps*, inverting the usual intuition.
+    thr34 = nu_s + math.log2(1.0 / ((1 - rho_s) / 2.0))
+    check("a = 0 beats a = 1 only below a threshold on the unknown constant",
+          24.0 < thr34 < 25.0, f"log2 C < {thr34:.1f}")
+    check("polynomial C(eps*) is harmless at every useful eps*",
+          all(math.log2(1 / e_ ** 2) < thr34 for e_ in (0.02, 0.05, 0.10, 0.20)),
+          "1/eps*^2 stays far below the threshold")
+    check("an exponential C(eps*) FAILS at small eps*, inverting the intuition",
+          math.log2(math.exp(1 / 0.02)) > thr34
+          and math.log2(math.exp(1 / 0.20)) < thr34,
+          "exp(1/eps*) fails below eps* ~ 0.07 -- useful range bounded BELOW")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
