@@ -149,8 +149,8 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  but NOT for the two UDR systems -- iteration 32 overstated it   [[('SP1 6.1.0', 20.6, 23), ('OpenVM 1.5.0', 21.0, 24)]]
   PASS  the UDR list size is 1, not the Johnson 2m+1   [unique decoding admits at most one codeword in the radius]
   PASS  the regime error was material, not cosmetic, for exactly two systems   [[('SP1 6.1.0', 8.9), ('OpenVM 1.5.0', 15.3)]]
-  PASS  no file's local system table has drifted from canonical   [5 local tables agree]
-  PASS  the drift detector actually parses the tables it claims to check   [parsed 5 files, >=5 systems each]
+  PASS  no file's local system table has drifted from canonical   [6 local tables agree]
+  PASS  the drift detector actually parses the tables it claims to check   [parsed 6 files, >=5 systems each]
   PASS  forcing the JBR bound on a UDR system changes it materially   [[('SP1 6.1.0', 10.4), ('OpenVM 1.5.0', 18.6)]]
   PASS  and leaves every JBR system bit-identical   [the accessor is a no-op where the regime already matched]
   PASS  the UDR list size is 1 and the JBR list size is 2m+1   [unique decoding admits at most one codeword in the radius]
@@ -204,6 +204,15 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  wider field elements give a SMALLER size reduction   [['46.7%', '42.7%', '39.8%'] at 2, 4, 8 bytes]
   PASS  even a 64-bit system keeps a ~40% reduction   [39.8% at 8 bytes]
   PASS  iteration 44's 42.7% is the 4-byte case, between the two extremes   [42.7%]
+  PASS  soundcalc's m >= 3 floor never binds at any deployable rate   [raw m ranges 10-50 over blowup 1..256]
+  PASS  ...which is a stronger reason than iteration 39's   [the formula never approaches 3, let alone crosses it]
+  PASS  soundcalc's m rises with blowup then saturates at 50   [[10, 15, 20, 29, 40, 50, 50, 50, 50]]
+  PASS  soundcalc's m differs materially from this repo's m_eq   [1.8x to 90.0x larger]
+  PASS  commit ceilings fall at soundcalc's m, never rise   [-22.2 to -4.1 bits]
+  PASS  the drop is 4-23 bits across the JBR systems   [['Airbender: -4.1', 'Pico: -4.1', 'ZisK 0.16.1: -12.7', 'RISC Zero: -15.2', 'Miden: -22.2']]
+  PASS  the query phase still binds at soundcalc's m, so totals are unmoved   [5/5 JBR systems still query-bound]
+  PASS  Theorem 7 still predicts 7/7 under soundcalc's own m   [7/7]
+  PASS  every crossover moved, so 7/7 is robustness not insensitivity   [s* fell by 10 to 30 at every system]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -228,8 +237,8 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  polynomial C(eps*) is harmless at every useful eps*   [1/eps*^2 stays far below the threshold]
   PASS  an exponential C(eps*) FAILS at small eps*, inverting the intuition   [exp(1/eps*) fails below eps* ~ 0.07 -- useful range bounded BELOW]
   PASS  the staleness guard can actually fail (teeth self-test)   [flags a bare stale assertion, clears a marked one]
-  PASS  no file asserts a claim this repo has retracted   [10 retracted claims registered]
-  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39, 40, 42, 46]]
+  PASS  no file asserts a claim this repo has retracted   [11 retracted claims registered]
+  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39, 40, 42, 46, 47]]
   PASS  a distant marker does not exempt a stale assertion   [proximity window, not file-wide matching]
   PASS  BCIKS20 gives blowup 4 exactly   [R* = 2.000000]
   PASS  BCHKS25 gives blowup 4 exactly   [R* = 2.000000]
@@ -333,8 +342,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 325, suite has 325]
+  PASS  README's stated check count matches the suite   [README says 334, suite has 334]
 
 ========================================================================================
-325/325 PASS   no property broken
+334/334 PASS   no property broken
 ========================================================================================

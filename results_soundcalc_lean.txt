@@ -1,0 +1,66 @@
+
+============================================================================================
+1. m IS DERIVED FROM (rate, field), NOT CHOSEN
+============================================================================================
+   blowup      rho        eta   m (Lean)   m_eq (repo)    ratio
+  ------------------------------------------------------------
+        2   0.5000    0.02500         15          8.24     1.8x
+        4   0.2500    0.01250         20          2.00    10.0x
+        8   0.1250    0.00625         29          0.85    34.3x
+       16   0.0625    0.00313         40          0.44    90.0x
+
+  Regime.lean states it outright: "eta is no longer a free rational parameter --
+  it is derived per-call from (F, rho, g)". So m is a function of the config,
+  not a knob.
+
+============================================================================================
+2. THE m >= 3 FLOOR IS DEAD CODE AT EVERY DEPLOYABLE RATE
+============================================================================================
+    blowup    raw m   after floor   floor binds?
+  ------------------------------------------------
+         1       10            10             no
+         2       15            15             no
+         4       20            20             no
+         8       29            29             no
+        16       40            40             no
+        32       50            50             no
+        64       50            50             no
+       128       50            50             no
+       256       50            50             no
+
+  Raw m is 10 at blowup 1 and saturates at 50. Iterations 38-39 concluded the
+  floor costs zero because deployed optima sit far above 3; the real reason is
+  that the formula never produces a value near 3 at any rate.
+
+============================================================================================
+3. CEILINGS FALL 4-22 BITS -- BUT THE QUERY PHASE STILL BINDS
+============================================================================================
+  system           K at m_eq  K at jbrM    delta  query term  still binds?
+  ------------------------------------------------------------------------
+  Airbender             82.4       78.3     -4.1        71.4           yes
+  Pico                  84.4       80.3     -4.1        57.9           yes
+  ZisK 0.16.1          153.4      140.8    -12.7       130.3           yes
+  RISC Zero             92.0       76.8    -15.2        50.0           yes
+  Miden                100.9       78.7    -22.2        56.5           yes
+
+  A 4-to-22-bit drop in a term that does not bind moves no reported total.
+  Iteration 24 established the query phase binds for six of seven; that is why
+  this correction is real but inert.
+
+============================================================================================
+4. THEOREM 7 SURVIVES BOTH CONVENTIONS
+============================================================================================
+  system              s   s* m_eq   s* jbrM   pred   reported
+  ----------------------------------------------------------
+  SP1 6.1.0         124     112.0      89.7    UDR        UDR
+  OpenVM 1.5.0      193     152.9     142.9    UDR        UDR
+  Airbender          87     131.2     121.2    JBR        JBR
+  Pico               84     164.9     155.0    JBR        JBR
+  ZisK 0.16.1       229     331.2     300.7    JBR        JBR
+  RISC Zero          50     135.6     113.3    JBR        JBR
+  Miden              27     102.3      75.5    JBR        JBR
+
+  7/7 under soundcalc's own m. Every s* falls by 10 to 27 and no system
+  crosses. With iteration 34's result that the crossover is invariant to the UDR
+  ceiling, Theorem 7 is now robust to two independent modelling choices it could
+  have been an artifact of.

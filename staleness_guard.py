@@ -73,6 +73,9 @@ RETRACTED = [
     ("no known efficient certificate",
      "not needed: the sampling failure probability is q^{-Omega(n)} <= 2^-360",
      46),
+    ("their unconstrained optimum already exceeds 3",
+     "soundcalc derives m by formula; its raw value is 10-50, so the floor is dead code",
+     47),
 ]
 
 # Extended in iteration 35 after its own first run produced a FALSE POSITIVE:

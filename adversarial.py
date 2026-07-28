@@ -1626,6 +1626,90 @@ def part_a():
               f"{reds_F[1]:.1%}")
     except ImportError:
         pass
+
+    # --- ITERATION 47: soundcalc-lean says m is DERIVED, not free.
+    #
+    # Soundcalc/Regime.lean: jbrM = max(ceil(sqrtUB rho g / (2*eta)), 3) with
+    # eta = max(rho/20, sqrt(rho)/100) below 2^150, and the docstring stating
+    # "eta is no longer a free rational parameter -- it is derived per-call".
+    try:
+        import soundcalc_lean as _sl
+
+        # (a) the floor must be dead code at every deployable rate
+        raws = [_sl.raw_m(2.0 ** -R_) for R_ in range(0, 9)]
+        check("soundcalc's m >= 3 floor never binds at any deployable rate",
+              all(r_ >= 10 for r_ in raws),
+              f"raw m ranges {min(raws)}-{max(raws)} over blowup 1..256")
+        check("...which is a stronger reason than iteration 39's",
+              min(raws) > 3, "the formula never approaches 3, let alone crosses it")
+        # m must rise with blowup and then saturate -- if it grew without bound
+        # the ceiling correction would be unbounded too
+        check("soundcalc's m rises with blowup then saturates at 50",
+              raws == sorted(raws) and max(raws) == 50,
+              f"{raws}")
+
+        # (b) it must differ MATERIALLY from the repo's m_eq, or there is nothing
+        # to correct
+        ratios47 = [_sl.jbr_m(2.0 ** -R_) / m_eq(R_) for R_ in (1, 2, 3, 4)]
+        check("soundcalc's m differs materially from this repo's m_eq",
+              all(r_ > 1.5 for r_ in ratios47),
+              f"{min(ratios47):.1f}x to {max(ratios47):.1f}x larger")
+
+        # (c) the ceilings must FALL (the error is increasing in m) by 4-23 bits
+        deltas47 = []
+        for nm_, E_, R_, T_, s_, g_, reg_ in _sl.ZKVMS:
+            if reg_ != "JBR":
+                continue
+            nu_ = T_ + R_
+            k1_ = commit_jbr(R_, nu_, E_, m_eq(R_))
+            k2_ = commit_jbr(R_, nu_, E_, float(_sl.jbr_m(2.0 ** -R_, E_)))
+            deltas47.append((nm_, k2_ - k1_))
+        check("commit ceilings fall at soundcalc's m, never rise",
+              all(d_ < 0 for _, d_ in deltas47),
+              f"{min(d_ for _, d_ in deltas47):.1f} to "
+              f"{max(d_ for _, d_ in deltas47):.1f} bits")
+        check("the drop is 4-23 bits across the JBR systems",
+              4.0 < min(-d_ for _, d_ in deltas47) and
+              max(-d_ for _, d_ in deltas47) < 23.0,
+              f"{[f'{n_}: {d_:+.1f}' for n_, d_ in deltas47]}")
+
+        # (d) BUT THE TOTALS MUST BE UNMOVED: the query phase still binds
+        def y_jbr47(R_, m_):
+            a_ = math.sqrt(2.0 ** -R_) * (1 + 0.5 / m_)
+            return -math.log2(a_) if a_ < 1 else float("-inf")
+
+        binds47 = []
+        for nm_, E_, R_, T_, s_, g_, reg_ in _sl.ZKVMS:
+            if reg_ != "JBR":
+                continue
+            nu_ = T_ + R_
+            k2_ = commit_jbr(R_, nu_, E_, float(_sl.jbr_m(2.0 ** -R_, E_)))
+            binds47.append(s_ * y_jbr47(R_, 1000.0) + g_ < k2_)
+        check("the query phase still binds at soundcalc's m, so totals are unmoved",
+              all(binds47), f"{sum(binds47)}/5 JBR systems still query-bound")
+
+        # (e) THEOREM 7 must survive -- this was the real risk
+        wrong47 = []
+        for nm_, E_, R_, T_, s_, g_, reg_ in _sl.ZKVMS:
+            nu_ = T_ + R_
+            k2_ = commit_jbr(R_, nu_, E_, float(_sl.jbr_m(2.0 ** -R_, E_)))
+            pred_ = "UDR" if s_ > (k2_ - g_) / y_udr_(R_) else "JBR"
+            if pred_ != reg_:
+                wrong47.append(nm_)
+        check("Theorem 7 still predicts 7/7 under soundcalc's own m",
+              not wrong47, f"{7-len(wrong47)}/7")
+        # and every s* must have MOVED, or the robustness claim is vacuous
+        moved47 = []
+        for nm_, E_, R_, T_, s_, g_, reg_ in _sl.ZKVMS:
+            nu_ = T_ + R_
+            a_ = (commit_jbr(R_, nu_, E_, m_eq(R_)) - g_) / y_udr_(R_)
+            b_ = (commit_jbr(R_, nu_, E_, float(_sl.jbr_m(2.0 ** -R_, E_))) - g_) / y_udr_(R_)
+            moved47.append(a_ - b_)
+        check("every crossover moved, so 7/7 is robustness not insensitivity",
+              all(m_ > 5 for m_ in moved47),
+              f"s* fell by {min(moved47):.0f} to {max(moved47):.0f} at every system")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

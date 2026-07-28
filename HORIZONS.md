@@ -134,9 +134,15 @@ conjecture on resilience grounds should not then adopt M-SIS to go faster.
 
 ## 5. Open threads worth pulling next
 
-1. **`symbolicsoft/soundcalc-lean`** — soundcalc's bounds proven in Lean, pushed
-   2026-07-27. The obvious way to check Theorems 4–7 mechanically rather than by
-   the numerical agreement in `verify_theorem.py` / `regime_crossover.py`.
+1. ~~**`symbolicsoft/soundcalc-lean`**~~ — **PULLED, iteration 47.** Cloned and
+   read: a real formalization (79 theorem/lemma declarations, one `sorry`). It
+   settles a modelling question this repo had open — `m` is **derived**, not
+   free: `η = max(ρ/20, √ρ/100)` and `m = max(⌈√ρ/(2η)⌉, 3)`, with the source
+   stating "η is no longer a free rational parameter". Consequences in
+   `soundcalc_lean.py`: the `m ≥ 3` floor is dead code (raw `m` is 10–50), the
+   commit ceilings computed at `m_eq` are 4–22 bits optimistic, the reported
+   totals are unmoved because the query phase still binds, and **Theorem 7 still
+   predicts 7/7** with every `s*` shifted by 10–27.
 2. **Jagged's concrete soundness** — `soundcalc/circuits/jagged.py` exists;
    worth running against SP1's real parameters to see whether the 100-bit UDR
    figure comes from the PCS or the arithmetization.
