@@ -288,6 +288,12 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  ...and still fails for the two UDR systems (iteration 40 stands)   [the regime split survives the m correction]
   PASS  the headroom range is 20.6-44.5 bits, not 20.6-37.3   [20.6-44.5]
   PASS  the sum-vs-min bias is unaffected by the m convention   [max 0.343 at jbrM, same as at m_eq -- it is a UDR effect]
+  PASS  systems.py matches the machine-readable configs exactly   [9/9 fields]
+  PASS  ...across enough fields to be a real check   [9 parameters from two systems]
+  PASS  parameter provenance is not uniform across the seven systems   [{'MACHINE-CHECKED': 1, 'MACHINE-READABLE': 1, 'QUOTED': 2, 'TOTAL ONLY': 3}]
+  PASS  three systems have their totals recorded but not their parameters   [OpenVM, Pico, ZisK]
+  PASS  two systems have machine-readable provenance, better than a quote   [SP1 and Airbender]
+  PASS  README no longer claims uniform verbatim parameter coverage   [graded instead, as the BOUNDS table was in iteration 31]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -417,8 +423,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 409, suite has 409]
+  PASS  README's stated check count matches the suite   [README says 415, suite has 415]
 
 ========================================================================================
-409/409 PASS   no property broken
+415/415 PASS   no property broken
 ========================================================================================

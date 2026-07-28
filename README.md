@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 409 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 415 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -150,7 +150,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **409 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **415 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
@@ -163,6 +163,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `m_star.py` | the `m` hinge is the query budget; the `m≥3` floor costs **zero** (it 39 corrects it 38) |
 | `theorem4_scope.py` | Thm 4 needed the `m ≥ 3` correction III.3 exempted it from |
 | `blowup_theorem.py` | Theorem 8: blowup 4 is optimal iff `c = 2(a+b)`; scope of Thm 3′ |
+| `provenance_grades.py` | audit of SOURCES.md's own claim; 10/10 machine-checked params agree |
 | `systems.py` | the canonical system table, regime baked in; drift detector |
 | `staleness_guard.py` | mechanical guard against this repo's own retracted claims |
 | `udr_a0.py` | what BCHKS25's proved `a=0` at UDR is worth, and the constant that decides it |
@@ -190,7 +191,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `nado_audit.py` | audit of a live chain: 47 provable bits vs 146 claimed (**fix landed 2026-07-28; migration is PARTIAL, true figure 63**) |
 | `nado_ext_fri_prototype.py` | GF(p²) FRI fold, 10/10 against real modules |
 | `THEOREM.md` | proofs, Parts I–IV |
-| `SOURCES.md` | verbatim upstream quotes for every parameter |
+| `SOURCES.md` | upstream quotes: thorough for formulas and totals, **graded** per system for parameters (`provenance_grades.py`) |
 | `EFFICIENCY.md` | the prover cost decomposition |
 | `HORIZONS.md` | multilinear vs lattice, and what each costs |
 

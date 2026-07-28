@@ -2207,6 +2207,42 @@ def part_a():
               f"max {max(biases):.3f} at jbrM, same as at m_eq -- it is a UDR effect")
     except ImportError:
         pass
+
+    # --- ITERATION 58: auditing SOURCES.md's own provenance claim.
+    try:
+        import provenance_grades as _pg
+
+        # (a) every checkable parameter must agree with its machine-readable source
+        rows58 = _pg.check_sp1() + _pg.check_airbender()
+        check("systems.py matches the machine-readable configs exactly",
+              all(a_ == b_ for _, a_, b_ in rows58),
+              f"{sum(1 for _, a_, b_ in rows58 if a_ == b_)}/{len(rows58)} fields")
+        # the check must be non-trivial -- at least 8 fields across two systems
+        check("...across enough fields to be a real check",
+              len(rows58) >= 8, f"{len(rows58)} parameters from two systems")
+
+        # (b) the provenance is NOT uniform, which is the finding
+        grades = _pg.grade_counts()
+        check("parameter provenance is not uniform across the seven systems",
+              len(grades) >= 3,
+              f"{grades}")
+        check("three systems have their totals recorded but not their parameters",
+              grades.get("TOTAL ONLY", 0) == 3,
+              "OpenVM, Pico, ZisK")
+        check("two systems have machine-readable provenance, better than a quote",
+              grades.get("MACHINE-CHECKED", 0) + grades.get("MACHINE-READABLE", 0) == 2,
+              "SP1 and Airbender")
+
+        # (c) README's claim must now be graded rather than flat
+        try:
+            _rd58 = open("README.md").read()
+            check("README no longer claims uniform verbatim parameter coverage",
+                  "verbatim upstream quotes for every parameter" not in _rd58,
+                  "graded instead, as the BOUNDS table was in iteration 31")
+        except OSError:
+            pass
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

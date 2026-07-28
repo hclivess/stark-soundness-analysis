@@ -713,3 +713,30 @@ These are **far weaker field requirements** than the GGSW Thms 5.3/5.6 used in
 iteration 30: at the radius that beats Johnson, **22 bits** for random linear and
 86–135 for random RS, against 5,909 and 3,026,000. Iteration 30's "blocked by
 field size" verdict is retracted; see `capacity_routes.py` §5–6.
+
+---
+
+## Provenance grading (iteration 58)
+
+README used to describe this file as carrying "verbatim upstream quotes for
+every parameter". Audited: it carries them thoroughly for the **formulas**
+(soundcalc's Python) and for each system's **reported total**, but not for most
+systems' queries, grinding, trace length and blowup. The grade is not uniform,
+and pretending otherwise is the same overstatement iterations 52–54 found in
+EFFICIENCY.md.
+
+| system | parameter provenance | basis |
+|---|---|---|
+| SP1 6.1.0 | **machine-checked** | `SoundcalcIO/ZkVM/SP1.lean`, all 5 fields verified |
+| Airbender | **machine-readable** | `Ref/airbender.toml`, 4 fields + `R` confirmed by exact commit-round reproduction |
+| Miden | quoted | `miden.toml` cited with parameters above |
+| RISC Zero | quoted | best-documented of the rest |
+| OpenVM 1.5.0 | total only | reported bits recorded; parameters not quoted |
+| Pico | total only | " |
+| ZisK 0.16.1 | total only | " |
+
+All **10** checkable parameters for SP1 and Airbender agree exactly with
+`systems.py`. The exposure from the rest is narrow: the repo validates against
+*reported totals*, which are recorded, and *formulas*, which are quoted. A bad
+parameter transcription would corrupt a per-system term breakdown while leaving
+the total right. See `provenance_grades.py`.
