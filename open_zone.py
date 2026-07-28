@@ -84,6 +84,23 @@ the action-orbit result would have nothing to apply to. Nobody has pinned that
 constant, so the 22-bit figure the repo quotes should be read as conditional on
 BOTH Q2 and on the open zone being non-empty -- two independent unknowns, where
 the repo previously flagged one.
+
+CORRECTED IN ITERATION 32 -- SOURCE AND SHAPE
+----------------------------------------------
+This file cites Kambire (arXiv 2604.09724) for the near-capacity failure. That
+note says up front it "flesh[es] out a sketch by Krachun and Kazanin"; the
+PRIMARY source is Krachun-Kazanin-Habock, "Failure of proximity gaps close to
+capacity", eprint 2026/782, cited as [KKH26] by Goyal-Guruswami-Sun-Wootters.
+Its abstract puts the failure at
+
+    eta = Theta_rho(1/log n)
+
+-- note the SUBSCRIPT. The constant is RATE-DEPENDENT. Section 3 sweeps a single
+rate-independent c across all three rates, which is the wrong shape: the
+emptying threshold is c(rho), not c, so the per-rate columns are not comparable
+as drawn. The qualitative conclusion is unaffected -- the zone can be empty at
+deployed n, so Q2's value rests on two unknowns rather than one -- but each rate
+column should be read on its own, not across.
 """
 
 import math

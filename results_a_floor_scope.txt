@@ -1,0 +1,66 @@
+
+============================================================================================
+1. THE MCA FLOOR IS EXACTLY (L+1)/q AT EVERY DEPLOYED PARAMETER
+============================================================================================
+           q          L          floor    as bits   (L+1)/q bits   match
+  ----------------------------------------------------------------------
+  2^31                5      2.794e-09     -28.42         -28.42     yes
+  2^31               33      1.583e-08     -25.91         -25.91     yes
+  2^31             2048      9.541e-07     -20.00         -20.00     yes
+  2^124               5      2.821e-37    -121.42        -121.42     yes
+  2^124              33      1.599e-36    -118.91        -118.91     yes
+  2^124            2048      9.634e-35    -113.00        -113.00     yes
+  2^192               5      9.559e-58    -189.42        -189.42     yes
+  2^192              33      5.417e-57    -186.91        -186.91     yes
+  2^192            2048      3.264e-55    -181.00        -181.00     yes
+
+============================================================================================
+2. THE NUMERATOR IS THE LIST SIZE, AND IT DOES NOT SCALE WITH n
+============================================================================================
+  BCHKS25's bound, as this repo already implements it, keeps the two
+  apart:
+
+      bits = E - log2(folding) - log2(n+1) - log2(2m+1) + (1/2)log2(rho)
+                                 ^ domain      ^ LIST SIZE
+
+  The list size is 2m+1. Doubling n does not change it.
+
+         m   list size 2m+1    floor bits at E=124
+  --------------------------------------------------
+      0.85             2.70                 122.11
+      2.00             5.00                 121.42
+      8.24            17.48                 119.79
+     16.00            33.00                 118.91
+    100.00           201.00                 116.34
+
+  Compare the interleaved case, where the numerator IS the domain size:
+
+           n    interleaved numerator (rho=1/4)   ratio to n
+  ------------------------------------------------------------
+       65536                          1.638e+04       0.2500
+     1048576                          2.621e+05       0.2500
+    16777216                          4.194e+06       0.2500
+
+  Theta(n) for interleaved, Theta(1) for the RS Johnson regime. The a >= 1
+  floor is PROVED for the first and merely OBSERVED for the second.
+
+============================================================================================
+3. HEADROOM: WHAT NO THEOREM HAS CLOSED
+============================================================================================
+  system              E   nu    m_eq   BCHKS25 K   MCA floor  headroom    nu
+  --------------------------------------------------------------------------
+  SP1 6.1.0         124   23    2.00        92.0       121.4      29.4    23
+  OpenVM 1.5.0      124   24    8.24        83.4       119.8      36.3    24
+  Airbender         124   25    8.24        82.4       119.8      37.3    25
+  Pico              124   23    8.24        84.4       119.8      35.3    23
+  ZisK 0.16.1       192   22    8.24       153.4       187.8      34.3    22
+  RISC Zero         124   23    2.00        92.0       121.4      29.4    23
+  Miden             128   21    0.85       100.9       126.1      25.2    21
+
+  Headroom 25.2 to 37.3 bits: the distance between the best proved upper
+  bound and the best proved lower bound. Nobody has closed it from either side.
+
+  Note it exceeds nu at every system. An a: 1 -> 0 improvement is worth exactly
+  nu bits, so the strongest known lower bound leaves room for it AND for the
+  constant. The action-orbit claim is not in tension with anything proved -- the
+  objection to it is provenance (iteration 31), not impossibility.

@@ -615,3 +615,38 @@ Goyal–Guruswami–Sun–Wootters (arXiv 2607.08516, 2026-07-09, 37 refs on thi
 topic), and unindexed in OpenAlex. Both signals are weak individually. See
 `open_zone.py` for the tier grading and for how much radius is left above Johnson
 once Kambiré's counterexamples are accounted for.
+
+## The MCA lower bound, and the primary source for the failure result (iteration 32)
+
+**Gao, Yang, Xu, Kan, "List-Decoding Counterexamples Yield Lower Bounds on Mutual
+Correlated Agreement Error"** — arXiv:2607.10572v1 (2026-07-12). Fetched and read.
+
+> "Given an explicit counterexample to the `(p,L)`-list-decodability of a linear
+> code over `F_q`, we construct a related code `C'` of the same length and
+> dimension such that `err_MCA(C',p) ≥ (1/q)·⌈(L+1)q/(q+L)⌉`, while decreasing
+> its minimum distance by at most one."
+
+Evaluates to exactly `(L+1)/q` at every deployed parameter. The numerator is the
+**list size**, which in BCHKS25's Johnson regime is `2m+1` — independent of `n`
+(this repo's own `commit_jbr` carries `log2(2m+1)` and `log2(n+1)` as separate
+factors). So the strongest known lower bound permits `a = 0` for RS at the
+Johnson radius; the `a ≥ 1` floor is proved only for interleaved codes, where the
+numerator is `e+1 = Θ(n)`.
+
+**Krachun, Kazanin, Haböck, "Failure of proximity gaps close to capacity"** —
+eprint 2026/782, cited as `[KKH26]` by Goyal–Guruswami–Sun–Wootters. This is the
+**primary** source for the near-capacity failure; the Kambiré arXiv note
+(2604.09724) used in iteration 31 states it "flesh[es] out a sketch by Krachun
+and Kazanin".
+
+> "For relative distance `θ = 1−ρ−η`, where `ρ` is the rate of the code, and
+> positive `η = Θ_ρ(1/log n)` … we construct an affine line that is not entirely
+> `θ`-close to the code but still contains `2^{Ω_ρ(1/η)}` such points."
+
+Note `Θ_ρ` — the constant is **rate-dependent**, which `open_zone.py` (iteration
+31) does not model.
+
+**Arnon, Boneh, Fenzi, "Open Problems in List Decoding and Correlated
+Agreement"** — eprint 2026/680, the survey behind the Ethereum Foundation's
+**Proximity Prize**; July 2026 revision adds a "concrete estimate of attacks".
+Abstract read; PDF unreachable (Cloudflare) and no open mirror found.

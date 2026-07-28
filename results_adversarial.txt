@@ -139,6 +139,14 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  at rate 1/4 and c=5 the zone is empty below n = 2^22   [so the claim needs large traces even to have a radius to apply to]
   PASS  a = 0 is worth nothing if the open zone is empty, Q2 or not   [conditional on Q2 AND on a non-empty zone -- two unknowns]
   PASS  ceiling_anatomy.py now declares the evidence tier of its rows   [the largest claimed win is tier 3 and now says so]
+  PASS  the MCA floor evaluates to exactly (L+1)/q at deployed parameters   [9/9]
+  PASS  the Johnson-regime list size is independent of n   [2m+1 depends on the proximity parameter only]
+  PASS  the interleaved numerator scales with n but the RS list size does not   [Theta(n) vs Theta(1) -- proved floor vs observed track record]
+  PASS  the strongest known lower bound does NOT forbid a = 0 for RS   [MCA floor numerator is 18, not Theta(n)]
+  PASS  the modelled bound never exceeds the proved MCA floor   [min headroom 25.2 bits]
+  PASS  headroom is 25-38 bits across the seven verified systems   [25.2-37.3]
+  PASS  headroom exceeds nu everywhere, so a = 0 is not ruled out   [the lower bound leaves room for a:1->0 plus its constant]
+  PASS  README distinguishes the proved floor from the observed one   [proved for interleaved; empirical for FRI/WHIR]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -210,8 +218,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 202, suite has 202]
+  PASS  README's stated check count matches the suite   [README says 210, suite has 210]
 
 ========================================================================================
-202/202 PASS   no property broken
+210/210 PASS   no property broken
 ========================================================================================

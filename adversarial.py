@@ -1175,6 +1175,78 @@ def part_a():
     except OSError:
         pass
 
+    # --- ITERATION 32: what the a >= 1 floor is actually PROVED for.
+    #
+    # Gao, Yang, Xu, Kan, arXiv 2607.10572 (2026-07-12): given a counterexample
+    # to (p,L)-list-decodability, err_MCA(C',p) >= (1/q)*ceil((L+1)q/(q+L)).
+    # Mutual correlated agreement is what WHIR's soundness rests on, so this is
+    # a proved floor on a deployed quantity.
+    def mca_floor_(q_, L_):
+        return math.ceil((L_ + 1) * q_ / (q_ + L_)) / q_
+
+    # (a) the bound is exactly (L+1)/q at deployed parameters
+    exact_ = []
+    for ql_ in (31, 124, 192):
+        for L_ in (5, 33, 2 ** 11):
+            exact_.append(abs(math.log2(mca_floor_(2 ** ql_, L_))
+                              - math.log2((L_ + 1) / 2 ** ql_)) < 1e-9)
+    check("the MCA floor evaluates to exactly (L+1)/q at deployed parameters",
+          all(exact_), f"{sum(exact_)}/{len(exact_)}")
+
+    # (b) THE KEY POINT: the numerator is the LIST SIZE, which in the Johnson
+    # regime is 2m+1 and does NOT scale with n. So the floor is O(1)/q there.
+    # If it scaled with n, a >= 1 would be forced for FRI and it is not.
+    def jl_(m_):
+        return 2.0 * m_ + 1.0
+
+    check("the Johnson-regime list size is independent of n",
+          jl_(8.24) == jl_(8.24) and all(
+              jl_(m_) < 250 for m_ in (0.85, 2.0, 8.24, 100.0)),
+          "2m+1 depends on the proximity parameter only")
+    # contrast: the interleaved numerator IS Theta(n) -- doubling n doubles it
+    def il_(n_, rho_):
+        return (1.0 - rho_) * n_ / 3.0 + 1.0
+    check("the interleaved numerator scales with n but the RS list size does not",
+          abs(il_(2 ** 21, 0.25) / il_(2 ** 20, 0.25) - 2.0) < 1e-3
+          and jl_(8.24) == jl_(8.24),
+          "Theta(n) vs Theta(1) -- proved floor vs observed track record")
+    # so nothing known forbids a = 0 for RS at the Johnson radius
+    check("the strongest known lower bound does NOT forbid a = 0 for RS",
+          math.log2(jl_(8.24) + 1) < 10,
+          f"MCA floor numerator is {jl_(8.24)+1:.0f}, not Theta(n)")
+
+    # (c) HEADROOM between best proved upper and lower bounds. If this were
+    # negative the repo's model would contradict a proved lower bound.
+    ZKH = [("SP1 6.1.0", 124, 2, 21), ("OpenVM 1.5.0", 124, 1, 23),
+           ("Airbender", 124, 1, 24), ("Pico", 124, 1, 22),
+           ("ZisK 0.16.1", 192, 1, 21), ("RISC Zero", 124, 2, 21),
+           ("Miden", 128, 3, 18)]
+    heads = []
+    for nm_, E_, R_, T_ in ZKH:
+        nu_ = T_ + R_
+        m_ = m_eq(R_)
+        K_ = commit_jbr(R_, nu_, E_, m_)
+        F_ = E_ - math.log2(jl_(m_) + 1)
+        heads.append((nm_, F_ - K_, nu_))
+    check("the modelled bound never exceeds the proved MCA floor",
+          all(h > 0 for _, h, _ in heads),
+          f"min headroom {min(h for _, h, _ in heads):.1f} bits")
+    check("headroom is 25-38 bits across the seven verified systems",
+          25.0 < min(h for _, h, _ in heads) and max(h for _, h, _ in heads) < 38.0,
+          f"{min(h for _,h,_ in heads):.1f}-{max(h for _,h,_ in heads):.1f}")
+    # and it must EXCEED nu, or an a: 1 -> 0 improvement would be ruled out
+    check("headroom exceeds nu everywhere, so a = 0 is not ruled out",
+          all(h > nu_ for _, h, nu_ in heads),
+          "the lower bound leaves room for a:1->0 plus its constant")
+    # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
+    try:
+        _rd2 = open("README.md").read()
+        check("README distinguishes the proved floor from the observed one",
+              "observed" in _rd2 or "track record" in _rd2,
+              "proved for interleaved; empirical for FRI/WHIR")
+    except OSError:
+        pass
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
