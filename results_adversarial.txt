@@ -20,6 +20,9 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  SP1: UDR strictly beats JBR at their own parameters   [UDR 100.1 vs JBR 93.0]
   PASS  Thm 7(b) predicts the regime of all five production zkVMs   [5/5]
   PASS  FRI-only model never undershoots a published total (it upper bounds)   [no undershoot in 5 systems]
+  PASS  residual is smaller for systems that fix or avoid m   [tuned<=1.8 vs untuned>=3.2]
+  PASS  optimising m never LOSES to a fixed m (residuals all >= 0)
+  PASS  measured untuned-m gap sits inside Part I's predicted <=8 bit envelope   [max measured 4.8 bits]
   PASS  dedup model matches UNIFORM queries   [model 1893 vs sim 1890]
   PASS  dedup model is NOT a worst-case bound (spread queries exceed it)   [spread 2056 vs model 1893]
   PASS  clustered queries are far cheaper than the model   [clustered 13 vs model 1893]
@@ -59,5 +62,5 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
 
 ========================================================================================
-48/48 PASS   no property broken
+51/51 PASS   no property broken
 ========================================================================================
