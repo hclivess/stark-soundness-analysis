@@ -1,0 +1,43 @@
+
+============================================================================================
+1. THE CANONICAL TABLE, WITH REGIME AS A FIELD
+============================================================================================
+  system              E   R   T   nu     s    g  reported  regime
+  --------------------------------------------------------------
+  SP1 6.1.0         124   2  21   23   124   16       100     UDR
+  OpenVM 1.5.0      124   1  23   24   193   20       100     UDR
+  Airbender         124   1  24   25    87   28        67     JBR
+  Pico              124   1  22   23    84   16        53     JBR
+  ZisK 0.16.1       192   1  21   22   229   16       128     JBR
+  RISC Zero         124   2  21   23    50    0        48     JBR
+  Miden             128   3  18   21    27   16        55     JBR
+
+============================================================================================
+2. REGIME-CORRECT ACCESSORS vs THE WRONG-REGIME VALUES
+============================================================================================
+  system           regime  commit (correct)  if JBR forced    delta      L
+  ------------------------------------------------------------------------
+  SP1 6.1.0           UDR             102.4           92.0    +10.4   1.00
+  OpenVM 1.5.0        UDR             102.0           83.4    +18.6   1.00
+  Airbender           JBR              82.4           82.4     +0.0  17.49
+  Pico                JBR              84.4           84.4     +0.0  17.49
+  ZisK 0.16.1         JBR             153.4          153.4     +0.0  17.49
+  RISC Zero           JBR              92.0           92.0     +0.0   5.00
+  Miden               JBR             100.9          100.9     +0.0   2.69
+
+  The two UDR rows are where iterations 38 and 40 went wrong. Forcing the JBR
+  bound on them understates their commit ceiling by 10 and 19 bits, and inflates
+  their list size from 1 to 5 and 17.5.
+
+============================================================================================
+3. DRIFT CHECK ACROSS EVERY FILE CARRYING ITS OWN COPY
+============================================================================================
+  adversarial.py           10 systems
+  bcs_composition.py       7 systems
+  m_star.py                7 systems
+  qrom_bracket.py          7 systems
+  udr_a0.py                7 systems
+
+  no drift: all 5 local tables agree with the canonical one.
+  (parameters never drifted -- the regime HANDLING did, which is
+   what the accessors above are for.)

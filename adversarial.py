@@ -1283,6 +1283,56 @@ def part_a():
               f"{[(n_, round(d_,1)) for n_, d_ in big]}")
     except ImportError:
         pass
+
+    # --- ITERATION 41: eliminate the regime-error class by construction.
+    #
+    # Iterations 38 and 40 made the same mistake in different files eight
+    # iterations apart, because every file re-declares the seven-system table and
+    # re-derives the commit bound ad hoc. systems.py holds it once with the
+    # regime as a FIELD and exposes accessors that cannot be called without it.
+    try:
+        import systems as _sys
+
+        # (a) no local table may drift from the canonical one
+        _drift = _sys.drift(".")
+        check("no file's local system table has drifted from canonical",
+              not _drift,
+              "; ".join(f"{f}:{k}" for f, k, _, _ in _drift) if _drift
+              else f"{len(_sys.local_tables('.'))} local tables agree")
+        # the drift detector must have teeth
+        _canon = {_sys.as_dict(r)["name"] for r in _sys.SYSTEMS}
+        check("the drift detector actually parses the tables it claims to check",
+              all(len(rows) >= 5 for rows in _sys.local_tables(".").values())
+              and len(_sys.local_tables(".")) >= 4,
+              f"parsed {len(_sys.local_tables('.'))} files, >=5 systems each")
+
+        # (b) the accessors must be regime-correct: UDR gets the UDR bound and
+        # list size 1, JBR gets BCHKS25 and 2m+1
+        from regime_crossover import commit_jbr as _cjb, m_eq as _meq
+        wrong_deltas = []
+        for r_ in _sys.SYSTEMS:
+            d_ = _sys.as_dict(r_)
+            forced_ = _cjb(d_["R"], _sys.nu(r_), d_["E"], _meq(d_["R"]))
+            wrong_deltas.append((d_["name"], d_["regime"],
+                                 _sys.commit_bound(r_) - forced_))
+        udr_d = [x for x in wrong_deltas if x[1] == "UDR"]
+        jbr_d = [x for x in wrong_deltas if x[1] == "JBR"]
+        check("forcing the JBR bound on a UDR system changes it materially",
+              all(abs(d_) > 10.0 for _, _, d_ in udr_d),
+              f"{[(n_, round(d_,1)) for n_, _, d_ in udr_d]}")
+        check("and leaves every JBR system bit-identical",
+              all(abs(d_) < 1e-9 for _, _, d_ in jbr_d),
+              "the accessor is a no-op where the regime already matched")
+        check("the UDR list size is 1 and the JBR list size is 2m+1",
+              all(_sys.list_size(r_) == 1.0 for r_ in _sys.by_regime("UDR"))
+              and all(_sys.list_size(r_) > 2.0 for r_ in _sys.by_regime("JBR")),
+              "unique decoding admits at most one codeword in the radius")
+        # (c) the split must be 2 UDR / 5 JBR, matching Theorem 7's prediction
+        check("the canonical table splits 2 UDR / 5 JBR as Theorem 7 predicts",
+              len(_sys.by_regime("UDR")) == 2 and len(_sys.by_regime("JBR")) == 5,
+              "regime field matches what soundcalc reports")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

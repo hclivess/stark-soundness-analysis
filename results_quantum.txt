@@ -54,8 +54,10 @@
 ============================================================================================
 4. WHAT IT COSTS TO ACTUALLY REACH 128 PQ BITS
 ============================================================================================
-  Need 256 classical provable bits. By THEOREM.md Thm 2 the ceiling is ~(E - 2nu) for JBR and
-  ~(E - nu) for UDR, so at a 2^20 trace:
+  Need 256 classical provable bits. The ceiling is ~(E - nu) under BCHKS25, for BOTH regimes
+  (a = 1; Thm 2's E - 2nu was the superseded BCIKS20 a = 2 form --
+  corrected iteration 41; the arithmetic below always used a = 1),
+  so at a 2^20 trace:
 
    target PQ  classical   min E (UDR ceiling)
   --------------------------------------------

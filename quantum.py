@@ -233,8 +233,10 @@ def report():
 
     sec("4. WHAT IT COSTS TO ACTUALLY REACH 128 PQ BITS")
     print(f"  Need {classical_needed(128):.0f} classical provable bits. "
-          f"By THEOREM.md Thm 2 the ceiling is ~(E - 2nu) for JBR and\n"
-          f"  ~(E - nu) for UDR, so at a 2^20 trace:\n")
+          f"The ceiling is ~(E - nu) under BCHKS25, for BOTH regimes\n"
+          f"  (a = 1; Thm 2's E - 2nu was the superseded BCIKS20 a = 2 form --\n"
+          f"  corrected iteration 41; the arithmetic below always used a = 1),\n"
+          f"  so at a 2^20 trace:\n")
     print(f"  {'target PQ':>10} {'classical':>10} {'min E (UDR ceiling)':>21}")
     print("  " + "-" * 44)
     for tgt in (64, 80, 100, 128):

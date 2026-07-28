@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 270 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 276 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -147,7 +147,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **270 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **276 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
@@ -155,6 +155,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `m_star.py` | the `m` hinge is the query budget; the `m≥3` floor costs **zero** (it 39 corrects it 38) |
 | `theorem4_scope.py` | Thm 4 needed the `m ≥ 3` correction III.3 exempted it from |
 | `blowup_theorem.py` | Theorem 8: blowup 4 is optimal iff `c = 2(a+b)`; scope of Thm 3′ |
+| `systems.py` | the canonical system table, regime baked in; drift detector |
 | `staleness_guard.py` | mechanical guard against this repo's own retracted claims |
 | `udr_a0.py` | what BCHKS25's proved `a=0` at UDR is worth, and the constant that decides it |
 | `radius_staircase.py` | `a` is a staircase in the radius: 0 at UDR, 1 at Johnson, unbounded above |
@@ -189,7 +190,10 @@ rate is the main reason to trust what survived. Since iteration 35 the
 retractions are also **machine-enforced**: `staleness_guard.py` registers each
 one and fails the suite if any file asserts a retracted claim without a nearby
 retraction marker. It caught a stale assertion in `adversarial.py` on its first
-run.
+run. Since iteration 41 `systems.py` holds the seven-system table **once**, with
+each system's reported regime as a field, so the regime-mixing that produced two
+separate errors (iterations 38 and 40) is impossible by construction rather than
+caught after the fact.
 
 1. **The RS up-to-capacity conjecture is not open — it was disproved in late
    2025** (Crites–Stewart 2025/2046; Diamond–Gruen 2025/2010). An early revision
