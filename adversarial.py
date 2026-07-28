@@ -298,11 +298,16 @@ def part_a():
     # FALSIFIABLE prediction against five independent engineering decisions.
     #
     # (name, E, R, logTrace, s, g, reported bits, reported regime)
+    # Venus is EXCLUDED: its parameters (Goldilocks^3, rho=0.5, 2^21, s=229,
+    # g=16, 128 JBR) are IDENTICAL to ZisK's, down to proof size and circuit
+    # count. Counting it would inflate the evidence with a duplicate.
     ZKVMS = [("SP1 6.1.0",    124, 2, 21, 124, 16, 100, "UDR"),
              ("OpenVM 1.5.0", 124, 1, 23, 193, 20, 100, "UDR"),
              ("Airbender",    124, 1, 24,  87, 28,  67, "JBR"),
              ("Pico",         124, 1, 22,  84, 16,  53, "JBR"),
-             ("ZisK 0.16.1",  192, 1, 21, 229, 16, 128, "JBR")]
+             ("ZisK 0.16.1",  192, 1, 21, 229, 16, 128, "JBR"),
+             ("RISC Zero",    124, 2, 21,  50,  0,  48, "JBR"),
+             ("Miden",        128, 3, 18,  27, 16,  55, "JBR")]
     wrong = []
     for nm, Ez, Rz, Tz, sz, gz, repbits, repreg in ZKVMS:
         nuz = Tz + Rz
@@ -310,8 +315,8 @@ def part_a():
         pred = "UDR" if sz > starz else "JBR"
         if pred != repreg:
             wrong.append(f"{nm}: predicted {pred}, reported {repreg}")
-    check("Thm 7(b) predicts the regime of all five production zkVMs",
-          not wrong, "; ".join(wrong) if wrong else "5/5")
+    check("Thm 7(b) predicts the regime of all seven production zkVMs",
+          not wrong, "; ".join(wrong) if wrong else f"{len(ZKVMS)}/{len(ZKVMS)}")
 
     # Where FRI binds, the model must match the published total closely; where
     # another component binds it may only UPPER bound it, never undershoot.
@@ -330,7 +335,20 @@ def part_a():
         if model < repbits - 0.5:          # undershooting would mean the model is unsound
             under.append(f"{nm}: model {model:.1f} < published {repbits}")
     check("FRI-only model never undershoots a published total (it upper bounds)",
-          not under, "; ".join(under) if under else "no undershoot in 5 systems")
+          not under, "; ".join(under) if under else f"no undershoot in {len(ZKVMS)} systems")
+
+    # Where soundcalc publishes the UDR figure too, the model must match it
+    # CLOSELY -- UDR has no m to tune, so there is no untuned-m gap to absorb.
+    UDR_REPORTED = [("Pico", 124, 1, 22, 84, 16, 50),
+                    ("RISC Zero", 124, 2, 21, 50, 0, 33),
+                    ("Miden", 128, 3, 18, 27, 16, 38)]
+    devs = []
+    for nm, Ez, Rz, Tz, sz, gz, rep in UDR_REPORTED:
+        mod = min(sz * yield_udr(Rz) + gz, commit_udr(Rz, Tz + Rz, Ez))
+        devs.append((nm, mod - rep))
+    check("model reproduces every published UDR figure within 1 bit",
+          all(0 <= d < 1.0 for _, d in devs),
+          "; ".join(f"{n} {d:+.1f}" for n, d in devs))
 
     # --- THE RESIDUAL IS THE UNTUNED-m GAP, not a model error.
     #

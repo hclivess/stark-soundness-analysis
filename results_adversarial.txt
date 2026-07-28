@@ -18,8 +18,9 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  SP1 v6.1.0: model reproduces the published 100-bit UDR figure   [model 100.08 vs published 100]
   PASS  Thm 7(b) predicts SP1 sits above the crossover (hence udr_only=true)   [s*=112, SP1 s=124]
   PASS  SP1: UDR strictly beats JBR at their own parameters   [UDR 100.1 vs JBR 93.0]
-  PASS  Thm 7(b) predicts the regime of all five production zkVMs   [5/5]
-  PASS  FRI-only model never undershoots a published total (it upper bounds)   [no undershoot in 5 systems]
+  PASS  Thm 7(b) predicts the regime of all seven production zkVMs   [7/7]
+  PASS  FRI-only model never undershoots a published total (it upper bounds)   [no undershoot in 7 systems]
+  PASS  model reproduces every published UDR figure within 1 bit   [Pico +0.9; RISC Zero +0.9; Miden +0.4]
   PASS  residual is smaller for systems that fix or avoid m   [tuned<=1.8 vs untuned>=3.2]
   PASS  optimising m never LOSES to a fixed m (residuals all >= 0)
   PASS  measured untuned-m gap sits inside Part I's predicted <=8 bit envelope   [max measured 4.8 bits]
@@ -94,8 +95,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 86, suite has 86]
+  PASS  README's stated check count matches the suite   [README says 87, suite has 87]
 
 ========================================================================================
-86/86 PASS   no property broken
+87/87 PASS   no property broken
 ========================================================================================
