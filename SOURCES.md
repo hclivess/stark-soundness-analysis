@@ -279,3 +279,139 @@ gh api -H "Accept: application/vnd.github.raw" repos/OWNER/REPO/contents/PATH
 
 eprint.iacr.org PDFs return HTTP 403 to WebFetch; the abstract pages
 (`eprint.iacr.org/YYYY/NNN`, no `.pdf`) work.
+
+---
+
+# Round 2 — remaining configs and soundcalc (2026-07-28)
+
+## Plonky2 — `0xPolygonZero/plonky2`
+
+`plonky2/src/plonk/circuit_data.rs`, `standard_recursion_config()`:
+
+```rust
+security_bits: 100,
+zero_knowledge: false,
+fri_config: FriConfig {
+    rate_bits: 3,            // blowup 8
+    cap_height: 4,
+    proof_of_work_bits: 16,
+    num_query_rounds: 28,
+}
+```
+
+**VERIFIED, and my recalled values were exactly right** (R=3, s=28, g=16).
+Conjectured: `3·28 + 16 = 100`, matching the declared `security_bits`.
+
+## Winterfell — `facebook/winterfell`
+
+`air/src/options.rs`: `MIN_BLOWUP_FACTOR = 2`, `MAX_BLOWUP_FACTOR = 128`,
+`MAX_NUM_QUERIES = 255`, `MAX_GRINDING_FACTOR = 32`. Doc comment:
+
+> conjectured proof soundness is bounded by `num_queries * log2(blowup_factor) + grinding_factor`
+
+Again the capacity formula. `air/src/proof/security.rs` holds the proven-side
+computation. No single production preset; `ProofOptions::new` is caller-driven.
+
+## Miden — via `ethereum/soundcalc` `soundcalc/zkvms/miden/miden.toml`
+
+Parameters for Miden's `RECURSIVE_96_BITS`:
+
+```toml
+field = "Goldilocks^2"
+rho = 0.125                  # blowup 8
+trace_length = 262144        # 2^18
+num_queries = 27
+grinding_query_phase = 16
+fri_folding_factors = [4, 4, 4, 4, 4, 4, 4]
+air_max_degree = 9
+power_batching = true        # algebraic batching
+```
+
+**VERIFIED.** My recalled R=3, s=27, g=16 were right. Two corrections: the
+field is **Goldilocks², not Goldilocks³** (E = 128, not 192), and the trace is
+2¹⁸, not 2²⁰.
+
+## Ethereum soundcalc — `ethereum/soundcalc`
+
+> A universal soundness calculator across hash-based zkEVMs and security regimes
+
+Also `symbolicsoft/soundcalc-lean` — the same, proven in Lean.
+
+### `reports/summary.md` — provable security by regime
+
+| zkVM | Security | Proof system | Field |
+|---|---|---|---|
+| Airbender | **67** bits (JBR) | DEEP-ALI + FRI | M31⁴ |
+| OpenVM 1.5.0 | **100** bits (**UDR**) | DEEP-ALI + FRI | BabyBear⁴ |
+| OpenVM2 2.0.0 | 100 bits (mixed) | **SWIRL + WHIR** | BabyBear⁴ |
+| Pico | **53** bits (JBR) | DEEP-ALI + FRI | KoalaBear⁴ |
+| SP1 6.1.0 | **100** bits (**UDR**) | **Jagged + FRI** | KoalaBear⁴ |
+| Venus 0.1.6 / ZisK 0.16.1 | 128 bits (JBR) | DEEP-ALI + FRI | Goldilocks³ |
+| zkDTVM 0.8.0 | 128 bits (mixed) | Jagged+FRI / SWIRL+WHIR | KoalaBear⁵ |
+
+Pico (53) and Airbender (67) land inside the ~50–60 band this repo predicted
+for 31-bit fields at deployed query counts — independent corroboration.
+
+**The regime column is not constant**, which is what motivated Theorem 7.
+
+### `soundcalc/proxgaps/unique_decoding.py`
+
+```python
+def get_proximity_parameter(self, rate, dimension): return (1 - rate) / 2
+def get_max_list_size(self, rate, dimension): return 1
+def get_error_linear(self, rate, dimension):
+    # Using Corollary 1.4 (which points to Theorem 1.3) from BCHKS25
+    gamma = (1 - rate) / 2
+    n = dimension / rate
+    return (gamma * n + 1) / self.field.F
+```
+
+**No `(m + ½)` factor and no `ρ^{3/2}`** — this is why the UDR ceiling sits 6–9
+bits above JBR's, and why OpenVM and SP1 report 100 provable bits in UDR.
+
+### `soundcalc/proxgaps/johnson_bound.py`
+
+```python
+def _get_m_from_eta(sqrt_rate, eta):
+    """m := max(⌈√ρ / (2η)⌉, 3) per BCHKS25 Theorem 1.5 / Theorem 4.2.
+    The factor of 2 in the denominator is missing from the statement of
+    BCHKS25 Theorem 4.2, which is a typo confirmed by the paper authors."""
+
+def _get_eta_from_m(sqrt_rate, m):
+    """Inverse: η = √ρ / (2m)."""
+```
+
+**`η = √ρ/(2m)` is verbatim the change of variables derived independently in
+`THEOREM.md`** ("RESOLVED: the admissible range of m"). Third independent
+confirmation, after ethSTARK Thm 1 and Plonky3's `compute_upper_m`.
+
+Also, on the `m ≥ 3` floor:
+
+> We allow m ≥ 1 (not just the m ≥ 3 from Thm 4.2): the lower bound of 3 can be
+> relaxed to 1, as noted in the optimization remark right after Lemma 3.1 of BCHKS25.
+
+So `m_floor` is 1, not 3 — partially restoring the range Theorems 3/3′ assumed,
+though still not the continuous `m → m_min`.
+
+## NADO — `/root/nado` (local)
+
+| quantity | value | source |
+|---|---|---|
+| field | Goldilocks `2⁶⁴−2³²+1`, **no extension** | `execnode/stark/field.py:13` |
+| FRI blowup | **2** (R = 1) | `execnode/stark/fri.py:41` |
+| queries | **320** | `execnode/stark/fri.py:40` |
+| grinding | **18** | `execnode/stark/fri.py:42` |
+| max trace | **2¹⁷** | `execnode/stark/stark.py:31` |
+| fold challenge | base-field element | `fri.py:93`, `transcript.py:28` |
+| DEEP point z | `int(z) % F.P` | `deep_eval.py:47` |
+
+Stated target, `fri.py` comment block:
+
+> Sized to clear 128 bits on the PROVABLE (unconditional-modulo-collision-
+> resistance) branch — not merely the conjectured branch that most STARK
+> deployments settle for:
+> `320 queries · 0.4 + 18 grind ≈ 146 bits PROVABLE (Johnson)`
+
+See `nado_audit.py`. The query-phase arithmetic is correct; the calculation has
+no commit-phase term, and the commit term binds at ~48 bits because challenges
+are drawn from the 64-bit base field.

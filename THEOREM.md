@@ -640,6 +640,166 @@ deployment is insecure: all three take production parameters from the caller.
 
 ---
 
+# Part IV — Theorem 7, and an audit of NADO (2026-07-28)
+
+## IV.1 Motivation: the winning regime is not constant
+
+Ethereum's `soundcalc` (`reports/summary.md`) reports best-across-regimes
+provable security, and the winning regime differs by system:
+
+| zkVM | Security | Regime | Field |
+|---|---|---|---|
+| Pico | 53 | **JBR** | KoalaBear⁴ |
+| Airbender | 67 | **JBR** | M31⁴ |
+| OpenVM / SP1 | 100 | **UDR** | BabyBear⁴ / KoalaBear⁴ |
+| Venus / ZisK | 128 | JBR | Goldilocks³ |
+
+Pico (53) and Airbender (67) fall inside the ~50–60 band Part III predicted for
+31-bit fields — independent corroboration. But Parts I–III treated unique
+decoding as strictly weakest, and OpenVM and SP1 reach **100 provable bits in
+UDR**. That was an error, and Theorem 7 explains it.
+
+The two regimes trade on opposite axes:
+
+- **UDR** — worse per-query yield, but its commit error is `(γn+1)/|F|` with
+  **no `(m+½)` factor and no `ρ^{3/2}`**, hence a *higher* ceiling.
+- **JBR** — better per-query yield (for large enough `m`), but the commit term
+  carries `2m'⁵` and `ρ^{3/2}`, hence a *lower* ceiling.
+
+So JBR wins when queries are scarce, UDR when they are plentiful.
+
+## Theorem 7(a) — the yield-equalising Johnson parameter
+
+JBR's per-query yield exceeds UDR's **iff `m > m_eq(R)`**, where
+
+```
+m_eq(R) = √ρ / (1 − √ρ)²  =  u/(u−1)²,     u = 2^{R/2}
+```
+
+*Proof.* Set `√ρ(1 + 1/2m) = (1+ρ)/2`. Then
+`1/(2m) = (1+ρ)/(2√ρ) − 1 = (1−√ρ)²/(2√ρ)`, so `m = √ρ/(1−√ρ)²`. Substituting
+`ρ = u^{−2}` gives `u/(u−1)²`. Monotonicity of `√ρ(1+1/2m)` in `m` makes the
+inequality strict either side. ∎
+
+| blowup | 2 | 4 | 8 | 16 | 32 |
+|---|---|---|---|---|---|
+| `m_eq` | **8.243** | 2.000 | 0.846 | 0.444 | 0.261 |
+
+Verified against direct bisection on the yield difference: agreement to 1e-6.
+
+**At blowup 2 you need `m > 8.24` before the Johnson regime even beats unique
+decoding on per-query yield.** Low-blowup systems get far less from JBR than
+the "Johnson beats unique decoding" folklore suggests.
+
+## Theorem 7(b) — the crossover query count
+
+At JBR's interior optimum, Proposition 1 gives `s·y_J(m*) + g = K_J(m*)`. If UDR
+is still query-bound at the crossover, `Λ_U = Λ_J` reads `s·y_U + g = s·y_J(m*) + g`,
+hence `y_J(m*) = y_U`, hence **`m* = m_eq(R)`**. Therefore
+
+```
+s* = ( K_J(m_eq(R)) − g ) / y_UDR(R)
+```
+
+Below `s*` use JBR; above it, UDR is strictly better. Verified against a scan
+for `R ∈ {1,2,3}`, `g ∈ {0,16}`, two field sizes — **all PASS**, agreement
+within one query.
+
+Note `K_J` is evaluated **at `m_eq`**, not at its maximum over `m`. Using the
+max gives an upper bound on `s*`, not the crossover — JBR has not saturated at
+the crossing. (An earlier version of this theorem made that mistake and failed
+its own numerical check at `R = 1, 2`.)
+
+**Corollary.** Buying queries past `s*` buys both more security *and* a weaker
+assumption: UDR needs no list-decoding argument at all.
+
+| field | R | g | s\* |
+|---|---|---|---|
+| 31-bit⁴ | 1 | 0 | 208 |
+| 31-bit⁴ | 2 | 0 | 137 |
+| Goldilocks² | 3 | 16 | 100 |
+
+The three verified deployed systems (RISC Zero s=50, Plonky2 s=28, Miden s=27)
+all sit **below** their crossover, so JBR is the right regime to report them in
+— and all three land in the 50–70 bit band, matching soundcalc's independent
+Pico/Airbender figures.
+
+**Reaching 100 provable bits on a small field means crossing `s*`: 130–210
+queries, roughly 3–4× current deployments.** That is the real price — not a
+different field, not a different bound, just many more queries.
+
+## IV.2 Audit: NADO (`/root/nado`)
+
+NADO is a post-quantum blockchain building STARK-verified ML-DSA-44 signatures.
+It already targets the *provable* branch, which is the design posture this
+repository argues for:
+
+```python
+NUM_QUERIES = 320;  FRI_BLOWUP = 2;  GRIND_BITS = 18
+# Sized to clear 128 bits on the PROVABLE branch — not merely the conjectured
+# branch that most STARK deployments settle for:
+#     320 queries · 0.4 + 18 grind ≈ 146 bits PROVABLE (Johnson)
+```
+
+**The query-phase arithmetic is correct.** At `R = 1`, JBR yield is 0.456 bits
+at `m = 16`, so `320 × 0.456 + 18 = 163.8`; the comment's 0.4 is a fair
+moderate-`m` figure.
+
+**But the calculation has no commit-phase term.** FRI soundness is a minimum
+over query and commit phases, and the commit phase is bounded by the field the
+folding challenges are drawn from. NADO folds with **base-field** challenges:
+
+```python
+alpha = t.challenge()                   # fri.py:93   -> "a uniform field element"
+out[i] = F.add(fe, F.mul(alpha, fo))    # fri.py:63
+z = int(z) % F.P                        # deep_eval.py:47
+```
+
+so `E = 64` (Goldilocks base), not a 128- or 192-bit extension.
+
+| term | bits |
+|---|---|
+| UDR query (320 queries + 18 grind) | 150.8 |
+| **UDR commit** (`γn+1`/\|F\|, ν = 18) | **48.0** |
+| JBR best over `m` | 40.3 |
+| **DEEP** (single base-field `z`, degree 2¹⁷) | **47.0** |
+| **achieved** | **47.0** |
+| stated in `fri.py` | 146 |
+
+Soundness saturates near 48 bits at ~54 queries; **the remaining ~266 queries
+add proof size and zero security.** The conjectured branch is capped by the same
+term, so the stated 338 bits is equally unreachable — the conjecture improves
+per-query yield, and the query phase is not what binds.
+
+### The fix
+
+| design | E | achieved |
+|---|---|---|
+| Goldilocks base (today) | 64 | 47.0 |
+| **Goldilocks² (Plonky2, Miden)** | 128 | **111.0** |
+| Goldilocks³ (Venus, ZisK) | 192 | 156.0 |
+
+Draw the **folding challenge and DEEP point `z` from a degree-2 extension**.
+That is what every other Goldilocks system does. It preserves what the `fri.py`
+comment is protecting — `FRI_BLOWUP` stays 2 and the fold *shape* is unchanged,
+so the in-circuit recursion AIRs keep their geometry — though the arithmetic
+inside those AIRs does move into the extension, which is real work.
+
+With Goldilocks², the existing 320-query budget becomes well matched: commit
+~112 bits against a query phase of ~151, and the 128-bit provable target is
+reachable.
+
+### Caveats
+
+Read from source, **not executed**. If NADO draws folding challenges from a
+wider space anywhere I did not look, the ceiling rises accordingly; the lines I
+read are cited above. `ν = 18` uses `MAX_TRACE_ROWS`; smaller traces gain ~1 bit
+per halving. **This is a soundness-parameter finding, not an exploit** — it says
+the proven bound is far below the stated target, not that a forgery is known.
+
+
+---
+
 ## Not connected: the Jacobian conjecture
 
 The Jacobian conjecture was disproved in July 2026 (Alpöge, counterexample
