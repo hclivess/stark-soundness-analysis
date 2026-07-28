@@ -290,6 +290,48 @@ def part_a():
     check("SP1: UDR strictly beats JBR at their own parameters",
           min(q_, c_) > bj_, f"UDR {min(q_,c_):.1f} vs JBR {bj_:.1f}")
 
+    # --- FIVE-SYSTEM REGIME PREDICTION.
+    #
+    # Thm 7(b) says UDR is optimal above s* and JBR below it. Ethereum soundcalc
+    # publishes the regime each production zkVM is actually reported in, and the
+    # parameters come from the projects' own configs. That makes the regime a
+    # FALSIFIABLE prediction against five independent engineering decisions.
+    #
+    # (name, E, R, logTrace, s, g, reported bits, reported regime)
+    ZKVMS = [("SP1 6.1.0",    124, 2, 21, 124, 16, 100, "UDR"),
+             ("OpenVM 1.5.0", 124, 1, 23, 193, 20, 100, "UDR"),
+             ("Airbender",    124, 1, 24,  87, 28,  67, "JBR"),
+             ("Pico",         124, 1, 22,  84, 16,  53, "JBR"),
+             ("ZisK 0.16.1",  192, 1, 21, 229, 16, 128, "JBR")]
+    wrong = []
+    for nm, Ez, Rz, Tz, sz, gz, repbits, repreg in ZKVMS:
+        nuz = Tz + Rz
+        starz = (commit_jbr(Rz, nuz, Ez, m_eq(Rz)) - gz) / yield_udr(Rz)
+        pred = "UDR" if sz > starz else "JBR"
+        if pred != repreg:
+            wrong.append(f"{nm}: predicted {pred}, reported {repreg}")
+    check("Thm 7(b) predicts the regime of all five production zkVMs",
+          not wrong, "; ".join(wrong) if wrong else "5/5")
+
+    # Where FRI binds, the model must match the published total closely; where
+    # another component binds it may only UPPER bound it, never undershoot.
+    under = []
+    for nm, Ez, Rz, Tz, sz, gz, repbits, repreg in ZKVMS:
+        nuz = Tz + Rz
+        uz = min(sz * yield_udr(Rz) + gz, commit_udr(Rz, nuz, Ez))
+        jz = -1e18
+        mz = 1.0
+        while mz < 2000:
+            yy = yield_jbr(Rz, mz)
+            if yy > 0:
+                jz = max(jz, min(sz * yy + gz, commit_jbr(Rz, nuz, Ez, mz)))
+            mz *= 1.01
+        model = max(uz, jz)
+        if model < repbits - 0.5:          # undershooting would mean the model is unsound
+            under.append(f"{nm}: model {model:.1f} < published {repbits}")
+    check("FRI-only model never undershoots a published total (it upper bounds)",
+          not under, "; ".join(under) if under else "no undershoot in 5 systems")
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0
