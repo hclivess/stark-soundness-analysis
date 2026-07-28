@@ -3314,6 +3314,82 @@ def part_a():
           all(pub == 100 for *_, pub in UDR_CIRCUITS + JBR_CIRCUITS),
           "whir_query = 100 = total for all six OpenVM2 circuits")
 
+    # --- ITERATION 64: the JBR path iteration 63 left open. Closed by reading
+    # explicit_m out of the toml. Every claim below is falsifiable against the
+    # published per-circuit figures.
+    from whir_jbr import (round_products, whir_query_bits as jbr_query_bits,
+                          per_query_yield, delta_johnson, eta_default,
+                          eta_from_m, m_default, list_size, CIRCUITS,
+                          FIELD_ETA_SWITCH)
+
+    # (a) THE WHOLE SYSTEM, BOTH REGIMES. If any circuit misses, the model is
+    # not general and iteration 64's headline is wrong.
+    errs = [abs(jbr_query_bits(lb, q, reg, m, g) - pub)
+            for _n, reg, lb, q, m, g, pub in CIRCUITS]
+    check("all six OpenVM2 circuits reproduce whir_query within 1 bit",
+          max(errs) < 1.0,
+          f"worst miss {max(errs):.2f} bits across {len(CIRCUITS)} circuits")
+    check("the model spans BOTH proximity regimes, not just one",
+          len({reg for _n, reg, *_ in CIRCUITS}) == 2,
+          f"regimes covered: {sorted({reg for _n, reg, *_ in CIRCUITS})}")
+    # equal-yield must hold across every round of every circuit
+    allp = [v for _n, reg, lb, q, m, g, pub in CIRCUITS
+            for v in round_products(lb, q, reg, m)]
+    check("all 19 rounds carry near-equal yield, spanning under 4 bits",
+          max(allp) - min(allp) < 4.0,
+          f"[{min(allp):.1f}, {max(allp):.1f}] over {len(allp)} rounds")
+    check("and every round clears 80 bits, the common design target",
+          min(allp) >= 79.9, f"minimum product {min(allp):.1f}")
+
+    # (b) CORRECTING ITERATION 63'S GUESS. It attributed the gap to heavier
+    # grinding. If query grinding really differed, this check should fail.
+    check("query-phase grinding is identical across all six circuits",
+          len({g for *_, g, _p in CIRCUITS}) == 1,
+          f"all circuits grind {CIRCUITS[0][5]} bits -- iteration 63's "
+          f"'much heavier grinding' was the FOLDING PoW, a different term")
+
+    # (c) THE ACTUAL CAUSE: explicit_m. Removing it must break the fit, or it
+    # was not what closed the gap.
+    broken = []
+    for _n, reg, lb, q, m, g, pub in CIRCUITS:
+        if m is None:
+            continue
+        without = min(round_products(lb, q, reg, m_default(2.0 ** -lb))) + g
+        broken.append(abs(without - pub))
+    check("dropping explicit_m breaks the JBR fit, so it is what closed the gap",
+          min(broken) > 5.0,
+          f"with default m the four JBR circuits miss by "
+          f"{min(broken):.1f}-{max(broken):.1f} bits")
+
+    # (d) THE TRADEOFF. Small m must COST query yield and BUY list size --
+    # if it helped both, there would be no tradeoff to report.
+    for r in (3, 6, 9):
+        rho_r, md = 2.0 ** -r, m_default(2.0 ** -r)
+        check(f"at rate 2^-{r}, pinning m=2 lowers per-query yield",
+              per_query_yield(r, "list", 2) < per_query_yield(r, "list", md),
+              f"y(m=2) {per_query_yield(r,'list',2):.3f} < "
+              f"y(default {md:.0f}) {per_query_yield(r,'list',md):.3f}")
+        check(f"at rate 2^-{r}, pinning m=2 shrinks the list by over 10x",
+              list_size(rho_r, md) / list_size(rho_r, 2) > 10,
+              f"{list_size(rho_r, md):.0f} -> {list_size(rho_r, 2):.0f} "
+              f"({list_size(rho_r, md)/list_size(rho_r, 2):.1f}x)")
+
+    # (e) THE TWO SOURCE CORRECTIONS. The eta forms must agree exactly, and the
+    # field-size branch must actually change the answer for a real system.
+    check("eta = sqrt(rho)/2m makes the two Johnson forms identical",
+          all(abs((1 - delta_johnson(2.0 ** -r, mm))
+                  - math.sqrt(2.0 ** -r) * (1 + 0.5 / mm)) < 1e-12
+              for r in (1, 3, 6, 9) for mm in (1, 2, 20)),
+          "1 - delta == sqrt(rho)(1 + 1/2m) to 1e-12")
+    check("eta's default branches on field size, which this repo had missed",
+          eta_default(0.125, 2 ** 192) != eta_default(0.125, 2 ** 124),
+          f"F=2^192 gives {eta_default(0.125, 2**192):.6f}, "
+          f"F=2^124 gives {eta_default(0.125, 2**124):.6f}")
+    check("the branch is at 2^150, so Goldilocks^3 systems take the other side",
+          2 ** 192 > FIELD_ETA_SWITCH > 2 ** 124,
+          "ZisK/Venus (Goldilocks^3, 2^192) are above the switch; "
+          "OpenVM2 (BabyBear^4, 2^124) is below")
+
 
 # ==================================================================== PART B
 
