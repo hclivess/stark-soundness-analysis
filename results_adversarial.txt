@@ -32,6 +32,9 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  per-round commit step equals log2(folding factor) in all four systems   [4/4 exact]
   PASS  a = 2 is ruled out by the observed step sizes   [a=2 would predict doubled steps; matches: []]
   PASS  Airbender's mixed [16,16,16,8,8] schedule yields exactly steps {3,4}
+  PASS  five-term ceiling reproduces published UDR commit round 1 EXACTLY   [Pico +0.0; Airbender +0.0]
+  PASS  g_commit is confirmed: Airbender's +5 is exactly its declared grinding
+  PASS  the Pico/Airbender gap decomposes as -2 (domain) + 5 (grinding) = +3
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -103,8 +106,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 95, suite has 95]
+  PASS  README's stated check count matches the suite   [README says 98, suite has 98]
 
 ========================================================================================
-95/95 PASS   no property broken
+98/98 PASS   no property broken
 ========================================================================================

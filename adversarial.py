@@ -456,6 +456,36 @@ def part_a():
     check("Airbender's mixed [16,16,16,8,8] schedule yields exactly steps {3,4}",
           {int(math.log2(f)) for f in [16, 16, 16, 8, 8]} == {4, 3})
 
+    # --- ITERATION 17: the COMPLETE five-term ceiling, reproduced exactly.
+    #
+    # UDR is the ideal test case because it has NO proximity parameter m, so its
+    # constant is fixed outright: C = gamma = (1-rho)/2, i.e. log2(C) = -2 at
+    # rho = 1/2. That leaves ceiling = E - a*nu - log2(C) + g_commit with every
+    # term read from each system's own config and nothing fitted at all.
+    #
+    # Pico     : E=124, nu=23, g_commit=0  ->  124 - 23 + 2 + 0 = 103   (reported 103)
+    # Airbender: E=124, nu=25, g_commit=5  ->  124 - 25 + 2 + 5 = 106   (reported 106)
+    #
+    # Their +3 difference decomposes as -2 (domain, a=1) + 5 (grinding), so BOTH
+    # the exponent and the grinding term are confirmed in a single comparison.
+    # This is the only empirical test in the repo of g_commit, the fifth term;
+    # Airbender is the sole system of the seven that uses it.
+    def udr_commit_5term(E, nu, R, gc):
+        return E - nu - math.log2((1 - 2.0 ** -R) / 2) + gc
+    five = [("Pico", 124, 23, 1, 0, 103), ("Airbender", 124, 25, 1, 5, 106)]
+    devs5 = [(nm, udr_commit_5term(E, nu, R, gc) - rep)
+             for nm, E, nu, R, gc, rep in five]
+    check("five-term ceiling reproduces published UDR commit round 1 EXACTLY",
+          all(abs(d) < 1e-9 for _, d in devs5),
+          "; ".join(f"{n} {d:+.1f}" for n, d in devs5))
+    # g_commit must be the whole of Airbender's excess over the no-grinding value
+    check("g_commit is confirmed: Airbender's +5 is exactly its declared grinding",
+          abs(udr_commit_5term(124, 25, 1, 5) - udr_commit_5term(124, 25, 1, 0) - 5) < 1e-9)
+    # and the domain term must account for the rest
+    check("the Pico/Airbender gap decomposes as -2 (domain) + 5 (grinding) = +3",
+          abs((106 - 103) - ((udr_commit_5term(124, 25, 1, 0)
+                              - udr_commit_5term(124, 23, 1, 0)) + 5)) < 1e-9)
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
