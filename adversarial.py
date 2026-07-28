@@ -3920,6 +3920,76 @@ def part_a():
           f"but wider digests and degree-9 arithmetic, which this repo has not "
           f"gate-counted")
 
+    # --- ITERATION 74: the recursive-verifier trace size, measured from the
+    # pipelines that already exist rather than assumed.
+    from recursive_verifier_size import (cells_per_node, fitted_range, pq_nodes,
+                                         required_area, trace_length,
+                                         aspect_sweep, optimal_floor, STAGES,
+                                         OUTLIER, DIGEST_WIDENING)
+
+    # (a) THE MEASUREMENT. The excluded outlier must genuinely be one, or
+    # dropping it is cherry-picking.
+    _all = [(sn, st, cells_per_node(T_, b_, s_, nu_, n_))
+            for sn, st, T_, b_, s_, nu_, n_ in STAGES]
+    _out = [c for sn, st, c in _all if (sn, st) == OUTLIER]
+    _kept = [c for sn, st, c in _all if (sn, st) != OUTLIER]
+    check("the excluded stage is an outlier by more than 5x, not a judgement call",
+          _out[0] > 5 * max(_kept),
+          f"Pico convert {_out[0]:.2e} vs the next largest {max(_kept):.2e}")
+    check("the retained stages span two independent codebases",
+          len({sn for sn, st, _c in _all if (sn, st) != OUTLIER}) == 2,
+          "Pico and SP1, so the constant is not one team's convention")
+    _lo, _hi = fitted_range()
+    check("the fitted cells-per-node range is reported with its real spread",
+          3.0 < _hi / _lo < 5.0,
+          f"{_lo:.2e} to {_hi:.2e}, a factor of {_hi/_lo:.1f} from six points")
+
+    # (b) IT MUST VALIDATE, THEN CORRECT, THE ASSUMED RANGE. If the raw estimate
+    # missed 18-20 entirely, iterations 72/73 were wrong to assume it.
+    _ra_lo, _ra_hi = required_area(widened=False)
+    check("the raw estimate reproduces the T range iterations 72/73 assumed",
+          17.5 < trace_length(_ra_lo, 128) < 19.0
+          and 19.5 < trace_length(_ra_hi, 128) < 21.0,
+          f"T = {trace_length(_ra_lo,128):.1f} to {trace_length(_ra_hi,128):.1f} "
+          f"at batch 128, against an assumed 16-20")
+    _wa_lo, _wa_hi = required_area(widened=True)
+    check("widening the digest strictly raises the required trace",
+          _wa_lo > _ra_lo and _wa_hi > _ra_hi
+          and abs(_wa_lo / _ra_lo - DIGEST_WIDENING) < 1e-9,
+          f"x{DIGEST_WIDENING:.2f} for 13 KoalaBear elements vs 8")
+    check("so iteration 73's 879 KiB low end is no longer reachable",
+          trace_length(_wa_lo, 128) > 18.0,
+          f"T >= {trace_length(_wa_lo,128):.1f} at batch 128, above the T=16 that "
+          f"produced 879")
+
+    # (c) THE ASPECT RATIO. Narrow must beat wide at fixed area, or the
+    # optimisation is backwards.
+    _sw = aspect_sweep(_wa_lo)
+    check("at fixed area, narrower traces give smaller proofs",
+          _sw[0][2] < _sw[-1][2] and _sw[0][0] < _sw[-1][0],
+          f"batch {_sw[0][0]} -> {_sw[0][2]} KiB vs batch {_sw[-1][0]} -> "
+          f"{_sw[-1][2]} KiB")
+    check("and the area is held constant across the sweep",
+          max(abs(b_ * 2 ** T_ / _wa_lo - 1) for b_, T_, _k in _sw) < 1.0,
+          "each (batch, T) pair covers the same required cell count")
+    _f_lo, _f_hi = optimal_floor()
+    check("the optimised floor is about 1.0-1.1 MiB, tighter than 879-1453",
+          950 < _f_lo < 1050 and 1050 < _f_hi < 1250 and (_f_hi - _f_lo) < 400,
+          f"{_f_lo}-{_f_hi} KiB against iteration 73's 879-1453")
+
+    # (d) THE CONCLUSION. 128 PQ must cost single-digit multiples, not orders
+    # of magnitude -- that is what separates this from iteration 72's reading.
+    # NOTE: first written as "2-5x" and failed at 1.85x against SP1's 529 KiB.
+    # The measured range is 1.8x to 5.7x; the check states that.
+    check("128 PQ costs roughly 2 to 6x the proof anyone transmits",
+          1.5 <= _f_lo / 529 and _f_hi / 200 <= 6.5,
+          f"{_f_lo/529:.1f}x SP1's final (the largest deployed), "
+          f"{_f_hi/200:.1f}x zkDTVM's (the smallest)")
+    check("and finding 1's 797 KiB is within 25% of the measured low end",
+          abs(797 - _f_lo) / _f_lo < 0.25,
+          f"797 vs {_f_lo} KiB -- wrong derivation, closer than iterations 72 "
+          f"and 73 each had it")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")

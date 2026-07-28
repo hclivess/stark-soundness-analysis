@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 578 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 589 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -73,7 +73,17 @@ KiB shipping today. That is **2–4×**, not the orders of magnitude iteration 7
 implied — that figure was the base layer, which the verifier never sees. And
 reproducing pq_design's own two-column assumption gives 778 KiB against its 797,
 so finding 1's number is within ~30% of the honest floor: **wrong derivation,
-roughly right answer**. "No conjecture, no lattice" stands.)*
+roughly right answer**.)*
+
+*(Iteration 74 pins it. Every deployed recursion stage **is** a measurement of
+the missing constant — its trace area against the verification work it does.
+Five stages across Pico and SP1 give **1.2×10⁴–4.7×10⁴ cells per Merkle node**,
+which reproduces the assumed T = 18–20 but, once the 384-bit digest's 1.62×
+widening is applied, removes the 879 KiB low end. Optimising the aspect ratio —
+narrow wins, since leaf data scales with batch but paths only logarithmically —
+the floor is **977–1140 KiB**. So 128 PQ bits costs **1.8×–5.7×** the proof
+anyone transmits, and finding 1's 797 KiB is within **18%** of the low end.
+"No conjecture, no lattice" stands.)*
 → `pq_design.py`, `quantum.py`, `pq_design_cost.py`
 
 **2. Under a quantum adversary, everything halves — not just grinding, and
@@ -200,7 +210,7 @@ circuit, not an aggregate, and that Venus differs from ZisK in one circuit.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **578 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **589 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
