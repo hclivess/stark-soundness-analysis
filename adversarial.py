@@ -377,6 +377,26 @@ def part_a():
     check("31-bit^4 (the deployed default) cannot reach 128 PQ at any query count",
           (124 - 22) / 2 < 128, f"ceiling {(124-22)/2:.0f} PQ bits")
 
+    # --- WHIR INHERITS THE FIELD-SIZE CEILING (it does not escape Thm 2).
+    #
+    # soundcalc/pcs/whir.py routes every error term through the SAME
+    # ProximityGapsRegime interface FRI uses (get_error_linear / get_error_powers),
+    # each divided by |F|. WHIR's rate shrinks per iteration
+    # (log_inv_rates[i+1] = log_inv_rates[i] + k - 1), which improves per-query
+    # yield in later rounds -- that is where its query advantage comes from -- but
+    # it does not change the |F| denominator on any term. So the ceiling has the
+    # same shape, ~E - nu, and the multilinear turn buys queries and verifier time,
+    # NOT soundness headroom. Only the lattice path escapes (lattice_compare.py).
+    for nm, E, nu, cl, pq_ in (("OpenVM2 BabyBear^4", 124, 24, 100, 50.0),
+                               ("zkDTVM KoalaBear^5", 155, 23, 132, 66.0)):
+        check(f"WHIR system {nm} is still capped at E-nu",
+              abs((E - nu) - cl) < 0.01 and abs((E - nu) / 2 - pq_) < 0.01,
+              f"{E-nu} classical / {(E-nu)/2:.0f} PQ")
+    check("no deployed WHIR system reaches 128 PQ bits either",
+          all((E - nu) / 2 < 128 for E, nu in ((124, 24), (155, 23))))
+    check("degree-10 over a 31-bit base clears 128 PQ under WHIR too",
+          (310 - 23) / 2 >= 128, f"{(310-23)/2:.1f} PQ bits")
+
     # --- Merkle dedup model: attack the UNIFORMITY assumption.
     def model(s, d):
         t = 0.0
