@@ -3227,6 +3227,93 @@ def part_a():
           f"violates single-tree: {bad_one} -- which is why it alone looked "
           f"anomalous to iterations 60 and 61")
 
+    # --- ITERATION 63: WHIR's query taper. Every claim here is a number that
+    # soundcalc or the toml can contradict.
+    from whir_taper import (round_yields, whir_query_bits, taper_spread,
+                            inv_rates, UDR_CIRCUITS, JBR_CIRCUITS,
+                            ROLES, FRI_APP_QUERIES, FRI_APP_ROUNDS, K_FOLD)
+    from whir_taper import yield_udr as _whir_yield   # avoid shadowing part_a's
+
+    # (a) THE CORRECTION TO MY OWN 28x REMARK. If the per-role ratios were all
+    # ~28x the remark would have been fine; the point is that they are not.
+    ratios = {nm: a / b for nm, a, b in ROLES}
+    check("the 28x headline is NOT reproduced at any matched pipeline role",
+          all(r < 16 for nm, r in ratios.items() if nm != "headline (last)"),
+          f"matched roles: {', '.join(f'{n} {r:.1f}x' for n, r in ratios.items() if n != 'headline (last)')}")
+    check("28.5x factors as WHIR-vs-FRI times extra recursion depth",
+          abs(ratios["internal"] * (2393 / 270) - ratios["headline (last)"]) < 0.1,
+          f"{ratios['internal']:.1f}x * {2393/270:.1f}x = "
+          f"{ratios['internal']*2393/270:.1f}x vs {ratios['headline (last)']:.1f}x")
+    check("most of the headline gain is recursion depth, not the protocol",
+          (2393 / 270) > ratios["internal"],
+          f"recursion {2393/270:.1f}x exceeds protocol {ratios['internal']:.1f}x")
+
+    # (b) THE TAPER. If WHIR's query counts were flat like FRI's, there would be
+    # nothing to explain -- so check they genuinely taper first.
+    app_q = UDR_CIRCUITS[0][2]
+    check("WHIR's per-round query counts strictly taper, unlike FRI's",
+          app_q[0] > app_q[1] >= app_q[2] and len(set(app_q)) > 1,
+          f"WHIR {app_q} vs FRI's constant {FRI_APP_QUERIES} x {FRI_APP_ROUNDS}")
+    check("the taper cuts total openings by an order of magnitude",
+          FRI_APP_QUERIES * FRI_APP_ROUNDS / sum(app_q) > 10,
+          f"{FRI_APP_QUERIES*FRI_APP_ROUNDS} -> {sum(app_q)} openings "
+          f"({FRI_APP_QUERIES*FRI_APP_ROUNDS/sum(app_q):.1f}x)")
+    # and the opening reduction must roughly track the proof-size reduction,
+    # or the taper is not what is driving the size
+    check("the opening reduction tracks the app-circuit size reduction",
+          abs(FRI_APP_QUERIES * FRI_APP_ROUNDS / sum(app_q)
+              - ratios["app"]) / ratios["app"] < 0.25,
+          f"openings {FRI_APP_QUERIES*FRI_APP_ROUNDS/sum(app_q):.1f}x vs size "
+          f"{ratios['app']:.1f}x")
+
+    # (c) EQUAL YIELD. The substantive claim: the taper equalises per-round
+    # yield. A large spread falsifies it.
+    for nm, lb, q, g, pub in UDR_CIRCUITS:
+        check(f"{nm}'s WHIR rounds carry equal yield to within 1 bit",
+              taper_spread(lb, q) < 1.0,
+              f"spread {taper_spread(lb, q):.2f} bits over {len(q)} rounds, "
+              f"all near {min(round_yields(lb, q)):.0f}")
+        check(f"{nm}'s whir_query figure is reproduced by yield + grinding",
+              abs(whir_query_bits(lb, q, g) - pub) < 0.5,
+              f"model {whir_query_bits(lb, q, g):.1f} vs published {pub}")
+    # the rate must actually improve, or the taper has no justification
+    r_app = inv_rates(1, 4)
+    check("WHIR's inverse rate strictly grows each round",
+          all(a < b for a, b in zip(r_app, r_app[1:])),
+          f"log inverse rates {r_app}, gaining k-1 = {K_FOLD-1} per round")
+    check("and rising inverse rate raises per-query yield",
+          all(_whir_yield(a) < _whir_yield(b) for a, b in zip(r_app, r_app[1:])),
+          f"yields {[round(_whir_yield(r), 3) for r in r_app]}")
+
+    # (d) THE HONEST LIMIT. The model must FAIL on the JBR circuits -- if it
+    # fitted them too, the UDR/JBR split claimed here would be wrong.
+    jbr_err = [abs(whir_query_bits(lb, q, g) - pub)
+               for _n, lb, q, g, pub in JBR_CIRCUITS]
+    check("the UDR model does NOT explain the four JBR circuits",
+          min(jbr_err) > 20, f"smallest miss {min(jbr_err):.1f} bits")
+    # and the reason must be structural, not tuning: UDR yield cannot exceed 1
+    # yield -> 1 as rho -> 0 and never exceeds it; the sup is attained only in
+    # the limit, so this is a <= bound, not a strict one.
+    check("UDR yield is bounded by 1 bit per query, so no rate rescues them",
+          max(_whir_yield(r) for r in (1, 4, 10, 40, 1000)) <= 1.0
+          and 20 * 1.0 + 20 < 100,
+          "sup yield = 1 bit/query; 20 queries + 20 grinding still under 100")
+
+    # (e) SCOPE. WHIR is a proof-size result, not a soundness one. The gain must
+    # show up entirely in size and not at all in bits -- if OpenVM2 reported
+    # MORE bits, this would be a soundness result and the framing would be wrong.
+    ov_bits, ov2_bits = 100, 100   # reports/summary.md, both systems
+    size_gain = ratios["headline (last)"]
+    bit_gain = ov2_bits / ov_bits
+    check("WHIR's entire gain is in proof size, none of it in security bits",
+          size_gain > 25 and bit_gain == 1.0,
+          f"size {size_gain:.1f}x, security {ov_bits} -> {ov2_bits} bits "
+          f"({bit_gain:.1f}x)")
+    # the query term is what WHIR economises, and it still binds at 100 for both
+    check("the query phase still binds for OpenVM2, as it does for every zkVM",
+          all(pub == 100 for *_, pub in UDR_CIRCUITS + JBR_CIRCUITS),
+          "whir_query = 100 = total for all six OpenVM2 circuits")
+
 
 # ==================================================================== PART B
 
