@@ -1924,6 +1924,41 @@ def part_a():
               "128 CLASSICAL bits is degree 5, not 10")
     except ImportError:
         pass
+
+    # --- ITERATION 52: EFFICIENCY.md's NTT share is sourced from MSM-paired
+    # systems, which STARKs are not. The conclusion it supports survives anyway.
+    try:
+        import ntt_share_scope as _nts
+
+        # (a) the penalty must exceed the 2x query gain across the whole
+        # plausible range -- that is what makes the mis-scoping survivable
+        shares = (0.905, 0.70, 0.50, 0.30, 0.20, 0.10)
+        pens = [_nts.prover_penalty(s_) for s_ in shares]
+        check("the prover penalty beats a 2x query gain at every plausible share",
+              all(p_ > 2.0 for p_ in pens),
+              f"{min(pens):.1f}x at share {min(shares):.0%}")
+        # (b) the flip point must be absurdly low, or the conclusion IS sensitive
+        fs_ = _nts.flip_share()
+        check("the trade would flip only below a ~5% NTT share",
+              fs_ < 0.06, f"flip at {fs_:.1%} -- no FFT prover is there")
+        # (c) the penalty must be monotone in the share, or the sweep is not
+        # telling us what it claims
+        check("the penalty rises monotonically with the NTT share",
+              pens == sorted(pens, reverse=True),
+              "so the 90% figure is the WORST case for the route, not the best")
+        # (d) the correction must be recorded where the number is used AND where
+        # it is stated -- a scope error in one place only is half-fixed
+        try:
+            _eff = open("EFFICIENCY.md").read()
+            _cap = open("capacity_routes.py").read()
+            check("the scope correction is recorded at both the claim and its use",
+                  "Scope correction, iteration 52" in _eff
+                  and "MSM-paired systems" in _cap,
+                  "EFFICIENCY.md section 1 and capacity_routes.py section 6")
+        except OSError:
+            pass
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

@@ -250,6 +250,10 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  so 128 PQ costs a lattice system far fewer classical bits   [141 vs 256 classical]
   PASS  the ceiling equation reproduces pq_design's degree-10 recommendation   [E >= 279 over a 31-bit base is degree 10]
   PASS  ...and gives a different degree at a different target   [128 CLASSICAL bits is degree 5, not 10]
+  PASS  the prover penalty beats a 2x query gain at every plausible share   [3.1x at share 10%]
+  PASS  the trade would flip only below a ~5% NTT share   [flip at 4.8% -- no FFT prover is there]
+  PASS  the penalty rises monotonically with the NTT share   [so the 90% figure is the WORST case for the route, not the best]
+  PASS  the scope correction is recorded at both the claim and its use   [EFFICIENCY.md section 1 and capacity_routes.py section 6]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -379,8 +383,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 371, suite has 371]
+  PASS  README's stated check count matches the suite   [README says 375, suite has 375]
 
 ========================================================================================
-371/371 PASS   no property broken
+375/375 PASS   no property broken
 ========================================================================================

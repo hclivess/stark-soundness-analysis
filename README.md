@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 371 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 375 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -147,7 +147,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **371 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **375 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
@@ -176,6 +176,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `pq_design.py` | what 128 PQ bits actually costs to build |
 | `regime_crossover.py` | Thm 7, the UDR/JBR crossover, 5/5 prediction |
 | `real_configs.py` | source-verified configs; BCHKS25 vs BCIKS20 |
+| `ntt_share_scope.py` | EFFICIENCY.md's NTT share is from MSM-paired systems; the sweep that survives it |
 | `merkle_dedup.py` | path deduplication, validated by simulation |
 | `lattice_field_escape.py` | HORIZONS thread 4: the field-size escape quantified (4.4× at 128 PQ) |
 | `lattice_compare.py` | why lattices escape the ceiling and what it costs |

@@ -1,0 +1,57 @@
+
+============================================================================================
+1. THE SOURCE MEASURES MSM-PAIRED SYSTEMS; STARKs HAVE NO MSM
+============================================================================================
+
+  ZKProphet (arXiv 2509.22684), abstract:
+
+    "Following massive speedups of MSM, we find that ZKPs are bottlenecked by
+     kernels like Number-Theoretic Transform (NTT), as they account for up to
+     90% of the proof generation latency on GPUs WHEN PAIRED WITH OPTIMIZED MSM
+     IMPLEMENTATIONS."
+
+  MSM is an elliptic-curve operation belonging to pairing and discrete-log
+  systems. A hash-based STARK has none. In a STARK the other dominant kernel is
+  MERKLE HASHING, which has no counterpart in that measurement.
+
+  EFFICIENCY.md's own wording carries the tell -- "paired with optimised MSM" --
+  and quoted the number anyway.
+
+============================================================================================
+2. WHAT IT COSTS: THE SWEEP THAT SHOULD HAVE BEEN THERE
+============================================================================================
+  penalty = (1 - share) + share * log2(n),  n = 2^22
+
+    NTT share   penalty   verdict against a 2x query gain
+  ------------------------------------------------------------
+         90%     20.0x   still a loss
+         70%     15.7x   still a loss
+         50%     11.5x   still a loss
+         30%      7.3x   still a loss
+         20%      5.2x   still a loss
+         10%      3.1x   still a loss
+
+  The trade flips only at share = (2-1)/(log2 n - 1) = 4.8%. An FFT-based
+  prover whose FFT is under 5% of its latency does not exist.
+
+  So iteration 42's conclusion -- the random-evaluation capacity route is blocked
+  by prover cost, not field size -- survives the entire plausible range by a wide
+  margin. The citation does not support the number for STARKs; the conclusion
+  that rested on it does not need the number.
+
+============================================================================================
+3. THE DEFENSIBLE STATEMENT
+============================================================================================
+
+  For a hash-based STARK the supportable claim is the ORDERING, not a
+  percentage: T_encode (NTT) and T_commit (Merkle hashing) are the two dominant
+  kernels, and T_open -- the term soundness parameters control -- is small.
+  That ordering is what EFFICIENCY.md's argument actually uses, and it does not
+  need 90%.
+
+  Where a specific share is required, quote the sweep above rather than a point
+  estimate, until someone measures a hash-based STARK prover directly.
+
+  ZK-Tracer (arXiv 2605.25493) is about zkVM trace generation and is on-target
+  for the front-end claim. It is the NTT share specifically that was imported
+  from the wrong system class.

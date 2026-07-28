@@ -305,8 +305,10 @@ def report_corrected():
   Random-EVALUATION-POINT RS keeps the polynomial structure but destroys the
   evaluation domain's group structure. The low-degree extension stops being an
   NTT (O(n log n)) and becomes general multipoint evaluation (O(n log^2 n)).
-  EFFICIENCY.md measures NTT at 90.5% of prover latency, so the asymptotic
-  prover cost multiplies by
+  EFFICIENCY.md measures NTT at 90.5% of prover latency -- a figure iteration 52
+  found is sourced from MSM-paired systems rather than STARKs, though the
+  conclusion below survives any share above 4.8% -- so the asymptotic prover
+  cost multiplies by
 
       (1 - 0.905) + 0.905 * log2(n)  =  {pen:.1f}x   at n = 2^22
 

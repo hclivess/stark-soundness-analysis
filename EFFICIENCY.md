@@ -37,6 +37,14 @@ T_total  =  T_witness        trace / witness generation (front end)
 Measured today, on GPU-accelerated backends:
 
 - **NTT is 90–91% of proof generation latency** ([ZKProphet, arXiv 2509.22684](https://arxiv.org/abs/2509.22684)); paired with optimised MSM, NTT accounts for up to 90% of latency.
+  > **Scope correction, iteration 52** (`ntt_share_scope.py`): ZKProphet measures
+  > systems "paired with optimized MSM implementations" — pairing/discrete-log
+  > provers. **A hash-based STARK has no MSM**; its second dominant kernel is
+  > Merkle hashing, which has no counterpart in that measurement. So this
+  > citation does not support 90% *for STARKs*. The defensible claim is the
+  > **ordering** — `T_encode` and `T_commit` dominate, `T_open` is small — which
+  > is all this document's argument uses. Where a specific share is needed, quote
+  > the sweep in `ntt_share_scope.py`, not a point estimate.
 - **Front-end trace generation is already 20–30% of end-to-end time**, and if the backend gets even 5× faster, front-end overhead rises "to over 90%" ([ZK-Tracer, arXiv 2605.25493](https://arxiv.org/abs/2605.25493)).
 - Hashing and MSM are minimal *after* optimisation.
 
