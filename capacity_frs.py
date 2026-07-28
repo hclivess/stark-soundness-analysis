@@ -79,6 +79,14 @@ the best case is a 0.5% to 6% proof-size REDUCTION -- against the ~50% the
 doubled yield implies. And c is specified in the theorem only as "a sufficiently
 large absolute constant"; at c >= 2 the optimum is a net LOSS.
 
+ITERATION 30 FOLLOW-UP
+----------------------
+This file's verdict rested entirely on the folding penalty, which invited the
+obvious objection: random-evaluation-point RS reaches capacity WITHOUT folding.
+capacity_routes.py checks that and the verdict survives -- the unfolded routes
+need fields of exp(Omega(1/eta^4)) to exp(Omega(1/eta^7)), i.e. thousands to
+millions of bits. Folding is precisely what buys a polynomial field size.
+
 HONEST LIMITS
 -------------
 1. c and C1 are unspecified constants. Section 4 gives the sensitivity, which is

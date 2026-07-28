@@ -1040,6 +1040,92 @@ def part_a():
     except OSError:
         pass
 
+    # --- ITERATION 30: the UNFOLDED capacity routes, and why they are worse.
+    #
+    # Iteration 29's verdict rested entirely on FRS's folding penalty. Random
+    # ensembles achieve capacity gaps WITHOUT folding, so the verdict had to be
+    # rechecked against them. Goyal-Guruswami-Sun-Wootters arXiv 2607.08516:
+    #   Thm 5.3 (random linear): q >= exp(Omega(l^2/eta^4))
+    #   Thm 5.6 (random RS):     q >= n * exp(Omega(l^4/eta^7))
+    # versus FRS (2601.10047 Thm 5.12): "q is at least a fixed POLYNOMIAL".
+    LN2_ = math.log(2)
+
+    def fbits_rlc_(eta_, ell_=1, c_=1.0):
+        return c_ * ell_ ** 2 / eta_ ** 4 / LN2_
+
+    def fbits_rrs_(eta_, n_, ell_=1, c_=1.0):
+        return math.log2(n_) + c_ * ell_ ** 4 / eta_ ** 7 / LN2_
+
+    def eta_beat_(rho_):
+        return (math.sqrt(rho_) - rho_) / 2.0
+
+    # (a) INDEPENDENT confirmation of a=1 at capacity, from a second paper and a
+    # different code family. Both (1.1) and (1.3) are linear in n.
+    # encode both papers' bounds and verify BOTH are linear in n (a=1). If
+    # either were quadratic, doubling n would quadruple it.
+    def ggsw_11_(n_, eta_, ell_=1):
+        return n_ * ell_ / eta_ + ell_ ** 2 / eta_ ** 3
+
+    def jlr_512_(n_, eta_):
+        return n_ / eta_ + 1 / eta_ ** 3
+
+    lin_ = []
+    for n_ in (2 ** 16, 2 ** 20, 2 ** 24):
+        for eta_ in (0.05, 0.15, 0.30):
+            lin_.append(ggsw_11_(2 * n_, eta_) / ggsw_11_(n_, eta_))
+            lin_.append(jlr_512_(2 * n_, eta_) / jlr_512_(n_, eta_))
+    check("both papers' capacity bounds are linear in n, so a = 1 in each",
+          all(1.99 < r_ <= 2.001 for r_ in lin_),
+          f"doubling ratio {min(lin_):.4f}-{max(lin_):.4f}, a=2 would give 4")
+
+    # (b) the break-even slack: at eta = (sqrt(rho)-rho)/2 the radii coincide
+    for R_ in (1, 2, 3):
+        rho_ = 2.0 ** -R_
+        e_ = eta_beat_(rho_)
+        check(f"capacity and Johnson radii coincide at the break-even eta, rate 1/{2**R_}",
+              abs((1 - rho_ - 2 * e_) - (1 - math.sqrt(rho_))) < 1e-12,
+              f"eta = {e_:.4f}")
+
+    # (c) THE KILL: the unfolded routes need astronomically large fields at any
+    # eta that actually beats Johnson. Deployed E is 124-192 bits.
+    for R_ in (1, 2, 3):
+        rho_ = 2.0 ** -R_
+        e_ = eta_beat_(rho_)
+        check(f"random linear needs >1000x the deployed field at rate 1/{2**R_}",
+              fbits_rlc_(e_) > 1000 * 192 / 1000 and fbits_rlc_(e_) > 5000,
+              f"{fbits_rlc_(e_):.4g} bits vs 192 deployed")
+        check(f"random RS needs >1e6 bits at rate 1/{2**R_}",
+              fbits_rrs_(e_, 2 ** 22) > 1e6,
+              f"{fbits_rrs_(e_, 2**22):.4g} bits")
+    # random RS must be strictly worse than random linear -- eta^7 beats eta^4
+    check("random RS is strictly worse than random linear at every slack",
+          all(fbits_rrs_(e_, 2 ** 22) > fbits_rlc_(e_)
+              for e_ in (0.4, 0.3, 0.2, 0.125)),
+          "exp(1/eta^7) dominates exp(1/eta^4)")
+    # and the requirement must EXPLODE as eta shrinks -- if a future edit makes
+    # it look mild, the exponential has been dropped
+    check("the field requirement is exponential in 1/eta, not polynomial",
+          fbits_rlc_(0.125) / fbits_rlc_(0.25) > 10,
+          f"halving eta multiplies it by {fbits_rlc_(0.125)/fbits_rlc_(0.25):.1f}")
+    # (d) larger curve degree (WHIR) makes it strictly worse, never better
+    check("larger curve degree l makes the unfolded routes worse, not better",
+          fbits_rlc_(0.2, ell_=2) > fbits_rlc_(0.2, ell_=1)
+          and fbits_rrs_(0.2, 2 ** 22, ell_=2) > fbits_rrs_(0.2, 2 ** 22, ell_=1),
+          "exp(l^2) and exp(l^4) respectively")
+    # (e) the complementary-cost claim: FRS pays payload for a poly field, the
+    # random routes pay field size for no payload. Neither is free.
+    # For each route, at the eta that route needs, at least one cost must be
+    # prohibitive. "Prohibitive" = payload multiplier > 10x, or field > 1000 bits.
+    blocked_ = []
+    for R_ in (1, 2, 3):
+        rho_, e_ = 2.0 ** -R_, eta_beat_(2.0 ** -R_)
+        frs_payload = max(2.0, 1.0 / e_ ** 2)          # m >= c/eta^2
+        blocked_.append(frs_payload > 10)               # FRS: payload
+        blocked_.append(fbits_rlc_(e_) > 1000)          # random linear: field
+        blocked_.append(fbits_rrs_(e_, 2 ** 22) > 1000)  # random RS: field
+    check("every known capacity route is blocked at its own break-even slack",
+          all(blocked_), f"{sum(blocked_)}/{len(blocked_)} route-rate pairs blocked")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

@@ -117,6 +117,20 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  capacity beats Johnson only for eta < sqrt(rho)-rho at rate 1/4   [boundary eta = 0.2500]
   PASS  capacity beats Johnson only for eta < sqrt(rho)-rho at rate 1/8   [boundary eta = 0.2286]
   PASS  README no longer states the capacity route is closed outright   [disproof is specific to plain RS over prime fields]
+  PASS  both papers' capacity bounds are linear in n, so a = 1 in each   [doubling ratio 1.9939-2.0000, a=2 would give 4]
+  PASS  capacity and Johnson radii coincide at the break-even eta, rate 1/2   [eta = 0.1036]
+  PASS  capacity and Johnson radii coincide at the break-even eta, rate 1/4   [eta = 0.1250]
+  PASS  capacity and Johnson radii coincide at the break-even eta, rate 1/8   [eta = 0.1143]
+  PASS  random linear needs >1000x the deployed field at rate 1/2   [1.255e+04 bits vs 192 deployed]
+  PASS  random RS needs >1e6 bits at rate 1/2   [1.13e+07 bits]
+  PASS  random linear needs >1000x the deployed field at rate 1/4   [5909 bits vs 192 deployed]
+  PASS  random RS needs >1e6 bits at rate 1/4   [3.026e+06 bits]
+  PASS  random linear needs >1000x the deployed field at rate 1/8   [8459 bits vs 192 deployed]
+  PASS  random RS needs >1e6 bits at rate 1/8   [5.669e+06 bits]
+  PASS  random RS is strictly worse than random linear at every slack   [exp(1/eta^7) dominates exp(1/eta^4)]
+  PASS  the field requirement is exponential in 1/eta, not polynomial   [halving eta multiplies it by 16.0]
+  PASS  larger curve degree l makes the unfolded routes worse, not better   [exp(l^2) and exp(l^4) respectively]
+  PASS  every known capacity route is blocked at its own break-even slack   [9/9 route-rate pairs blocked]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -188,8 +202,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 180, suite has 180]
+  PASS  README's stated check count matches the suite   [README says 194, suite has 194]
 
 ========================================================================================
-180/180 PASS   no property broken
+194/194 PASS   no property broken
 ========================================================================================

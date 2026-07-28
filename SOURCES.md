@@ -560,3 +560,28 @@ Consequences for this repo: the `n/η` term dominates `1/η³` at every practica
 verbatim with `log₂C = log₂(C1/η)` — a penalty, so capacity *lowers* the ceiling.
 The `m ≥ c/η²` folding requirement means each query returns `m` field elements,
 which cancels the doubled per-query yield.
+
+## The unfolded capacity routes (iteration 30)
+
+**Goyal, Guruswami, Sun, Wootters, "Locality of Curve-Decoding and Improved
+Proximity Gaps"** — arXiv:2607.08516v1 (2026-07-09). Fetched and read.
+
+Bounds, both **linear in `n`** (so `a = 1`, independently confirming iteration 29
+from a different group and a different code family):
+
+```
+(1.1) subspace design / FRS [GG25]:  eps*q >= n*l/eta       + O(l^2/eta^3)
+(1.3) this paper, random ensembles:  eps*q >= n*l(1-R)/eta  + O(l^2/eta^3)
+```
+
+The field requirements are what close these routes:
+
+> **Theorem 5.3 (random linear codes).** "If `q ≥ exp(Ω(ℓ²/η⁴))` and
+> `n ≥ Ω(ℓ⁴/η⁷)`, then with high probability …"
+
+> **Theorem 5.6 (random Reed–Solomon codes).** "If `q ≥ n·exp(Ω(ℓ⁴/η⁷))` and
+> `n ≥ Ω(ℓ⁴/η⁷)`, then with high probability …"
+
+against Jeronimo–Liu–Rajpal Thm 5.12 for FRS, where "`q` is at least a fixed
+**polynomial** in `n` and `1/η`". So folding buys a polynomial field; removing it
+makes the field exponential in `1/η`.
