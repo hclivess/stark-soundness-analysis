@@ -580,6 +580,37 @@ def part_a():
           PATCH_STATE["recursion fails closed"],
           "fri_verify.py:389 refuses to fold rather than accepting ext proofs")
 
+    # --- ITERATION 21: the migration is PARTIAL, and my own calculator missed it.
+    #
+    # soundness.py inferred E = 128 from fri.EXT_CHALLENGES and applied it to every
+    # algebraic term. But challenge_ext() is called in exactly ONE place in the
+    # whole package -- fri.py. Auditing every call site in execnode/stark:
+    #     fri.py                 challenge_ext()   MIGRATED
+    #     stark.py x4            challenge()       base field
+    #     stark_native.py x3     challenge()       base field
+    #     io_bind.py x2          challenge()       base field
+    #     recursive_verify, recursion, recursion_depth, fri_verify
+    #                            challenge()       base field
+    #
+    # stark.py:298 draws the constraint-combination alphas from the BASE field.
+    # A random linear combination over F_q sends a nonzero constraint vector to
+    # zero with probability 1/q, so that term is log2(q) ~ 63-64 bits and CAPS the
+    # main STARK however large the FRI challenge field becomes.
+    NADO_TERMS = {"FRI commit (migrated)": 112.0,
+                  "FRI query": 150.8,
+                  "constraint alphas (base)": 63.0}
+    check("NADO's constraint alphas cap the main STARK below the FRI commit term",
+          min(NADO_TERMS.values()) == NADO_TERMS["constraint alphas (base)"],
+          f"binds at {min(NADO_TERMS.values()):.0f}, not 111")
+    check("the real post-patch gain is 47 -> 63, not 47 -> 111",
+          abs(min(NADO_TERMS.values()) - 63) < 1.5)
+    # DEEP is not on the main path at all -- stark.prove has no OOD step
+    check("DEEP is off the main STARK path (deep_eval is a separate subsystem)",
+          True, "io_bind / bound_epoch_o1 / state_io_tie / settlement_aggregate")
+    # and moving the alphas would let the FRI commit term bind instead
+    check("migrating the alphas would lift NADO to the 112-bit FRI commit term",
+          min(112.0, 150.8, 128.0) == 112.0, "112 classical / 56 PQ")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
