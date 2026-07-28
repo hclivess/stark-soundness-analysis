@@ -1,0 +1,85 @@
+
+==============================================================================================
+1. SUM vs MIN: the composition bias the repo has been carrying
+==============================================================================================
+  system           k_query  k_commit     min  bits(sum)   bias
+  ------------------------------------------------------------
+  SP1 6.1.0          100.1     102.4   100.1       99.8   0.26
+  OpenVM 1.5.0       100.1     102.0   100.1       99.8   0.34
+  Airbender           71.4      82.4    71.4       71.4   0.00
+  Pico                57.9      84.4    57.9       57.9   0.00
+  ZisK 0.16.1        130.3     153.4   130.3      130.3   0.00
+  RISC Zero           50.0      92.0    50.0       50.0   0.00
+  Miden               56.5     100.9    56.5       56.5   0.00
+
+  Worst bias 0.34 bits, against a theoretical worst case of
+  log2(2) = 1.00 for two terms and log2(5) = 2.32 for a five-term model. The
+  terms in deployed configs are far enough apart that the sum is dominated by
+  its smallest, so the min-model holds to a third of a bit. That is a
+  VALIDATION of an assumption, not a correction -- but the assumption was
+  untested until now, and it is not free in general.
+
+==============================================================================================
+2. THE OMITTED TERM: t^2/2^lambda is the birthday bound
+==============================================================================================
+
+  The BCS theorem's additive error is 3.5*t^2/2^lambda. This repo models the
+  IOP's own error only, so this term has never appeared in any figure here.
+  Its shape is exactly collision finding, which fixes both columns:
+
+  digest lambda  classical  PQ (BHT)  PQ (mem-bounded)
+  ------------------------------------------------------
+            128         64        43                64
+            160         80        53                80
+            248        124        83               124
+            256        128        85               128
+            384        192       128               192
+            512        256       171               256
+
+  Classical security is lambda/2, never lambda. Quantum is lambda/3 by BHT's
+  algorithm, and Zhandry's Omega(N^(1/3)) says no better -- so this term loses a
+  factor THREE, not two. Iteration 24 could only bracket c >= 2; here c = 3
+  exactly, which is the first established case of c > 2 in this repository.
+
+==============================================================================================
+3. REQUIREMENTS: what each reported level demands of the digest
+==============================================================================================
+  (a requirements table, NOT an audit -- digest sizes were not read
+   from source, unlike every parameter in SOURCES.md)
+
+   target bits  classical needs  PQ needs (BHT)  31-bit elements
+  ----------------------------------------------------------------
+            48               96             144                5
+            64              128             192                7
+           100              200             300               10
+           128              256             384               13
+
+  A 256-bit digest -- the ubiquitous default -- supports 128 classical bits but
+  only 85 post-quantum bits under the conservative reading.
+
+==============================================================================================
+4. CORRECTION TO pq_design.py's RECOMMENDATION
+==============================================================================================
+
+  pq_design.py DOES model a hash floor -- line 83:
+
+      def pq(c):
+          return min(c / 2.0, 128.0)   # 256-bit hash floor never binds below 128
+
+  but lambda/2 is the CLASSICAL collision exponent. Against a quantum collision
+  finder a 256-bit digest gives lambda/3 = 85, so in a function whose whole
+  job is post-quantum bits, the floor is set with the wrong exponent and the
+  comment is false in exactly the column it is used for.
+
+      extension:  E - nu >= 2*128 = 256   ->  degree 10 gives 310 - 22 = 288  OK
+      digest:     lambda >= 3*128 = 384   ->  256-bit default gives  85  FAILS
+
+  With a 256-bit digest the design is capped at 85 PQ bits whatever the
+  extension degree is. The complete recommendation is degree 10 AND a 384-bit
+  digest (13 field elements over a 31-bit base).
+
+  The memory-bounded reading rescues the original figure: if quantum collision
+  finding is held to 2^(lambda/2) -- BHT's 2^(lambda/3) needs 2^(lambda/3)
+  quantum-accessible memory, widely thought unrealistic -- then 256 bits
+  suffice and pq_design.py's number stands. Both readings are defensible. The
+  point is that the file silently assumed one of them in a comment.

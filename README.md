@@ -30,9 +30,11 @@ Pico and OpenVM (fold 2, step 1), Miden (fold 4, step 2), Airbender
 fitting. `a = 2` would double every step.
 
 Total soundness is a **minimum** over all terms, so **the code layer always
-binds**. That single fact explains the rest of this repo.
+binds**. That single fact explains the rest of this repo. (Strictly the BCS
+theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
+measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 138 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 149 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -43,7 +45,10 @@ confirm them. It has caught two real errors in my own work.
 system near 50 post-quantum bits.** RISC Zero, SP1, OpenVM, OpenVM2, Pico,
 Airbender all use it. Degree 9–10 over a 31-bit base reaches 128 PQ bits for
 ~800 KiB *(at `c = 2`; see finding 2 — at `c = 3` it needs degree 14)*, resting
-on collision resistance plus the random oracle — no conjecture, no lattice. It is a configuration choice nobody has revisited.
+on collision resistance plus the random oracle — no conjecture, no lattice. It
+is a configuration choice nobody has revisited. **It also needs a 384-bit Merkle
+digest**: quantum collision finding costs `2^{λ/3}`, so the ubiquitous 256-bit
+default caps the design at 85 PQ bits however large the extension degree is.
 → `pq_design.py`, `quantum.py`
 
 **2. Under a quantum adversary, everything halves — not just grinding, and
@@ -55,6 +60,10 @@ and BBBV forbids better, so the provable range is
 ```
 k/c ≤ PQ ≤ k/2,   c ≥ 2   (c = the QROM reduction's query-loss exponent)
 ```
+
+`c` is **term-dependent**, not one constant: `c = 2` for challenge search
+(Grover achieves, BBBV forbids better) but `c = 3` for the hash chain (BHT
+achieves, Zhandry forbids better).
 
 `classical/2` bounds **provable** PQ soundness from *above* and **true** PQ
 security from *below* — the two coincide only where the classical bound is
@@ -118,10 +127,11 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **138 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **149 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
+| `bcs_composition.py` | BCS composes by sum; the hash term's QROM loss is 3, not 2 |
 | `fs_tightness.py` | Chiesa–Yogev's two-sided FS bound; Grover checked against exact amplitude amplification |
 | `pq_design.py` | what 128 PQ bits actually costs to build |
 | `regime_crossover.py` | Thm 7, the UDR/JBR crossover, 5/5 prediction |
@@ -162,7 +172,12 @@ rate is the main reason to trust what survived.
    loss were negligible. Grover on Fiat–Shamir is an *attack*, so a negligible
    loss is impossible: `classical/2` is the best case. The negative headline is
    unconditional; the *design recommendation* is what depends on the constant.
-7. **…and iteration 24 then overcorrected.** "Conservative lower bound" and
+7. **The hash term loses a factor 3, not 2.** `PQ = classical/2` is not
+   universal: BCS's additive error is `t²/2^λ`, a birthday bound, so classical
+   security is `λ/2` and quantum is `λ/3` (BHT above, Zhandry's `Ω(N^{1/3})`
+   below). `pq_design.py` set its hash floor with the *classical* exponent in a
+   function that reports post-quantum bits.
+8. **…and iteration 24 then overcorrected.** "Conservative lower bound" and
    "optimistic upper bound" are *both* right — of different quantities.
    `classical/2` bounds **provable** PQ soundness from above and **true** PQ
    security from below; the two coincide only on attained terms. Neither

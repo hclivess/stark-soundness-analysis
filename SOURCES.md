@@ -456,3 +456,24 @@ state (line 2731):
 
 That is consistent with `c = 2` but is not a quantitative statement, so the
 QROM loss exponent remains unpinned. See `qrom_bracket.py`.
+
+## BCS soundness composition (iteration 26)
+
+Same source, Theorem `bcs-soundness` (`snargs-book.tex` line 17834), with macros
+expanded from lines 1077–1090:
+
+```
+eps_ARG(lambda, n, t)  <=  eps_IOP-SR(lambda + salt, n, t)
+                         + eps_MT(lambda, proof_lengths, t, t+1)
+                         + t^2 / 2^lambda
+```
+
+> "Above `eps_MT` is the Merkle commitment multi-extraction error … and the
+> additive error `<= 3.5 * t^2 / 2^lambda` if `t >= 2(log l + 1) * l`."
+
+Two consequences: the composition is a **sum**, not a minimum (this repo's
+min-model overstates by ≤ `log₂(#terms)`, measured ≤0.34 bits on deployed
+configs); and the `t²/2^λ` shape is a **birthday** bound, so the hash family's
+classical security is `λ/2` and its quantum security is `λ/3` — BHT's algorithm
+above, Zhandry's `Ω(N^{1/3})` below. That is a QROM loss exponent of 3, strictly
+worse than the halving that applies to challenge search.

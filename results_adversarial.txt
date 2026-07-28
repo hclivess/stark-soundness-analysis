@@ -75,6 +75,17 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  no deployed grinding parameter approaches a binding salt cap   [max declared grinding 28 bits]
   PASS  PQ_true >= k_bound/2 >= PQ_provable holds on every measured system   [7/7 systems]
   PASS  the provable/true gap is nonzero exactly where the bound is loose   [loose on 5 of 7]
+  PASS  the min-model never understates relative to the true sum
+  PASS  composition bias hits exactly log2(2) when all terms coincide   [1.0000]
+  PASS  composition bias hits exactly log2(3) when all terms coincide   [1.5850]
+  PASS  composition bias hits exactly log2(5) when all terms coincide   [2.3219]
+  PASS  the min-model is accurate to under half a bit on every deployed config   [worst bias 0.34 bits]
+  PASS  the hash term's classical exponent is lambda/2, not lambda   [birthday, not preimage]
+  PASS  the hash family loses a factor 3, strictly worse than the halving   [85 PQ vs 128 classical/2]
+  PASS  so `c = 2 everywhere` is false -- c is term-dependent   [challenge search c=2; hash chain c=3]
+  PASS  a 256-bit digest caps a design at 85 PQ bits under the BHT reading   [85.3]
+  PASS  128 PQ bits needs a 384-bit digest, not the 256-bit default   [13 field elements over a 31-bit base]
+  PASS  pq_design.py's hash floor still uses the classical exponent   [line 83: 256-bit hash floor stated as 128 PQ bits]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -146,8 +157,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 138, suite has 138]
+  PASS  README's stated check count matches the suite   [README says 149, suite has 149]
 
 ========================================================================================
-138/138 PASS   no property broken
+149/149 PASS   no property broken
 ========================================================================================

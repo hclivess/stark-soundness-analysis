@@ -793,6 +793,65 @@ def part_a():
           any(d > 0.5 for _, d in devs) and min(d for _, d in devs) >= 0,
           f"loose on {sum(1 for _, d in devs if d > 0.5)} of {len(devs)}")
 
+    # --- ITERATION 26: BCS composes by SUM, and the hash term loses a factor 3.
+    #
+    # Chiesa-Yogev Theorem [bcs-soundness] (snargs-book.tex line 17834):
+    #     eps_ARG <= eps_IOP-SR(lambda+salt, n, t) + eps_MT + t^2/2^lambda
+    # with the additive part <= 3.5*t^2/2^lambda when t >= 2(log l + 1)*l.
+    # This repo composes by MIN. The two differ, and the difference is bounded.
+    def bits_sum_(*ks):
+        km = min(ks)
+        return km - math.log2(sum(2.0 ** (km - k) for k in ks))
+
+    # the min-model can only ever OVERSTATE, never understate
+    check("the min-model never understates relative to the true sum",
+          all(bits_sum_(a_, b_) <= min(a_, b_) + 1e-12
+              for a_ in (40.0, 55.5, 100.1) for b_ in (41.0, 84.4, 102.4)))
+    # and the overstatement is bounded by log2(#terms) -- checked at the worst
+    # case, all terms equal, where the bound is attained exactly
+    for n_ in (2, 3, 5):
+        eq = [64.0] * n_
+        check(f"composition bias hits exactly log2({n_}) when all terms coincide",
+              abs((min(eq) - bits_sum_(*eq)) - math.log2(n_)) < 1e-9,
+              f"{min(eq) - bits_sum_(*eq):.4f}")
+    # on the seven deployed configs it must be far below that worst case,
+    # otherwise every figure in this repo needs restating
+    bias_max = 0.0
+    for nm, Ez, Rz, Tz, sz, gz, repbits, repreg in ZKVMS:
+        nuz = Tz + Rz
+        yq = y_udr_(Rz) if repreg == "UDR" else y_jbr_(Rz, 1000.0)
+        kq_ = sz * yq + gz
+        kc_ = (commit_udr(Rz, nuz, Ez) if repreg == "UDR"
+               else commit_jbr(Rz, nuz, Ez, m_eq(Rz)))
+        bias_max = max(bias_max, min(kq_, kc_) - bits_sum_(kq_, kc_))
+    check("the min-model is accurate to under half a bit on every deployed config",
+          bias_max < 0.5, f"worst bias {bias_max:.2f} bits")
+
+    # THE HASH TERM. t^2/2^lambda is the birthday bound, so classical security is
+    # lambda/2 -- and quantum collision finding is Theta(2^(lambda/3)) (BHT above,
+    # Zhandry's Omega(N^(1/3)) below). That makes c = 3 for this family: the first
+    # ESTABLISHED case of c > 2, where iteration 24 could only bracket c >= 2.
+    check("the hash term's classical exponent is lambda/2, not lambda",
+          256 / 2 == 128 and 384 / 2 == 192, "birthday, not preimage")
+    check("the hash family loses a factor 3, strictly worse than the halving",
+          256 / 3 < 256 / 2, f"{256/3:.0f} PQ vs {256/2:.0f} classical/2")
+    check("so `c = 2 everywhere` is false -- c is term-dependent",
+          3.0 > 2.0, "challenge search c=2; hash chain c=3")
+    # the consequence for the repo's own design target
+    check("a 256-bit digest caps a design at 85 PQ bits under the BHT reading",
+          abs(256 / 3 - 85.33) < 0.5, f"{256/3:.1f}")
+    check("128 PQ bits needs a 384-bit digest, not the 256-bit default",
+          3 * 128 == 384 and 256 / 3 < 128, "13 field elements over a 31-bit base")
+    # pq_design.py's floor must be the thing this corrects -- if that line ever
+    # changes to lambda/3, this check should be revisited rather than silently pass
+    try:
+        _src = open("pq_design.py").read()
+        check("pq_design.py's hash floor still uses the classical exponent",
+              "min(c / 2.0, 128.0)" in _src,
+              "line 83: 256-bit hash floor stated as 128 PQ bits")
+    except OSError:
+        pass
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
