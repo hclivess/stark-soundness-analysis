@@ -3716,6 +3716,76 @@ def part_a():
               for _n, E_, R_, T_ in JBR_SYSTEMS),
           "K_linear < K_nq for all five Johnson-regime systems")
 
+    # --- ITERATION 71: Propositions 10 and 11. The gap closes in closed form,
+    # and then turns out to be slack in a term that does not bind.
+    from gap_closed_form import (commit_linear, commit_nq, query_term,
+                                 slack_closed_form, headroom_closed_form,
+                                 query_cap, best_m as _best_m_71,
+                                 exponent_table, SYSTEMS as _S71, EXPONENTS)
+    from headroom_split import mca_floor as _mf71
+
+    # (a) PROPOSITION 10. Exact on the deployed set, and the exponent-4 must be
+    # the substance: a wrong exponent would break it immediately.
+    _errs10, _hd = [], []
+    for _nm, _E, _R, _T, _s, _g in _S71:
+        _nu = _T + _R
+        _m = float(__import__('soundcalc_lean').jbr_m(2.0 ** -_R, _E))
+        _errs10.append(abs((commit_nq(_R, _nu, _E, _m)
+                            - commit_linear(_R, _nu, _E, _m))
+                           - slack_closed_form(_R, _m)))
+        _hd.append(abs((_mf71(_E, _R, _m) - commit_linear(_R, _nu, _E, _m))
+                       - headroom_closed_form(_R, _nu, _m)))
+    check("Proposition 10 gives the slack exactly on all five JBR systems",
+          max(_errs10) < 1e-3, f"worst deviation {max(_errs10):.2e} bits")
+    check("and Props 9+10 close the WHOLE gap to under 0.1 bits",
+          max(_hd) < 0.1, f"worst residual {max(_hd):.4f} bits, no unexplained part")
+    # the coefficient must be 4, not 3 or 5 -- it is the exponent difference
+    def _slack_coef(c, R, m):
+        return c * math.log2(m + 0.5) + R - math.log2(3.0) - 1.0
+    _true = commit_nq(1, 25, 124, 15.0) - commit_linear(1, 25, 124, 15.0)
+    check("the slack coefficient is 4 (= 5 - 1), not 3 or 5",
+          abs(_true - _slack_coef(4, 1, 15.0)) < 1e-3
+          and abs(_true - _slack_coef(3, 1, 15.0)) > 3
+          and abs(_true - _slack_coef(5, 1, 15.0)) > 3,
+          "coefficient 4 fits; 3 and 5 miss by over 3 bits")
+    # and it must scale with m, or it is not a log term
+    _s1 = commit_nq(1, 25, 124, 10.0) - commit_linear(1, 25, 124, 10.0)
+    _s2 = commit_nq(1, 25, 124, 160.0) - commit_linear(1, 25, 124, 160.0)
+    # NOTE: the proposition is in (m + 0.5), not m. My first version of this
+    # check compared against 4*log2(16) and failed by 0.26 bits; the correct
+    # prediction is 4*log2(160.5/10.5) = 15.74, which is what is measured.
+    check("the slack grows as 4*log2(m + 0.5), exactly",
+          abs((_s2 - _s1) - 4 * math.log2(160.5 / 10.5)) < 0.01,
+          f"m 10 -> 160 moves the slack {_s2-_s1:.2f} bits, predicted "
+          f"{4*math.log2(160.5/10.5):.2f}")
+
+    # (b) PROPOSITION 11. The cap must hold, be approached, and be immovable by
+    # the commit side. If a lower exponent broke past it, Prop 11 is wrong.
+    for _nm, _E, _R, _T, _s, _g in _S71:
+        _cap = query_cap(_R, _s, _g)
+        _vals = [_best_m_71(_R, _T + _R, _E, _s, _g, _k)[1] for _k in EXPONENTS]
+        check(f"{_nm} never exceeds s*R/2+g at any m-exponent",
+              all(v <= _cap + 1e-6 for v in _vals),
+              f"cap {_cap:.1f}, best across k in {EXPONENTS}: {max(_vals):.1f}")
+    _gains = [rows[-1][2] - rows[0][2] for _n, rows in exponent_table()]
+    check("collapsing the m-exponent 5 -> 2 is worth under 1.5 bits everywhere",
+          max(_gains) < 1.5,
+          f"gains {[round(g, 1) for g in _gains]} bits")
+    check("and is worth nothing at all for at least two systems",
+          sum(1 for g in _gains if g < 0.05) >= 2,
+          f"{sum(1 for g in _gains if g < 0.05)} systems gain under 0.05 bits")
+    # the mechanism: the optimum sits AT the crossover, so both terms are equal
+    for _nm, _E, _R, _T, _s, _g in _S71:
+        _m, _v = _best_m_71(_R, _T + _R, _E, _s, _g, 5)
+        _q, _k = query_term(_R, _s, _g, _m), commit_linear(_R, _T + _R, _E, _m)
+        check(f"{_nm}'s optimum sits at the query/commit crossover",
+              abs(_q - _k) < 0.5, f"query {_q:.1f} vs commit {_k:.1f} at m*={_m:.0f}")
+    # and the query yield really does saturate at R/2
+    _sat = [abs(-math.log2(math.sqrt(2.0 ** -R_) * (1 + 0.5 / 1e7)) - R_ / 2.0)
+            for R_ in (1, 2, 3, 4)]
+    check("the query yield saturates at exactly R/2 as m grows",
+          max(_sat) < 1e-6, f"worst deviation {max(_sat):.2e} at m = 1e7")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")

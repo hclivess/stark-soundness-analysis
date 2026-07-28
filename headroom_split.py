@@ -64,6 +64,15 @@ At soundcalc's derived m, across the five Johnson-regime systems:
 Only the slack is a target for a better theorem, and it is a third to a half of
 what the headline number suggests.
 
+    CORRECTED IN ITERATION 71. The first clause is wrong. The slack is slack in
+    the COMMIT bound, and the commit bound does not bind at any deployed
+    parameter -- the query phase does, for all seven verified zkVMs. Collapsing
+    the m-exponent from 5 to 2, far beyond any plausible theorem, is worth at
+    most 1.3 bits and nothing at all for three of the five systems, because the
+    optimum sits at the query/commit crossover and the query yield saturates at
+    R/2. See gap_closed_form.py, Propositions 10 and 11. Essentially none of the
+    20.6-45.0 bits is recoverable soundness.
+
 WHY THE SLACK EXISTS: THE WEAKER BRANCH ALWAYS BINDS
 ------------------------------------------------------
 commit_jbr returns min(K_linear, K_nq). Sweeping 700 parameter points across
@@ -235,7 +244,11 @@ def report():
       linear slack     {min(sl):.1f} - {max(sl):.1f} bits    {100*sum(sl)/sum(tot):.0f}% of the total
 
   Only the slack is a target for a better theorem, and it is a third to a half
-  of what the headline number suggests.""")
+  of what the headline number suggests.
+
+  CORRECTED IN ITERATION 71: it is not a target either. The slack is in the
+  COMMIT bound, which does not bind at any deployed parameter. Collapsing the
+  m-exponent 5 -> 2 is worth at most 1.3 bits. See gap_closed_form.py.""")
 
     sec("3. WHY THE SLACK EXISTS: THE WEAKER BRANCH ALWAYS BINDS")
     pts = nq_binding_points()
