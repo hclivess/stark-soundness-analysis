@@ -29,7 +29,9 @@ WHAT "REGIME-CORRECT" MEANS HERE
   UDR  commit bound (gamma*n + 1)/|F|, gamma = (1-rho)/2  -- no proximity
        parameter m, and list size 1 (unique decoding admits at most one
        codeword within the radius)
-  JBR  commit bound BCHKS25 Thm 1.5, evaluated at m; list size 2m + 1
+  JBR  commit bound BCHKS25 Thm 1.5, evaluated at m; list size
+       (m + 0.5)/sqrt(rho)  -- corrected in iteration 68 from 2m+1, which is
+       that expression only at rho = 1/4
 
 The regime field is what soundcalc REPORTS each system in, cross-checked by
 Theorem 7's crossover, which predicts all seven correctly.
@@ -90,12 +92,23 @@ def commit_bound(row, m=None):
 
 
 def list_size(row, m=None):
-    """Codewords within the radius: 1 for unique decoding, 2m+1 for Johnson."""
+    """Codewords within the radius: 1 for unique decoding, (m+0.5)/sqrt(rho)
+    for Johnson.
+
+    CORRECTED IN ITERATION 68. This returned 2m+1, dropping the 1/sqrt(rho)
+    that this repo's OWN commit_jbr carries: regime_crossover.py:95 computes
+    `mm / sqrt_rho` = (m+0.5)/sqrt(rho), and :98 carries
+    `- log2(2m+1) + 0.5*log2(rho)` = -log2((2m+1)/sqrt(rho)). The commit bound
+    was always right; only this accessor's attribution of which factor is the
+    LIST was wrong, and 2m+1 is that expression's value at rho = 1/4.
+    soundcalc states the same thing directly (johnson_bound.py:91-105).
+    """
     from regime_crossover import m_eq
     d = as_dict(row)
     if d["regime"] == "UDR":
         return 1.0
-    return 2.0 * (m if m is not None else m_eq(d["R"])) + 1.0
+    mm = (m if m is not None else m_eq(d["R"])) + 0.5
+    return mm / math.sqrt(2.0 ** -d["R"])
 
 
 def query_term(row, m=1000.0):

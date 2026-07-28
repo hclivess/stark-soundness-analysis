@@ -2210,9 +2210,13 @@ def part_a():
               all(h_ <= v_ for _, h_, v_ in _udr),
               "the regime split survives the m correction")
         # (c) the full range must be the corrected one
-        check("the headroom range is 20.6-44.5 bits, not 20.6-37.3",
+        # UPDATED IN ITERATION 68. Was "20.6-44.5", computed with the list size
+        # 2m+1. That expression is (m+0.5)/sqrt(rho) only at rho=1/4; correcting
+        # it moves the top of the range to 45.0. The check fired on the first run
+        # after the correction, which is its job.
+        check("the headroom range is 20.6-45.0 bits, not 20.6-37.3",
               abs(min(h_ for _, h_, _ in _hs) - 20.6) < 0.3
-              and 44.0 < max(h_ for _, h_, _ in _hs) < 45.0,
+              and 44.5 < max(h_ for _, h_, _ in _hs) < 45.5,
               f"{min(h_ for _, h_, _ in _hs):.1f}-{max(h_ for _, h_, _ in _hs):.1f}")
 
         # (d) NO-OP CHECK: bcs_composition's bias must be unaffected, because it
@@ -3533,6 +3537,58 @@ def part_a():
     check("and its advantage grows as the rate falls",
           all(a < b for a, b in zip(_gaps, _gaps[1:])),
           f"{_gaps[0]:.2f}x at rho=1/2 rising to {_gaps[-1]:.2f}x at rho=1/16")
+
+    # --- ITERATION 68: the list-size correction PROPAGATED into the code, and
+    # iteration 40's correction applied to the table that carried it in prose.
+    import systems as _s68
+    from a_floor_scope import (johnson_list_size as _jls,
+                               headroom_at_jbrM as _hjm,
+                               headroom_regime_correct as _hrc)
+
+    # (a) list_size must now agree with the term commit_jbr already computes.
+    # regime_crossover.py:95 has mm/sqrt_rho; :98 has -log2(2m+1)+0.5*log2(rho).
+    # If the accessor disagrees with the bound, the repo contradicts itself.
+    for _R in (1, 2, 3):
+        _rho, _m = 2.0 ** -_R, 7.5
+        check(f"list_size matches commit_jbr's own (m+0.5)/sqrt(rho) at R={_R}",
+              abs(_jls(_m, _rho) - (_m + 0.5) / math.sqrt(_rho)) < 1e-12,
+              f"L = {_jls(_m, _rho):.4f}")
+    # the old convention must be recoverable exactly at rho=1/4, or the
+    # identification of 2m+1 as a special case is wrong
+    check("2m+1 is exactly the rho=1/4 case, for every m",
+          all(abs(_jls(m_, 0.25) - (2 * m_ + 1)) < 1e-12
+              for m_ in (0.85, 2.0, 7.5, 8.2426, 50.0)),
+          "m-free identity, as it must be")
+
+    # (b) THE DIRECTION. rho > 1/4 shrinks the list (headroom rises), rho < 1/4
+    # grows it (headroom falls). A correction that moved everything one way
+    # would mean the rho dependence was not really there.
+    _rowmap = {_s68.as_dict(r)["name"]: r for r in _s68.SYSTEMS}
+    _up = [n for n, r in _rowmap.items()
+           if _s68.as_dict(r)["regime"] == "JBR" and _s68.as_dict(r)["R"] < 2]
+    _dn = [n for n, r in _rowmap.items()
+           if _s68.as_dict(r)["regime"] == "JBR" and _s68.as_dict(r)["R"] > 2]
+    check("the correction moves rho=1/2 and rho=1/8 systems OPPOSITE ways",
+          _up and _dn
+          and all(_s68.list_size(_rowmap[n]) < 2 * 8.2426 + 1 for n in _up)
+          and all(_s68.list_size(_rowmap[n]) > 2 * 0.846 + 1 for n in _dn),
+          f"shrinks for {_up}, grows for {_dn}")
+    # RISC Zero sits exactly at rho=1/4 and must not move at all
+    _r0 = _rowmap["RISC Zero"]
+    check("RISC Zero (rho=1/4) is unchanged by the correction",
+          abs(_s68.list_size(_r0) - 5.0) < 1e-12,
+          f"L = {_s68.list_size(_r0):.4f}, the fixed point of the correction")
+
+    # (c) ITERATION 40's CORRECTION IS NOW IN THE CODE, NOT ONLY THE DOCSTRING.
+    # The two UDR systems must come out at the corrected 20.6 / 21.0.
+    _sp1 = _hrc("SP1 6.1.0", 124, 2, 21)[2]
+    _ovm = _hrc("OpenVM 1.5.0", 124, 1, 23)[2]
+    check("the headroom table now reproduces iteration 40's corrected UDR values",
+          abs(_sp1 - 20.6) < 0.2 and abs(_ovm - 21.0) < 0.2,
+          f"SP1 {_sp1:.1f} (was printing 29.4), OpenVM {_ovm:.1f} (was 36.3)")
+    check("and UDR systems carry list size 1, not a Johnson list",
+          all(_s68.list_size(r) == 1.0 for r in _s68.by_regime("UDR")),
+          "unique decoding admits at most one codeword")
 
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,

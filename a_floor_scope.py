@@ -152,9 +152,15 @@ def mca_floor_bits(E, L):
     return E - math.log2(L + 1)
 
 
-def johnson_list_size(m):
-    """BCHKS25's Johnson-regime list size, as used in commit_jbr: 2m+1."""
-    return 2.0 * m + 1.0
+def johnson_list_size(m, rho=0.25):
+    """Johnson-regime list size (m+0.5)/sqrt(rho).
+
+    CORRECTED IN ITERATION 68 from 2m+1, which is this expression at rho=1/4
+    only. commit_jbr carries the 1/sqrt(rho) explicitly (regime_crossover.py:95,
+    :98); this function had dropped it. The default rho=0.25 reproduces the old
+    value so the identity is visible.
+    """
+    return (m + 0.5) / math.sqrt(rho)
 
 
 def interleaved_numerator(n, rho):
@@ -208,27 +214,32 @@ def report():
   floor is PROVED for the first and merely OBSERVED for the second.""")
 
     sec("3. HEADROOM: WHAT NO THEOREM HAS CLOSED")
-    ZK = [("SP1 6.1.0", 124, 2, 21), ("OpenVM 1.5.0", 124, 1, 23),
-          ("Airbender", 124, 1, 24), ("Pico", 124, 1, 22),
-          ("ZisK 0.16.1", 192, 1, 21), ("RISC Zero", 124, 2, 21),
-          ("Miden", 128, 3, 18)]
-    print(f"  {'system':<15} {'E':>5} {'nu':>4} {'m_eq':>7} {'BCHKS25 K':>11} "
-          f"{'MCA floor':>11} {'headroom':>9} {'nu':>5}")
-    print("  " + "-" * 74)
+    # ITERATION 68: this table now uses systems.py's regime-correct accessors.
+    # Previously it applied the JBR bound and the Johnson list size to all seven
+    # rows, including the two UDR systems -- the error iteration 40 identified
+    # and corrected only in the docstring above. Documenting a correction is not
+    # applying it; the numbers printed here were the uncorrected ones for 28
+    # iterations. It also uses the iteration-68 list size (m+0.5)/sqrt(rho).
+    import systems as _sys
+    print(f"  {'system':<15} {'E':>5} {'nu':>4} {'regime':>7} {'m_eq':>7} "
+          f"{'bound K':>9} {'list L':>8} {'MCA floor':>11} {'headroom':>9} {'nu':>5}")
+    print("  " + "-" * 92)
     gaps = []
-    for nm, E, R, T in ZK:
-        nu = T + R
-        m = m_eq(R)
-        K = commit_jbr(R, nu, E, m)
-        F = mca_floor_bits(E, johnson_list_size(m))
+    for row in _sys.SYSTEMS:
+        d = _sys.as_dict(row)
+        nu_, m = _sys.nu(row), m_eq(d["R"])
+        K = _sys.commit_bound(row)
+        L = _sys.list_size(row)
+        F = mca_floor_bits(d["E"], L)
         gaps.append(F - K)
-        print(f"  {nm:<15} {E:>5} {nu:>4} {m:>7.2f} {K:>11.1f} {F:>11.1f} "
-              f"{F-K:>9.1f} {nu:>5}")
+        print(f"  {d['name']:<15} {d['E']:>5} {nu_:>4} {d['regime']:>7} {m:>7.2f} "
+              f"{K:>9.1f} {L:>8.2f} {F:>11.1f} {F-K:>9.1f} {nu_:>5}")
     print(f"""
   Headroom {min(gaps):.1f} to {max(gaps):.1f} bits: the distance between the best proved upper
   bound and the best proved lower bound. Nobody has closed it from either side.
 
-  Note it exceeds nu at every system. An a: 1 -> 0 improvement is worth exactly
+  Note it exceeds nu at the FIVE JBR systems (iteration 40; the two UDR systems
+  are below nu). An a: 1 -> 0 improvement is worth exactly
   nu bits, so the strongest known lower bound leaves room for it AND for the
   constant. The action-orbit claim is not in tension with anything proved -- the
   objection to it is provenance (iteration 31), not impossibility.
@@ -263,7 +274,7 @@ def headroom_regime_correct(nm, E, R, T):
         return commit_udr(R, nu, E), 1.0, mca_floor_bits(E, 1.0) - commit_udr(R, nu, E)
     m = m_eq(R)
     K = commit_jbr(R, nu, E, m)
-    L = johnson_list_size(m)
+    L = johnson_list_size(m, 2.0 ** -R)      # ITERATION 68: rho-correct
     return K, L, mca_floor_bits(E, L) - K
 
 
@@ -311,7 +322,7 @@ def headroom_at_jbrM(nm, E, R, T):
         return headroom_regime_correct(nm, E, R, T)
     m = float(jbr_m(2.0 ** -R, E))
     K = commit_jbr(R, nu, E, m)
-    L = 2.0 * m + 1.0
+    L = johnson_list_size(m, 2.0 ** -R)      # ITERATION 68: was hardcoded 2m+1
     return K, L, mca_floor_bits(E, L) - K
 
 
