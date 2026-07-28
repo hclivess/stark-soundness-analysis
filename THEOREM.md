@@ -511,6 +511,30 @@ not a different field.
 
 ---
 
+## Not connected: the Jacobian conjecture
+
+The Jacobian conjecture was disproved in July 2026 (Alpöge, counterexample
+credited to the AI system Fable; geometric reconstruction by Tao). It is false
+in dimension 3 and hence in all dimensions ≥ 3; the plane case `n = 2` remains
+open. Independently verified, not yet journal peer-reviewed.
+
+**This has no bearing on STARK soundness.** The tempting link is that STARKs
+depend on invertible low-degree polynomial maps throughout — the algebraic
+S-boxes of Poseidon, Rescue, Griffin, Anemoi, Monolith are polynomial
+automorphisms of `F_p^n`. But the Jacobian conjecture is a **characteristic-0**
+statement, and it has been known false in characteristic `p` for decades: `x +
+x^p` has derivative 1 yet is not injective over `F̄_p`, since `d(x^p)/dx = 0`.
+All STARK arithmetic is characteristic `p` (M31, BabyBear, KoalaBear,
+Goldilocks, binary towers), so the char-0 case falling changes nothing where it
+never applied.
+
+**The methodological point does carry over.** Two long-standing conjectures
+were falsified within eight months — RS up-to-capacity (late 2025) and Jacobian
+in `n ≥ 3` (July 2026). Neither had been widely expected to fall. For a design
+brief that lists resilience as a hard requirement, this is a direct argument for
+regime T over the conjectured regime, and Theorems 4–6 price that choice:
+`κ = 1.2×` queries at blowup 2, `2.2×` at blowup 16.
+
 ## Files
 
 - `verify_theorem.py` — numerical verification of Lemma 2, Prop. 1(a,b,c),
