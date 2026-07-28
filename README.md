@@ -32,7 +32,7 @@ fitting. `a = 2` would double every step.
 Total soundness is a **minimum** over all terms, so **the code layer always
 binds**. That single fact explains the rest of this repo.
 
-Run `python3 adversarial.py` — 129 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 138 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -56,7 +56,11 @@ and BBBV forbids better, so the provable range is
 k/c ≤ PQ ≤ k/2,   c ≥ 2   (c = the QROM reduction's query-loss exponent)
 ```
 
-Every PQ figure here is an optimistic **upper** bound. That splits the PQ claims
+`classical/2` bounds **provable** PQ soundness from *above* and **true** PQ
+security from *below* — the two coincide only where the classical bound is
+attained. Chiesa–Yogev prove that Fiat–Shamir's grinding bound *is* attained,
+two-sided, with a matching universal attack, and exact amplitude amplification
+puts Grover 1.35 bits below the modelled `2^{k/2}`. That splits the PQ claims
 in two: **no deployed system reaches 100 provable PQ bits** is *unconditional* —
 the query phase binds for all seven verified zkVMs and its bound is *attained*,
 so its halving is exact, and the largest deployed query term (ZisK, 128) caps the
@@ -114,10 +118,11 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **129 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **138 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
+| `fs_tightness.py` | Chiesa–Yogev's two-sided FS bound; Grover checked against exact amplitude amplification |
 | `pq_design.py` | what 128 PQ bits actually costs to build |
 | `regime_crossover.py` | Thm 7, the UDR/JBR crossover, 5/5 prediction |
 | `real_configs.py` | source-verified configs; BCHKS25 vs BCIKS20 |
@@ -157,6 +162,11 @@ rate is the main reason to trust what survived.
    loss were negligible. Grover on Fiat–Shamir is an *attack*, so a negligible
    loss is impossible: `classical/2` is the best case. The negative headline is
    unconditional; the *design recommendation* is what depends on the constant.
+7. **…and iteration 24 then overcorrected.** "Conservative lower bound" and
+   "optimistic upper bound" are *both* right — of different quantities.
+   `classical/2` bounds **provable** PQ soundness from above and **true** PQ
+   security from below; the two coincide only on attained terms. Neither
+   iteration said which it meant.
 
 The adversarial suite additionally caught two numerical errors in my own math —
 a catastrophic-cancellation instability in Theorem 4's closed form, and a

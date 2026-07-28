@@ -66,6 +66,15 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the degree-10 recommendation clears 128 PQ only at c = 2   [c=2 -> 144, c=3 -> 96]
   PASS  at c = 3 the 128-PQ target needs degree 14 over a 31-bit base   [14]
   PASS  the negative claim is c-invariant and the positive one is not   [attained vs unattained terms behave differently under the QROM loss]
+  PASS  Chiesa-Yogev's two-sided FS bound brackets the exact probability   [15/15 grid points]
+  PASS  the FS bound is tight, not just valid (within a small constant)   [upper/exact = 1.1302]
+  PASS  the naive 1-(1-eps)^t form is unusable here (documents the trap)   [underflow makes the naive form return 0 for every t]
+  PASS  the Grover halving is a constant offset from k/2, not a drift   [spread 0.0018 bits]
+  PASS  exact Grover costs ~1.35 bits LESS than the modelled 2^(k/2)   [offset -1.35 bits]
+  PASS  so the repo's PQ figures err in the defender's favour, not against   [modelled work exceeds exact Grover work]
+  PASS  no deployed grinding parameter approaches a binding salt cap   [max declared grinding 28 bits]
+  PASS  PQ_true >= k_bound/2 >= PQ_provable holds on every measured system   [7/7 systems]
+  PASS  the provable/true gap is nonzero exactly where the bound is loose   [loose on 5 of 7]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -137,8 +146,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 129, suite has 129]
+  PASS  README's stated check count matches the suite   [README says 138, suite has 138]
 
 ========================================================================================
-129/129 PASS   no property broken
+138/138 PASS   no property broken
 ========================================================================================

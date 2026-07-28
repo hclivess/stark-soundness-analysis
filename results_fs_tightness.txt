@@ -1,0 +1,93 @@
+
+============================================================================================
+1. THE BOOK'S TWO-SIDED CLASSICAL BOUND, CHECKED AGAINST EXACT PROBABILITY
+============================================================================================
+     k            t        lower        exact        upper  brackets
+  ------------------------------------------------------------------
+    20         1024     0.000976     0.000976     0.000978       yes
+    20       262144     0.218750     0.221199     0.250001       yes
+    20      1048576     0.500000     0.632121     1.000001       yes
+    40      1048576     0.000001     0.000001     0.000001       yes
+    40 274877906944     0.218750     0.221199     0.250000       yes
+    40 1099511627776     0.500000     0.632121     1.000000       yes
+    60   1073741824     0.000000     0.000000     0.000000       yes
+    60 288230376151711744     0.218750     0.221199     0.250000       yes
+    60 1152921504606846976     0.500000     0.632121     1.000000       yes
+    80 1099511627776     0.000000     0.000000     0.000000       yes
+    80 302231454903657293676544     0.218750     0.221199     0.250000       yes
+    80 1208925819614629174706176     0.500000     0.632121     1.000000       yes
+
+  brackets hold everywhere: True
+
+  Both sides are within a small constant factor of the exact value in the regime
+  that matters (t*eps <~ 1), which is what makes the Fiat-Shamir accounting
+  `bits = log2(1/eps)` correct rather than merely safe.
+
+============================================================================================
+2. THE GROVER HALVING, AGAINST EXACT AMPLITUDE AMPLIFICATION
+============================================================================================
+  queries to reach success probability 1/2, both models exact:
+
+     k  log2 classical  log2 quantum      k/2  model err
+  --------------------------------------------------------
+    20           19.47          8.65     10.0      -1.35
+    32           31.47         14.65     16.0      -1.35
+    48           47.47         22.65     24.0      -1.35
+    64           63.47         30.65     32.0      -1.35
+    80           79.47         38.65     40.0      -1.35
+   100           99.47         48.65     50.0      -1.35
+   128          127.47         62.65     64.0      -1.35
+
+  The repo models post-quantum work as exactly 2^(k/2). Exact Grover needs
+  -1.35 bits relative to that -- a constant, not a drift (spread
+  0.0018 bits across k = 20..128). Grover reaches 1/2 success in
+  (pi/8)/sqrt(eps) queries, hence the -1.35; the classical side sits at
+  ln(2)/eps, hence its -0.53.
+
+  So `PQ = classical/2` OVERSTATES the quantum attacker's query count by about
+  1.35 bits. The repo's PQ figures are conservative in the DEFENDER's favour by
+  that constant, which is worth stating and too small to matter.
+
+============================================================================================
+3. THE SALT-SPACE CAP, AND WHY IT DOES NOT SAVE ANYONE
+============================================================================================
+
+  The book's lower bound is min{t, 2^salt} * eps: the grinding attack cannot
+  exceed the salt space. A system with a tiny nonce space would therefore be
+  IMMUNE to the grind beyond 2^salt attempts.
+
+  That is not a defence in any deployed STARK. The "salt" is not a dedicated
+  field -- a prover re-randomizes blinding factors, reorders independent
+  commitments, or perturbs the witness, each of which yields a fresh transcript
+  and hence a fresh challenge. The effective salt space is the prover's whole
+  freedom in the transcript, which is astronomically larger than any grind a
+  quantum attacker could mount. Deployed proof-of-work nonces (RISC Zero g=0,
+  Pico/ZisK/Miden g=16, OpenVM g=20, Airbender g=28) are also far below any
+  plausible salt bound.
+   salt bits   attack capped at   caps a k=64 grind?
+  --------------------------------------------------
+          16      2^16 attempts                  YES
+          32      2^32 attempts                  YES
+          64      2^64 attempts                   no
+         128     2^128 attempts                   no
+
+  Only a salt space below the target security level would bind, and no system
+  restricts the transcript that way.
+
+============================================================================================
+4. PROVABLE vs TRUE: THE TWO READINGS OF classical/2
+============================================================================================
+  term                          k_bound  attained?  PQ provable   PQ true
+  ------------------------------------------------------------------------
+  query phase (ZisK, largest)       128        yes           64        64
+  query phase (RISC Zero)            48        yes           24        24
+  commit ceiling 31-bit^4           102         no        34-51     >= 51
+  commit ceiling 31-bit^10          288         no       96-144    >= 144
+
+  For attained terms the two readings coincide and the number is exact. For the
+  commit phase they diverge in OPPOSITE directions: provable soundness may be as
+  low as k/3, while true security is at least k/2 and possibly much more,
+  because the proximity-gap constant is not known to be attained by any prover.
+
+  This is why the repository's headline survives and its design target does not:
+  the headline rests on attained terms.

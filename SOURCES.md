@@ -415,3 +415,44 @@ Stated target, `fri.py` comment block:
 See `nado_audit.py`. The query-phase arithmetic is correct; the calculation has
 no commit-phase term, and the commit term binds at ~48 bits because challenges
 are drawn from the 64-bit base field.
+
+---
+
+## Fiat–Shamir grinding tightness (iteration 25)
+
+**Alessandro Chiesa and Eylon Yogev, "Building Cryptographic Proofs from Hash
+Functions."** Free book; LaTeX source at
+`github.com/hash-based-snargs-book/hash-based-snargs-book`, commit `305fa3d`
+(2026-03-25). Quoted from `snargs-book.tex`.
+
+Lemma `sp-srs-to-soundness` (line 9159) — **two-sided**:
+
+> If SP has soundness error `eps` then it has state-restoration soundness error
+> `eps_SR(salt, n, t) <= (t+1) * eps(n)` … Moreover
+> `eps_SR(salt, n, t) >= min{t,2^salt} * eps(n) - C(min{t,2^salt},2) * eps(n)^2`.
+
+Accompanying text (line 9157), verbatim:
+
+> "this upper bound is essentially tight because, in common parameter regimes,
+> the SP state restoration soundness error is at least Ω(t) times the SP
+> soundness error. We prove this next."
+
+The lower bound is proved by an explicit **"universal state-restoration attack"**
+(line 9340): rerun a cheating prover with a fresh salt each time. That is the
+nonce-grinding strategy this repo's PQ accounting assumes.
+
+Lemma `fs-for-sigma-protocol-adaptive-soundness` (line 9103) transfers it to
+Fiat–Shamir: `eps_ARG <= eps_SR`, and
+
+> "In fact, if `eps_SR` is a tight upper bound then `eps_ARG >= eps_SR`."
+
+On the quantum side the book does **not** give a theorem — post-quantum security
+is explicitly out of scope (line 27224, "While not discussed in this book…"), and
+it points to `ChiesaMS19` for both the Micali and BCS transformations. It does
+state (line 2731):
+
+> "The error bounds typically incur predictable changes due to known speedups of
+> quantum algorithms. This is the case for the succinct arguments in this book."
+
+That is consistent with `c = 2` but is not a quantitative statement, so the
+QROM loss exponent remains unpinned. See `qrom_bracket.py`.
