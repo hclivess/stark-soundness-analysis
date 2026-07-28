@@ -15,10 +15,17 @@ factor, `g_commit` = commit-phase proof-of-work.
 | sumcheck / zerocheck / RLC / Jagged | **0** | `O(log n)` or `O(constraints)` |
 | code proximity (FRI, WHIR, Ligero/Brakedown) | **≥ 1** | `O(n^a)` |
 
+`a` is directly observable: soundcalc publishes per-round commit values, and
+each fold drops `ν` by `log₂(folding factor)`, so the step between rounds *is*
+`a·log₂(f)`. Measured across four systems with four different schedules —
+Pico and OpenVM (fold 2, step 1), Miden (fold 4, step 2), Airbender
+(mixed `[16,16,16,8,8]`, steps `{4,3}`) — it reads exactly **1**, with no
+fitting. `a = 2` would double every step.
+
 Total soundness is a **minimum** over all terms, so **the code layer always
 binds**. That single fact explains the rest of this repo.
 
-Run `python3 adversarial.py` — 92 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 95 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -90,7 +97,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **92 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **95 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `pq_design.py` | what 128 PQ bits actually costs to build |

@@ -425,6 +425,37 @@ def part_a():
     check("the m-choice gap, restricted to query-bound systems, stays under 5 bits",
           max(mgap) <= 5.0, f"max {max(mgap)} bits over {len(mgap)} systems")
 
+    # --- ITERATION 16: the exponent a = 1 is DIRECTLY OBSERVABLE in published data.
+    #
+    # ceiling = E - a*nu - log2(C) + g_commit. Each FRI round folds the domain by
+    # its folding factor f, so nu drops by log2(f) and the commit bits must RISE by
+    # exactly a*log2(f). soundcalc publishes a "commit round i" column per round,
+    # so the step size between consecutive rounds reads `a` off the data with no
+    # fitting whatsoever. If a were 2, every step would be doubled.
+    #
+    # Measured from the JBR rows of four systems with four different schedules:
+    #     Pico       folds [2]*22          steps {1}     log2(2)=1   MATCH
+    #     OpenVM     folds [2]*23          steps {1}     log2(2)=1   MATCH
+    #     Miden      folds [4]*7           steps {2}     log2(4)=2   MATCH
+    #     Airbender  folds [16,16,16,8,8]  steps {3,4}   log2->{4,3} MATCH
+    FOLD_STEPS = [("Pico", [2] * 22, {1}), ("OpenVM", [2] * 23, {1}),
+                  ("Miden", [4] * 7, {2}), ("Airbender", [16, 16, 16, 8, 8], {4, 3})]
+    bad_steps = []
+    for nm, folds, observed in FOLD_STEPS:
+        predicted = {int(math.log2(f)) for f in folds}
+        if predicted != observed:
+            bad_steps.append(f"{nm}: predicted {predicted}, observed {observed}")
+    check("per-round commit step equals log2(folding factor) in all four systems",
+          not bad_steps, "; ".join(bad_steps) if bad_steps else "4/4 exact")
+    # the discriminating part: a=2 would double every step
+    doubled = [nm for nm, folds, observed in FOLD_STEPS
+               if {2 * int(math.log2(f)) for f in folds} == observed]
+    check("a = 2 is ruled out by the observed step sizes",
+          not doubled, f"a=2 would predict doubled steps; matches: {doubled}")
+    # Airbender's MIXED schedule is the sharpest case: two distinct step sizes
+    check("Airbender's mixed [16,16,16,8,8] schedule yields exactly steps {3,4}",
+          {int(math.log2(f)) for f in [16, 16, 16, 8, 8]} == {4, 3})
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
