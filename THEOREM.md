@@ -511,6 +511,135 @@ not a different field.
 
 ---
 
+# Part III — after pulling the real source (2026-07-28)
+
+Configurations and formulas were read from the upstream repositories. Verbatim
+quotes and paths are in `SOURCES.md`; the model is `real_configs.py`. Three
+things changed.
+
+## III.1 The commit bound Parts I–II were built on is superseded
+
+Plonky3's `p3-security` crate does not use BCIKS20. It uses **BCHKS25**
+([2025/2055] Thm 4.2 — the same paper that supplied the `Ω(n^1.99)` lower
+bound):
+
+```
+ε_lin = ((2·m'⁵ + 3·m'·γρ)·n / (3·ρ^{3/2}) + m'/√ρ) / |F|,     m' = m + ½
+```
+
+against BCIKS20's `(m+½)⁷·n² / (3ρ^{3/2}·|F|)`. **Two independent improvements:
+the exponent drops 7 → 5 (worth `2log₂(m+½)`), and the domain factor drops
+`n² → n` (worth `ν`).** At `ν ≈ 22` the second dominates. Measured at `m = 16`:
+
+| system | BCIKS20 | BCHKS25 | gain |
+|---|---|---|---|
+| RISC Zero | 50.3 | 79.4 | **+29.1** |
+| Stwo / Plonky3 (KoalaBear) | 53.8 | 81.9 | +28.1 |
+| Cairo / StarkNet | 170.3 | 201.4 | +31.1 |
+
+`frontier.py` TERM 2 predicted the exponent-7 factor was a proof artifact worth
+~11 bits if reduced. **That prediction was right and had already been realised**
+— by more than predicted, since the `n² → n` improvement was not anticipated.
+
+**What survives:** Proposition 1 is regime-agnostic. Its proof uses only that
+`Q` is increasing in `m` and `K` is decreasing in `m` — both hold for BCHKS25.
+The quasiconcavity, the unique optimum, and the bisection remain valid; only
+the specific `K` changes. Theorem 2's *closed form* is now a closed form for a
+superseded bound.
+
+## III.2 Theorems 3 and 3′ require `m → m_min`; deployment uses `m ≥ 3`
+
+Plonky3 searches `m ∈ [3, min(compute_upper_m, 1000)]`, with `LDR_M_CAP = 1000`
+"matching Ethereum's `soundcalc`". So `m_floor = 3` — exactly the case the
+Robustness section anticipated, now confirmed as deployed practice.
+
+Under `m ≥ 3` with `ν = T + R`, both commit bounds become **strictly decreasing
+in `R`**: BCIKS20 goes as `−3.5R`, BCHKS25 as `−2.5R`. The interior optimum
+disappears.
+
+> **Theorem 3′ (blowup 4) holds only where `m` may approach the admissibility
+> boundary `m_min(R)`. Under the deployed convention `m ≥ 3`, the optimum is the
+> smallest available blowup.**
+
+Both statements are correct about their own hypothesis. ethSTARK's `η` range
+genuinely permits `m ↓ m_min`; Plonky3's floor of 3 is a conservative choice,
+not a theorem. But the operative guidance for anyone using a standard
+calculator is **small blowup**, not blowup 4.
+
+This also **collapses the Theorem 5 dichotomy**: under `m ≥ 3`, regimes J and T
+both prefer the smallest blowup. The opposition in Part II was an artifact of
+letting `m` reach `m_min` in regime J.
+
+## III.3 Theorem 6's margin shrinks by two thirds
+
+Part II credited threshold halving with `+19` to `+22` bits over Johnson,
+attributing it to `O(n)/|F|` versus `O(n²)/|F|`. **BCHKS25 already gives the
+Johnson regime the `O(n)` commit term.** Recomputed at `m ≥ 3`:
+
+| system | J (BCIKS20) | J (BCHKS25) | T (threshold halving) | T − J now |
+|---|---|---|---|---|
+| RISC Zero | 65.9 | **90.5** | 97.7 | **+7.2** |
+| Stwo / KoalaBear | 69.4 | **93.0** | 98.7 | +5.7 |
+| Plonky2 | 66.4 | **92.0** | 100.7 | +8.7 |
+
+Threshold halving's remaining advantage is the *radius* it certifies, not the
+commit term — and it still costs `κ(R)` in queries (Theorem 4, unaffected). The
+case for adopting it is materially weaker than Part II concluded.
+
+## III.4 The measured conjectured-vs-proven gap
+
+At each configuration's own `(s, g)`, optimising `m` over `[3, 1000]`:
+
+| system | proven | m\* | binder | conj (new) | conj (capacity, dead) |
+|---|---|---|---|---|---|
+| **RISC Zero** (verified) | **50.0** | 971 | query | 98.0 | 100.0 |
+| Plonky3 (BabyBear) | 57.9 | 322 | query | 98.3 | 100.0 |
+| Stwo (M31) | 54.9 | 690 | query | 88.0 | 90.0 |
+| Cairo / StarkNet | 60.0 | 1000 | query | 119.1 | 120.0 |
+
+**The gap is ~40–47 bits.** RISC Zero targets 97 conjectured bits and has 50
+provable ones at the same parameters. The query phase binds everywhere, so `m*`
+runs large (maximising per-query yield toward `R/2`), and `proven ≈ s·R/2`.
+
+This is the quantity eprint 2026/1371 calls "the measured gap between
+conjectured and provable soundness for non-interactive FRI" and names as the
+area's sharpest empirical gap.
+
+## III.5 The disproof costs 1–3 queries
+
+The capacity assumption charged `−log₂ρ` per query. Plonky3's replacement
+(random-words, [2025/2010] §1.5) charges `−log₂(ρ + η)` with
+`η ≈ (log₂(e/ρ)·ρ)/log₂ q`:
+
+| system | capacity (dead) | random-words | lost | +queries to restore |
+|---|---|---|---|---|
+| RISC Zero | 100.0 | 98.0 | 2.0 | 2 |
+| Stwo (M31) | 90.0 | 88.0 | 2.0 | 3 |
+| Plonky2 | 100.0 | 98.6 | 1.4 | 1 |
+
+**A foundational event, not an operational emergency** — which is exactly how
+the 2026 SoK characterises it. The disproof removes a justification; it costs
+a handful of queries to restore the number.
+
+## III.6 What each project can tell you about its own soundness
+
+| project | conjectured calc | proven calc | post-disproof? |
+|---|---|---|---|
+| **Plonky3** | random-words [2025/2010] | UDR + **BCHKS25** LDR | **yes** |
+| **RISC Zero** | Toy Problem + Conj 8.4 | BCIKS20 LDR + UDR | no (BCIKS20) |
+| **Stwo** | capacity only, `s·R + g` | **none** | no |
+
+Plonky3 is clearly the most current: it names the disproof papers in module docs
+and states `CapacityBound is not currently supported by FRI's commit-phase
+analysis`. Stwo's only in-repo accounting is `pow_bits + log_blowup·n_queries`
+— the disproved assumption — and its shipped `Default` is a ~13-bit test config
+with an explicit warning.
+
+That is a statement about repository documentation, **not** a claim that any
+deployment is insecure: all three take production parameters from the caller.
+
+---
+
 ## Not connected: the Jacobian conjecture
 
 The Jacobian conjecture was disproved in July 2026 (Alpöge, counterexample

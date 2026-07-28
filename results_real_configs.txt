@@ -1,0 +1,92 @@
+
+====================================================================================================
+1. BCHKS25 vs BCIKS20 -- the commit bound that Plonky3 actually ships
+====================================================================================================
+Both evaluated at the SAME m, so this isolates the bound change.
+
+  system                    E  R  nu    m   BCIKS20   BCHKS25    gain
+  ----------------------------------------------------------------------
+  RISC Zero               124  2  22   16      50.3      79.4   +29.1
+  Plonky3 (KoalaBear)     124  1  21   16      53.8      81.9   +28.1
+  Plonky3 (BabyBear)      124  2  22   16      50.3      79.4   +29.1
+  Stwo (M31)              124  1  21   16      53.8      81.9   +28.1
+  Plonky2 (Goldilocks)    128  3  23   16      50.8      80.9   +30.1
+  Winterfell / Miden      192  3  23   16     114.8     144.9   +30.1
+  Cairo / StarkNet        251  4  24   16     170.3     201.4   +31.1
+
+  Two independent improvements: exponent 7 -> 5 gives 2*log2(m+1/2)
+  bits, and n^2 -> n gives nu bits. At nu ~ 22 the second dominates.
+
+====================================================================================================
+2. CEILINGS: max provable bits at unlimited queries, m in [3, 1000]
+====================================================================================================
+  system                    E   BCIKS20   BCHKS25    gain   100 bits?
+  --------------------------------------------------------------------
+  RISC Zero               124      65.9      90.5   +24.6          no
+  Plonky3 (KoalaBear)     124      69.4      93.0   +23.6          no
+  Plonky3 (BabyBear)      124      65.9      90.5   +24.6          no
+  Stwo (M31)              124      69.4      93.0   +23.6          no
+  Plonky2 (Goldilocks)    128      66.4      92.0   +25.6          no
+  Winterfell / Miden      192     130.4     156.0   +25.6         YES
+  Cairo / StarkNet        251     185.9     212.5   +26.6         YES
+
+  Under BCIKS20 the 31-bit systems capped near 77-79 bits (THEOREM.md
+  Part I headline). Under the bound Plonky3 actually ships they clear
+  or approach 90+, and the wider-field systems clear 100 outright.
+
+====================================================================================================
+3. FULL ACCOUNTING at each configuration's own (s, g)
+====================================================================================================
+  system                 status          proven   m*  binder  conj(new)  conj(dead)
+  ----------------------------------------------------------------------------------
+  RISC Zero              VERIFIED          50.0  971   query       98.0       100.0
+  Plonky3 (KoalaBear)    ILLUSTRATIVE      55.9  602   query       93.7        96.0
+  Plonky3 (BabyBear)     ILLUSTRATIVE      57.9  322   query       98.3       100.0
+  Stwo (M31)             ILLUSTRATIVE      54.9  690   query       88.0        90.0
+  Plonky2 (Goldilocks)   ILLUSTRATIVE      57.9  394   query       98.6       100.0
+  Winterfell / Miden     ILLUSTRATIVE      56.5 1000   query       96.1        97.0
+  Cairo / StarkNet       ILLUSTRATIVE      60.0 1000   query      119.1       120.0
+
+  conj(dead)  = s*R + g, the DISPROVED capacity formula that Stwo's
+                security_bits() and Plonky3's conjectured_soundness_bits()
+                still compute, and that RISC Zero targets 97 bits under.
+  conj(new)   = the random-words replacement Plonky3's security crate uses.
+
+====================================================================================================
+4. THE REPRICING: what the disproof actually costs
+====================================================================================================
+  system                  conj(dead)  conj(new)   lost  +queries to restore
+  --------------------------------------------------------------------------
+  RISC Zero                    100.0       98.0    2.0                    2
+  Plonky3 (KoalaBear)           96.0       93.7    2.3                    3
+  Plonky3 (BabyBear)           100.0       98.3    1.7                    1
+  Stwo (M31)                    90.0       88.0    2.0                    3
+  Plonky2 (Goldilocks)         100.0       98.6    1.4                    1
+  Winterfell / Miden            97.0       96.1    0.9                    1
+  Cairo / StarkNet             120.0      119.1    0.9                    1
+
+  This is the 'modest repricing' the 2026 SoK describes: the capacity
+  assumption charged -log2(rho) per query; the replacement charges
+  -log2(rho + eta). At deployed rates eta is small, so the loss is a few
+  bits, recoverable with a handful of extra queries. The disproof is a
+  foundational event, not an operational emergency.
+
+====================================================================================================
+5. WHAT EACH PROJECT CAN TELL YOU ABOUT ITS OWN SOUNDNESS
+====================================================================================================
+
+  project     conjectured calc              proven calc            post-disproof
+  ---------------------------------------------------------------------------
+  Plonky3     random-words [2025/2010]      UDR + BCHKS25 LDR      YES
+  RISC Zero   Toy Problem + Conj 8.4        BCIKS20 LDR + UDR      no (BCIKS20)
+  Stwo        capacity only (s*R + g)       NONE                   no
+
+  Stwo's only in-repo security accounting is the formula whose underlying
+  assumption was disproved, and its shipped Default is a ~13-bit test config
+  carrying an explicit warning. That is a statement about what the repository
+  documents, not a claim that any deployment is insecure -- production
+  parameters are supplied by the caller in all three projects.
+
+  Plonky3 is, by a clear margin, the most current: it names the disproof papers
+  in module docs and has removed CapacityBound from FRI commit-phase analysis.
+

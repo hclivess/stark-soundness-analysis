@@ -6,11 +6,43 @@ parts of the security budget are improvable, which are conjecture-bound, and
 which are information-theoretically floored.
 
 ```
-python3 stark_soundness.py    # soundness model + landscape + parameter optimisation
+python3 real_configs.py       # START HERE -- source-verified configs, BCHKS25 bound
+python3 regimes.py            # four-regime model post the 2025 capacity disproof
+python3 verify_theorem.py     # numerical checks for THEOREM.md Parts I-II
+python3 stark_soundness.py    # original BCIKS20 model + landscape (superseded)
 python3 frontier.py           # quantum adjustment + frontier map + slack decomposition
 ```
 
 No dependencies beyond the standard library.
+
+## Read this first
+
+The analysis was revised twice as better information arrived, and the later
+revisions overturn earlier headlines. In order of authority:
+
+1. **`SOURCES.md`** — configurations and formulas read from upstream source on
+   2026-07-28, with verbatim quotes. Supersedes all recalled parameters.
+2. **`THEOREM.md` Part III** — what the real source changed.
+3. **`THEOREM.md` Part II** — the post-disproof regime model.
+4. **`THEOREM.md` Part I** and the findings below — built on BCIKS20, now
+   superseded by BCHKS25 in several numbers.
+
+Three headline corrections, in short:
+
+- **The RS up-to-capacity conjecture is not open — it was disproved in late
+  2025** (Crites–Stewart 2025/2046; Diamond–Gruen 2025/2010). An earlier
+  revision called proving it "the highest-leverage open problem in the field".
+  Johnson-bound soundness is untouched, and the repricing costs 1–3 queries.
+- **BCIKS20's `(m+½)⁷·n²` commit bound is superseded by BCHKS25's
+  `(2m'⁵+…)·n`** — exponent 7→5 and `n²→n`, worth ~+29 bits. Plonky3 ships this
+  today. Ceilings below that cite ~77 bits should read ~90+.
+- **Per-system blowup/query/grinding values were recalled, and mostly were not
+  real configs.** Only RISC Zero ships one (blowup 4, 50 queries, no grinding,
+  trace 2²⁰, 97-bit conjectured target — my recollection was right). Plonky3 and
+  Stwo take parameters from the caller.
+
+The most durable single number: **at their own deployed query counts these
+systems have ~50–60 bits of provable soundness against ~97–100 conjectured.**
 
 ## Scope, honestly stated
 
