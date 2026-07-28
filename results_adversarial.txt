@@ -40,6 +40,9 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  GF(p^3) is worth +104 classical / +52 PQ to NADO   [47 -> 151]
   PASS  at GF(p^2) NADO needs ~225 queries, so 320 over-provisions by ~95   [225 needed]
   PASS  at GF(p^3) the query phase becomes binding, so 320 UNDER-provisions   [379 needed vs 320 configured]
+  PASS  commit - DEEP = -R - log2((1-rho)/2) across all three rate classes   [3/3]
+  PASS  the commit/DEEP gap is bounded by ~2 bits at every deployed rate   [max |gap| 1.81]
+  PASS  DEEP repetition is worth at most 1 bit to NADO at any extension   [gains [1, 1, 0]]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -111,8 +114,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 103, suite has 103]
+  PASS  README's stated check count matches the suite   [README says 106, suite has 106]
 
 ========================================================================================
-103/103 PASS   no property broken
+106/106 PASS   no property broken
 ========================================================================================

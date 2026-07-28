@@ -32,7 +32,7 @@ fitting. `a = 2` would double every step.
 Total soundness is a **minimum** over all terms, so **the code layer always
 binds**. That single fact explains the rest of this repo.
 
-Run `python3 adversarial.py` — 103 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 106 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -104,7 +104,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **103 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **106 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `pq_design.py` | what 128 PQ bits actually costs to build |

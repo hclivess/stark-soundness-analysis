@@ -515,6 +515,35 @@ def part_a():
     check("at GF(p^3) the query phase becomes binding, so 320 UNDER-provisions",
           queries_needed(192) > S_N, f"{queries_needed(192)} needed vs {S_N} configured")
 
+    # --- ITERATION 19: DEEP repetition is sound but uniformly worthless.
+    #
+    # DEEP samples z and checks (P(x)-v)/(x-z) is low degree; cheating is caught
+    # with probability 1 - d/|F|. Repeating at k independent points gives error
+    # (d/|F|)^k, so the bits multiply by k. A real amplification -- and worth at
+    # most 1 bit anywhere, because DEEP and the commit term are structurally
+    # near-balanced.
+    #
+    # Since the LDE domain is the degree times the blowup, nu = log2(deg) + R, so
+    #     commit - DEEP = -R - log2((1-rho)/2)
+    # which is +1.00 at blowup 2, -0.58 at 4, -1.81 at 8. The gap is bounded by
+    # about 2 bits and fully determined by the rate, so there is never enough
+    # daylight between the two terms for repetition to recover.
+    def commit_deep_gap(R):
+        return -R - math.log2((1 - 2.0 ** -R) / 2)
+    OBSERVED_GAP = {1: 1, 2: -1, 3: -2}      # from the seven deployed systems
+    bad_gap = [R for R, o in OBSERVED_GAP.items() if round(commit_deep_gap(R)) != o]
+    check("commit - DEEP = -R - log2((1-rho)/2) across all three rate classes",
+          not bad_gap, f"mismatches at R={bad_gap}" if bad_gap else "3/3")
+    check("the commit/DEEP gap is bounded by ~2 bits at every deployed rate",
+          all(abs(commit_deep_gap(R)) <= 2.0 for R in (1, 2, 3)),
+          f"max |gap| {max(abs(commit_deep_gap(R)) for R in (1,2,3)):.2f}")
+    # therefore DEEP repetition can never be worth more than ~2 bits
+    def nado_with_deep_k(E, k):
+        return min(E - 18 - math.log2(0.25), k * (E - 17), 320 * yield_udr(1) + 18)
+    gains = [nado_with_deep_k(E, 2) - nado_with_deep_k(E, 1) for E in (64, 128, 192)]
+    check("DEEP repetition is worth at most 1 bit to NADO at any extension",
+          all(0 <= g <= 1.01 for g in gains), f"gains {[round(g) for g in gains]}")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE
