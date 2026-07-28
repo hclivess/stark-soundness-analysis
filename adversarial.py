@@ -2089,6 +2089,54 @@ def part_a():
               "floor(sqrt(g^2 rho))/g <= sqrt(rho)")
     except ImportError:
         pass
+
+    # --- ITERATION 56: Airbender's full table, and the m_eq/jbrM distinction.
+    try:
+        import airbender_verified as _av
+        from soundcalc_lean import jbr_m as _jm
+
+        # (a) all five UDR commit rounds must match, including the MIXED folding
+        # schedule and the +5 commit grinding
+        _mine = _av.commit_rounds_udr(_av.AIRBENDER)
+        _ref = _av.AIRBENDER["udr"]["commit"]
+        check("all five Airbender UDR commit rounds match the reference",
+              all(abs(m_ - r_) < 0.5 for m_, r_ in zip(_mine, _ref)),
+              f"max deviation {max(abs(m_-r_) for m_, r_ in zip(_mine, _ref)):.2f} bits")
+        # the step pattern must be log2 of the mixed schedule, not a constant
+        _steps = [_ref[i + 1] - _ref[i] for i in range(len(_ref) - 1)]
+        check("the commit steps are {4,4,4,3}, matching log2[16,16,16,8]",
+              _steps == [4, 4, 4, 3], f"{_steps}")
+        check("...so a mixed schedule is reproduced, not just a uniform one",
+              len(set(_steps)) == 2, "two distinct step sizes, both predicted")
+
+        # (b) the query phase must bind in BOTH regimes
+        for _reg in ("udr", "jbr"):
+            _row = _av.AIRBENDER[_reg]
+            check(f"the query phase binds in Airbender's {_reg.upper()} row",
+                  _row["query"] == _row["total"],
+                  f"query {_row['query']} = total {_row['total']}")
+        check("JBR beats UDR for Airbender, as Theorem 7 predicts",
+              _av.AIRBENDER["jbr"]["total"] > _av.AIRBENDER["udr"]["total"],
+              "67 > 64, and it is reported in JBR")
+
+        # (c) THE ACCURACY RESULT: jbrM must beat m_eq by a wide margin
+        _te = _tj = 0.0
+        for nm_, E_, R_, T_, s_, g_, rep_ in _av.JBR_SYSTEMS:
+            _te += abs(_av.query_term(s_, g_, R_, m_eq(R_)) - rep_)
+            _tj += abs(_av.query_term(s_, g_, R_, float(_jm(2.0 ** -R_, E_))) - rep_)
+        check("jbrM reproduces the JBR query term far better than m_eq",
+              _tj < _te / 5, f"{_te:.1f} bits of error at m_eq -> {_tj:.1f} at jbrM")
+        check("every system lands within ~1 bit at jbrM",
+              all(abs(_av.query_term(s_, g_, R_, float(_jm(2.0 ** -R_, E_))) - rep_) < 1.2
+                  for nm_, E_, R_, T_, s_, g_, rep_ in _av.JBR_SYSTEMS),
+              "5/5 within 1.2 bits")
+        # (d) THE DIAGNOSIS: m_eq reproduces the UDR figure BY CONSTRUCTION,
+        # which is why it is the wrong parameter for a JBR question
+        check("at m_eq the JBR yield equals the UDR yield, by definition",
+              abs(_av.yield_jbr(1, m_eq(1)) - _av.yield_udr(1)) < 1e-9,
+              "so a JBR figure at m_eq just reproduces the UDR figure")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

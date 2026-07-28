@@ -149,8 +149,8 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  but NOT for the two UDR systems -- iteration 32 overstated it   [[('SP1 6.1.0', 20.6, 23), ('OpenVM 1.5.0', 21.0, 24)]]
   PASS  the UDR list size is 1, not the Johnson 2m+1   [unique decoding admits at most one codeword in the radius]
   PASS  the regime error was material, not cosmetic, for exactly two systems   [[('SP1 6.1.0', 8.9), ('OpenVM 1.5.0', 15.3)]]
-  PASS  no file's local system table has drifted from canonical   [6 local tables agree]
-  PASS  the drift detector actually parses the tables it claims to check   [parsed 6 files, >=5 systems each]
+  PASS  no file's local system table has drifted from canonical   [7 local tables agree]
+  PASS  the drift detector actually parses the tables it claims to check   [parsed 7 files, >=5 systems each]
   PASS  forcing the JBR bound on a UDR system changes it materially   [[('SP1 6.1.0', 10.4), ('OpenVM 1.5.0', 18.6)]]
   PASS  and leaves every JBR system bit-identical   [the accessor is a no-op where the regime already matched]
   PASS  the UDR list size is 1 and the JBR list size is 2m+1   [unique decoding admits at most one codeword in the radius]
@@ -272,6 +272,15 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  ...so it cannot account for the repo's 3-5 bit overshoot   [the untuned-m gap remains the explanation (iteration 14)]
   PASS  the gap shrinks monotonically with granularity   [['0.0146', '0.0002', '0.0000', '0.0000']]
   PASS  sqrtLB is a genuine lower bound on sqrt at every granularity   [floor(sqrt(g^2 rho))/g <= sqrt(rho)]
+  PASS  all five Airbender UDR commit rounds match the reference   [max deviation 0.01 bits]
+  PASS  the commit steps are {4,4,4,3}, matching log2[16,16,16,8]   [[4, 4, 4, 3]]
+  PASS  ...so a mixed schedule is reproduced, not just a uniform one   [two distinct step sizes, both predicted]
+  PASS  the query phase binds in Airbender's UDR row   [query 64 = total 64]
+  PASS  the query phase binds in Airbender's JBR row   [query 67 = total 67]
+  PASS  JBR beats UDR for Airbender, as Theorem 7 predicts   [67 > 64, and it is reported in JBR]
+  PASS  jbrM reproduces the JBR query term far better than m_eq   [52.7 bits of error at m_eq -> 3.3 at jbrM]
+  PASS  every system lands within ~1 bit at jbrM   [5/5 within 1.2 bits]
+  PASS  at m_eq the JBR yield equals the UDR yield, by definition   [so a JBR figure at m_eq just reproduces the UDR figure]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -401,8 +410,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 393, suite has 393]
+  PASS  README's stated check count matches the suite   [README says 402, suite has 402]
 
 ========================================================================================
-393/393 PASS   no property broken
+402/402 PASS   no property broken
 ========================================================================================

@@ -1,0 +1,63 @@
+
+============================================================================================
+1. ALL FIVE UDR COMMIT ROUNDS MATCH EXACTLY
+============================================================================================
+  folding [16, 16, 16, 8, 8], grind_commit 5
+
+    round  reference  this repo    diff
+  --------------------------------------
+        1        106        106    -0.0
+        2        110        110    -0.0
+        3        114        114    -0.0
+        4        118        118    -0.0
+        5        121        121    -0.0
+
+  The nu sequence is 25, 21, 17, 13, 10 -- steps 4, 4, 4, 3, exactly log2 of the
+  mixed schedule. README claims `a` "reads exactly 1" on this schedule; here
+  every round is reproduced, not just the step sizes.
+
+============================================================================================
+2. BOTH REGIME ROWS CONFIRM EARLIER FINDINGS
+============================================================================================
+   regime   total   query    binds?   batching    ALI   DEEP
+  ----------------------------------------------------------
+      UDR      64      64     query         90    114    110
+      JBR      67      67     query         68    109    105
+
+  The query phase binds in BOTH regimes -- iteration 24's result for Airbender,
+  now visible rather than inferred. And JBR (67) beats UDR (64), so Airbender is
+  correctly reported in JBR, which is what Theorem 7 predicts for it.
+
+  UDR query phase: this repo gives 64.1 against a reported 64.
+
+============================================================================================
+3. THE JBR QUERY TERM: m_eq IS THE WRONG PARAMETER FOR THIS QUESTION
+============================================================================================
+
+  m_eq is DEFINED as the m at which JBR's yield equals UDR's, so evaluating a
+  system's JBR figure at m_eq necessarily reproduces its UDR figure. For
+  Airbender that is 64.1 -- the UDR number, arrived at by construction.
+
+  Iteration 47 found soundcalc derives m by formula instead. Substituting it:
+
+  system        reported   at m_eq     err   at jbrM     err
+  ----------------------------------------------------------
+  Airbender           67      64.1    -2.9      67.4    +0.4
+  Pico                53      50.9    -2.1      54.0    +1.0
+  ZisK               128     111.0   -17.0     127.2    -0.8
+  RISC Zero           48      33.9   -14.1      48.2    +0.2
+  Miden               55      38.4   -16.6      55.8    +0.8
+
+  total |error|:   52.7 bits at m_eq   ->   3.3 bits at jbrM
+
+  Every system within about a bit, and the total error falls 16-fold.
+
+  This does NOT touch the repo's headline validation, which is about the UDR
+  figures and matches here to 0.1 bits across five commit rounds and the query
+  term. It does mean m_eq belongs to Theorem 7's crossover, where the
+  yield-equalising point IS the quantity of interest, and jbrM belongs anywhere
+  a system's achieved Johnson-regime figure is wanted.
+
+  It also closes a loop from iteration 55, which excluded the sqrt approximation
+  as the source of the model's overshoot and left the untuned-m gap. This is
+  that gap, measured: it is not so much untuned as the wrong m for the question.
