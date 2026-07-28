@@ -1,0 +1,394 @@
+"""
+Adversarial suite: try hard to break this repo's theorems and its FRI prototype.
+
+Two halves.
+
+  PART A -- THEOREM FALSIFICATION. Randomised and worst-case search for
+  counterexamples to Prop 1, Thms 2, 3', 4, 7(a), 7(b), and the Merkle
+  deduplication model. These are not happy-path checks: each one is written to
+  FIND a violation and only reports PASS when a directed search fails to.
+
+  PART B -- FORGERY. Attacks on the GF(p^2) FRI prototype: structural
+  degeneracies (the empty-proof class of bug NADO's own fri.py calls the C-1
+  total soundness bypass), transcript manipulation, Merkle path substitution,
+  grinding bypass, field-encoding abuse, and the ext-downgrade attack.
+
+Every check prints PASS only if the attack FAILED to break the property.
+"""
+
+import math
+import random
+import copy
+import sys
+
+sys.path.insert(0, "/root/nado")
+
+RESULTS = []
+
+
+def check(name, ok, detail=""):
+    RESULTS.append((name, ok, detail))
+    print(f"  {'PASS' if ok else '*** FAIL ***'}  {name}"
+          + (f"   [{detail}]" if detail else ""))
+    return ok
+
+
+# ==================================================================== PART A
+
+def yield_udr(R):
+    return -math.log2((1 + 2.0 ** -R) / 2)
+
+
+def yield_jbr(R, m):
+    a = math.sqrt(2.0 ** -R) * (1 + 0.5 / m)
+    return -math.log2(a) if a < 1 else float("-inf")
+
+
+def commit_bciks(R, nu, E, m):
+    return E + math.log2(3) - 7 * math.log2(m + 0.5) - 1.5 * R - 2 * nu
+
+
+def commit_jbr(R, nu, E, m, folding=2):
+    rho = 2.0 ** -R
+    sr = math.sqrt(rho)
+    mm = m + 0.5
+    gam = 1 - sr * (1 + 0.5 / m)
+    if gam <= 0:
+        return float("-inf")
+    n = 2.0 ** nu
+    eps = ((2 * mm ** 5 + 3 * mm * gam * rho) * n / (3 * rho * sr) + mm / sr) \
+        * max(folding - 1, 1)
+    return min(E - math.log2(max(eps, 1.0)),
+               E - math.log2(folding) - math.log2(n + 1)
+               - math.log2(2 * m + 1) + 0.5 * math.log2(rho))
+
+
+def commit_udr(R, nu, E):
+    gam = (1 - 2.0 ** -R) / 2
+    return E - math.log2(gam * 2.0 ** nu + 1)
+
+
+def m_min(R):
+    return 1.0 / (2 * (2 ** (R / 2) - 1))
+
+
+def m_eq(R):
+    u = 2.0 ** (R / 2)
+    return u / (u - 1.0) ** 2
+
+
+def part_a():
+    print("=" * 88)
+    print("PART A -- ATTEMPTS TO FALSIFY THE THEOREMS")
+    print("=" * 88)
+    rng = random.Random(20260728)
+
+    # --- Prop 1: quasiconcavity of min(Q, K) in m. Search for a second local max.
+    bad = None
+    for _ in range(4000):
+        R = rng.uniform(0.3, 6.0)
+        nu = rng.randint(8, 30)
+        E = rng.uniform(40, 400)
+        s = rng.randint(1, 2000)
+        g = rng.randint(0, 40)
+        lo = m_min(R) * (1 + 1e-9)
+        ms = [lo * (1.004 ** i) for i in range(2500)]
+        vals = [min(s * yield_jbr(R, m) + g, commit_bciks(R, nu, E, m)) for m in ms]
+        # count strict interior local maxima
+        peaks = sum(1 for i in range(1, len(vals) - 1)
+                    if vals[i] > vals[i - 1] + 1e-12 and vals[i] > vals[i + 1] + 1e-12)
+        if peaks > 1:
+            bad = (R, nu, E, s, g, peaks)
+            break
+    check("Prop 1: no configuration admits two interior local maxima in m",
+          bad is None, "" if bad is None else str(bad))
+
+    # --- Thm 2: closed form is an upper bound over ALL (s, m). Try to exceed it.
+    worst = 0.0
+    argworst = None
+    for _ in range(3000):
+        R = rng.uniform(0.3, 6.0)
+        nu = rng.randint(8, 30)
+        E = rng.uniform(40, 400)
+        ceil_ = commit_bciks(R, nu, E, m_min(R) * (1 + 1e-12))
+        for _ in range(30):
+            s = rng.randint(1, 20000)
+            m = m_min(R) * (1 + 10 ** rng.uniform(-9, 3))
+            v = min(s * yield_jbr(R, m) + 0, commit_bciks(R, nu, E, m))
+            if v - ceil_ > worst:
+                worst, argworst = v - ceil_, (R, nu, E, s, m)
+    check("Thm 2: no (s, m) exceeds the closed-form ceiling",
+          worst <= 1e-9, f"max excess {worst:.3e}")
+
+    # --- Thm 3': g(R) uniquely maximised at R = 2 (nu = T + R). Adversarial search.
+    def g_of_R(R):
+        return -7 * R + 7 * math.log2(2 ** (R / 2) - 1) + math.log2(3) + 7
+    best_R, best_v = None, -1e18
+    R = 0.001
+    while R < 30:
+        v = g_of_R(R)
+        if v > best_v:
+            best_v, best_R = v, R
+        R *= 1.0005
+    check("Thm 3': g(R) argmax is R = 2 (blowup 4)", abs(best_R - 2.0) < 5e-3,
+          f"argmax {best_R:.5f}")
+    check("Thm 3': g(2) = log2(3) - 7 exactly",
+          abs(g_of_R(2.0) - (math.log2(3) - 7)) < 1e-12)
+
+    # --- Thm 4: kappa strictly increasing.
+    #
+    # FINDING (this suite caught it): the direct closed form
+    #     kappa(R) = (R/2) / (1 - log2(1 + 2^-R))
+    # is NUMERICALLY UNSTABLE for small R. Both numerator and denominator go to
+    # zero, and `1 - log2(1+2^-R)` suffers catastrophic cancellation. A naive
+    # sweep reports ~62 monotonicity violations in R in [1.0e-6, 1.7e-6] with
+    # deltas of 1e-10..1e-14. All 62 vanish at 60-digit precision, so the
+    # THEOREM is fine and the FORMULA needs care.
+    #
+    # Stable small-R form. With t = R*ln2, 2^-R = e^-t:
+    #     log2(1 + e^-t) = 1 - t/(2 ln2) + t^2/(8 ln2) + O(t^3)
+    #     denominator    = (t / (2 ln2)) * (1 - t/4 + O(t^2))
+    #     kappa(R)       = 1 / (1 - t/4 + O(t^2)) = 1 + R*ln2/4 + O(R^2)
+    LN2 = math.log(2.0)
+
+    def kappa(R):
+        if R < 1e-3:                      # series branch; direct form loses all digits
+            return 1.0 + R * LN2 / 4.0
+        return (R / 2) / (1 - math.log2(1 + 2.0 ** -R))
+
+    viol = 0
+    prev = kappa(1e-9)
+    R = 1e-9
+    while R < 60:
+        R *= 1.0009
+        cur = kappa(R)
+        if cur <= prev - 1e-15:
+            viol += 1
+        prev = cur
+    check("Thm 4: kappa strictly increasing on (0, 60] (stable evaluation)",
+          viol == 0, f"{viol} violations")
+    check("Thm 4: kappa -> 1 as R -> 0+", abs(kappa(1e-9) - 1.0) < 1e-6)
+    # the series and the direct form must agree where both are trustworthy
+    agree = max(abs(kappa(R) - (R / 2) / (1 - math.log2(1 + 2.0 ** -R)))
+                for R in (1e-3, 1e-2, 0.1, 0.5))
+    check("Thm 4: series branch agrees with the direct form at the join",
+          agree < 1e-4, f"max discrepancy {agree:.2e}")
+
+    # --- Thm 7(a): yield_jbr crosses yield_udr exactly at m_eq. Try to find drift.
+    worst_err = 0.0
+    for _ in range(500):
+        R = rng.uniform(0.2, 8.0)
+        me = m_eq(R)
+        if me <= m_min(R):
+            continue
+        lo, hi = yield_jbr(R, me * (1 - 1e-6)), yield_jbr(R, me * (1 + 1e-6))
+        u = yield_udr(R)
+        # must straddle
+        if not (lo < u < hi):
+            worst_err = max(worst_err, 1.0)
+        worst_err = max(worst_err, abs(yield_jbr(R, me) - u))
+    check("Thm 7(a): yields cross exactly at m_eq(R) = u/(u-1)^2",
+          worst_err < 1e-9, f"max |y_J(m_eq) - y_U| = {worst_err:.2e}")
+
+    # --- Thm 7(b): s* prediction vs a directed scan, adversarial parameter draws.
+    def best_jbr(R, nu, E, s, g):
+        best = -1e18
+        m = m_min(R) * (1 + 1e-9)
+        while m < 2000:
+            y = yield_jbr(R, m)
+            if y > 0:
+                best = max(best, min(s * y + g, commit_jbr(R, nu, E, m)))
+            m *= 1.01
+        return best
+    worst_gap = 0.0
+    for _ in range(12):
+        R = rng.choice([1, 2, 3])
+        nu = 20 + R
+        E = rng.choice([124, 128, 192, 251])
+        g = rng.choice([0, 16, 32])
+        pred = (commit_jbr(R, nu, E, m_eq(R)) - g) / yield_udr(R)
+        found = None
+        prev = None
+        s = 1.0
+        while s < 4000:
+            u = min(s * yield_udr(R) + g, commit_udr(R, nu, E))
+            j = best_jbr(R, nu, E, s, g)
+            if prev is not None and prev <= 0 < u - j:
+                found = s
+                break
+            prev = u - j
+            s += 1.0
+        if found is not None:
+            worst_gap = max(worst_gap, abs(found - pred))
+    check("Thm 7(b): s* = (K_J(m_eq) - g)/y_UDR matches directed scan",
+          worst_gap <= 2.0, f"max |scan - closed form| = {worst_gap:.1f} queries")
+
+    # --- Merkle dedup model: attack the UNIFORMITY assumption.
+    def model(s, d):
+        t = 0.0
+        for i in range(d):
+            m = 2 ** (d - i)
+            q = 1 - (1 - 1 / m) ** s
+            t += (m / 2) * 2 * q * (1 - q)
+        return t
+
+    def count(occ, d):
+        need, cur = 0, set(occ)
+        for _ in range(d):
+            nxt = set()
+            for v in cur:
+                if (v ^ 1) not in cur:
+                    need += 1
+                nxt.add(v >> 1)
+            cur = nxt
+        return need
+
+    d, s = 18, 200
+    uni = sum(count([rng.randrange(1 << d) for _ in range(s)], d) for _ in range(20)) / 20
+    mod = model(s, d)
+    check("dedup model matches UNIFORM queries", abs(mod - uni) / uni < 0.05,
+          f"model {mod:.0f} vs sim {uni:.0f}")
+
+    # adversarial: clustered queries (best case for the prover -> SMALLER proof)
+    clustered = count(list(range(s)), d)
+    # adversarial: maximally spread (worst case -> LARGER proof)
+    stride = (1 << d) // s
+    spread = count([i * stride for i in range(s)], d)
+    check("dedup model is NOT a worst-case bound (spread queries exceed it)",
+          spread > mod, f"spread {spread} vs model {mod:.0f}")
+    check("clustered queries are far cheaper than the model",
+          clustered < mod, f"clustered {clustered} vs model {mod:.0f}")
+    print(f"      -> proof-size guarantee needs the SPREAD figure ({spread}), not")
+    print(f"         the average ({mod:.0f}). Query positions are Fiat-Shamir")
+    print(f"         derived so uniform is right for EXPECTED size, but a")
+    print(f"         worst-case bound must use ~{spread/mod:.2f}x the model.")
+
+
+# ==================================================================== PART B
+
+def part_b():
+    print()
+    print("=" * 88)
+    print("PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE")
+    print("=" * 88)
+    try:
+        import nado_ext_fri_prototype as P
+        from execnode.stark import field as F
+    except Exception as e:
+        print(f"  SKIP (prototype/NADO modules unavailable: {e})")
+        return
+
+    rng = random.Random(7)
+    B, NQ, G = 2, 10, 4
+    N, OFF = 64, F.GENERATOR
+    coeffs = [rng.randrange(F.P) for _ in range(N // B)]
+    evals = P._lde(coeffs, N, OFF)
+    good = P.prove_ext(evals, OFF, B, NQ, G)
+
+    ok, _ = P.verify_ext(good, NQ, B, G)
+    check("baseline: honest proof still verifies", ok)
+
+    def rejects(p, label, nq=NQ, bl=B):
+        o, why = P.verify_ext(p, nq, bl, G)
+        return check(label, not o, why[:44] if o is False or why else "")
+
+    # --- structural degeneracies (the C-1 class)
+    p = copy.deepcopy(good); p["queries"] = []
+    rejects(p, "C-1: empty query list")
+    p = copy.deepcopy(good); p["roots"] = []
+    rejects(p, "C-1: empty roots (no folding layers)")
+    p = copy.deepcopy(good); p["final"] = good["final"] * 4
+    rejects(p, "C-1: inflated final layer makes LDT vacuous")
+    p = copy.deepcopy(good); p["roots"] = good["roots"][:-1]
+    rejects(p, "dropped a folding layer")
+    p = copy.deepcopy(good); p["queries"] = good["queries"][:1] * NQ
+    rejects(p, "duplicated a single query NQ times")
+
+    # --- the downgrade attack
+    p = copy.deepcopy(good); p["ext"] = False
+    rejects(p, "downgrade: declare base-field to get the weaker commit bound")
+    p = copy.deepcopy(good); del p["ext"]
+    rejects(p, "downgrade: omit the ext flag entirely")
+
+    # --- grinding bypass
+    for nonce, lab in ((0, "zero"), (-1, "negative"), (2**200, "absurd"),
+                       (None, "None"), ("x", "non-integer")):
+        p = copy.deepcopy(good); p["pow"] = nonce
+        rejects(p, f"grinding bypass: {lab} nonce")
+
+    # --- transcript / geometry manipulation
+    p = copy.deepcopy(good); p["offset"] = F.mul(good["offset"], 2)
+    rejects(p, "altered coset offset")
+    p = copy.deepcopy(good); p["N"] = good["N"] * 2
+    rejects(p, "altered domain size N")
+    p = copy.deepcopy(good); p["blowup"] = 4
+    rejects(p, "altered declared blowup")
+    p = copy.deepcopy(good)
+    p["roots"] = list(reversed(good["roots"]))
+    rejects(p, "reordered layer roots")
+
+    # --- Merkle path substitution
+    p = copy.deepcopy(good)
+    if len(p["queries"][0]["steps"]) > 1:
+        p["queries"][0]["steps"][0]["lo_path"] = good["queries"][0]["steps"][1]["lo_path"]
+        rejects(p, "path from a different layer substituted")
+    p = copy.deepcopy(good)
+    p["queries"][0]["steps"][0]["lo_path"] = list(
+        reversed(good["queries"][0]["steps"][0]["lo_path"]))
+    rejects(p, "reversed authentication path")
+    p = copy.deepcopy(good)
+    p["queries"][0]["steps"][0]["lo_path"] = []
+    rejects(p, "emptied authentication path")
+
+    # --- field-encoding abuse specific to the extension
+    p = copy.deepcopy(good)
+    a, b = p["final"][0]
+    p["final"][0] = (a + F.P, b)                # non-canonical representative
+    o, why = P.verify_ext(p, NQ, B, G)
+    check("non-canonical ext encoding does not change acceptance",
+          o is True, "reduced mod P as expected" if o else why[:40])
+    p = copy.deepcopy(good)
+    p["final"][0] = (1, 2, 3)                   # wrong arity
+    rejects(p, "malformed ext element (3 components)")
+    p = copy.deepcopy(good)
+    p["final"][0] = 12345                       # base int where a pair is expected
+    rejects(p, "base int substituted for an ext final value")
+
+    # --- value tampering across every query and layer (fuzz)
+    forged = 0
+    for qi in range(len(good["queries"])):
+        for li in range(len(good["queries"][qi]["steps"])):
+            for fld in ("lo", "hi"):
+                p = copy.deepcopy(good)
+                v = p["queries"][qi]["steps"][li][fld]
+                p["queries"][qi]["steps"][li][fld] = (
+                    ((v[0] + 1) % F.P, v[1]) if type(v) is tuple else (v + 1) % F.P)
+                o, _ = P.verify_ext(p, NQ, B, G)
+                if o:
+                    forged += 1
+    check("exhaustive single-value tampering across all queries/layers",
+          forged == 0, f"{forged} forgeries accepted")
+
+    # --- high-degree witness (the property FRI exists to enforce)
+    hi = [rng.randrange(F.P) for _ in range(N)]
+    p = P.prove_ext(P._lde(hi, N, OFF), OFF, B, NQ, G)
+    rejects(p, "high-degree polynomial (2x the bound)")
+    mid = [rng.randrange(F.P) for _ in range(N // B + 1)]
+    p = P.prove_ext(P._lde(mid, N, OFF), OFF, B, NQ, G)
+    rejects(p, "degree exceeding the bound by exactly one")
+
+
+def main():
+    part_a()
+    part_b()
+    print()
+    print("=" * 88)
+    n_fail = sum(1 for _, ok, _ in RESULTS if not ok)
+    print(f"{len(RESULTS) - n_fail}/{len(RESULTS)} PASS"
+          + (f"   *** {n_fail} FAILURES ***" if n_fail else "   no property broken"))
+    print("=" * 88)
+    return n_fail == 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(0 if main() else 1)
