@@ -86,6 +86,15 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  a 256-bit digest caps a design at 85 PQ bits under the BHT reading   [85.3]
   PASS  128 PQ bits needs a 384-bit digest, not the 256-bit default   [13 field elements over a 31-bit base]
   PASS  pq_design.py's hash floor still uses the classical exponent   [line 83: 256-bit hash floor stated as 128 PQ bits]
+  PASS  the additive constant 3.5 is derivable from its three components   [1.5 (MT birthday) + 1.0 (n_c=t+1) + 1.0 (FS chain)]
+  PASS  every additive component is birthday-shaped or smaller   [t^2 exponents: MT collisions 2, length term 0, commitment term 2]
+  PASS  the length-dependent term is negligible at deployed parameters   [~2^-226 at lambda=256, 2^24 proof]
+  PASS  the simplified-bound condition holds far below any real query budget   [binds at 2^30.7 vs t = 2^100]
+  PASS  a 256-bit digest delivers 127.1 classical bits, not 128   [127.10 bits, short by 0.90]
+  PASS  iteration 26's 384-bit digest MISSES 128 PQ bits   [127.40, short by 0.60]
+  PASS  386 bits is the true requirement for 128 PQ   [385 -> 127.73, 386 -> 128.06]
+  PASS  iteration 26's '13 field elements' survives the correction   [403 >= 386]
+  PASS  the constant costs a fixed 0.90 classical bits at every digest size   [-0.90]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -157,8 +166,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 149, suite has 149]
+  PASS  README's stated check count matches the suite   [README says 158, suite has 158]
 
 ========================================================================================
-149/149 PASS   no property broken
+158/158 PASS   no property broken
 ========================================================================================

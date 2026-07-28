@@ -76,6 +76,11 @@ below the 128 the extension degree was chosen to reach. The complete
 recommendation is degree 10 AND a 384-bit digest (13 field elements over a
 31-bit base). Extension degree alone does not buy 128 PQ bits.
 
+[ITERATION 27: 384 is 0.6 bits short. BCS's additive error carries a leading
+constant of 3.5, so PQ = lambda/3 - log2(3.5)/3 and lambda = 384 gives 127.40.
+The requirement is lambda >= 386. The 13-field-element figure is unaffected
+(13*31 = 403). See merkle_extraction.py.]
+
 The memory-bounded reading rescues the original number: if quantum collision
 finding is held to 2^(lambda/2) -- because BHT's 2^(lambda/3) requires
 2^(lambda/3) quantum-accessible memory, widely considered unrealistic -- then

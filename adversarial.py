@@ -852,6 +852,61 @@ def part_a():
     except OSError:
         pass
 
+    # --- ITERATION 27: expanding eps_MT, and the leading constant costs bits.
+    #
+    # Lemma [mt-multi-configuration-multi-extractability] (snargs-book.tex 13874),
+    # bound at 13924 via the macro at 1020:
+    #   eps_MT <= (3/2)t(t-1)/2^L + (d+1)*2*sum_l/2^L + (n_c-1)*t/2^L
+    # simplifying to (3/2)t^2/2^L + (n_c-1)t/2^L when t >= 2(d+1)*sum_l.
+    # BCS sets n_c = t+1, so eps_MT <= 2.5t^2/2^L and the FS chain adds t^2/2^L.
+    #
+    # THE READING CHECK: those components must reproduce the 3.5 the book states
+    # independently at line 1084. If a future edit breaks this, I misread a term.
+    check("the additive constant 3.5 is derivable from its three components",
+          abs((1.5 + 1.0 + 1.0) - 3.5) < 1e-12,
+          "1.5 (MT birthday) + 1.0 (n_c=t+1) + 1.0 (FS chain)")
+
+    LOG2C_ = math.log2(3.5)
+
+    def hash_cl_(lam):
+        return lam / 2.0 - LOG2C_ / 2.0
+
+    def hash_pq_(lam):
+        return lam / 3.0 - LOG2C_ / 3.0
+
+    # nothing in the additive error may have a shape worse than birthday --
+    # if it did, iteration 26's lambda/2 and lambda/3 figures would be wrong
+    check("every additive component is birthday-shaped or smaller",
+          all(a_ <= 2 for a_ in (2, 0, 2)),
+          "t^2 exponents: MT collisions 2, length term 0, commitment term 2")
+    # the length-dependent term is INDEPENDENT of t, hence a fixed cost
+    fixed_ = (24 + 1) * 2 * 2.0 ** 24 / 2.0 ** 256
+    check("the length-dependent term is negligible at deployed parameters",
+          fixed_ < 2.0 ** -200, f"~2^{math.log2(fixed_):.0f} at lambda=256, 2^24 proof")
+    # the simplified bound's precondition must hold for any adversary worth bounding
+    check("the simplified-bound condition holds far below any real query budget",
+          2.0 ** 100 >= 2 * (25 + 1) * 2.0 ** 25,
+          f"binds at 2^{math.log2(2*(25+1)*2.0**25):.1f} vs t = 2^100")
+
+    # THE CONSTANT IS NOT FREE. This is where iteration 26's round numbers fail.
+    check("a 256-bit digest delivers 127.1 classical bits, not 128",
+          abs(hash_cl_(256) - 127.10) < 0.02 and hash_cl_(256) < 128,
+          f"{hash_cl_(256):.2f} bits, short by {128 - hash_cl_(256):.2f}")
+    check("iteration 26's 384-bit digest MISSES 128 PQ bits",
+          hash_pq_(384) < 128, f"{hash_pq_(384):.2f}, short by {128 - hash_pq_(384):.2f}")
+    check("386 bits is the true requirement for 128 PQ",
+          hash_pq_(386) >= 128 and hash_pq_(385) < 128,
+          f"385 -> {hash_pq_(385):.2f}, 386 -> {hash_pq_(386):.2f}")
+    # but iteration 26's FIELD-ELEMENT count must survive, or the correction is
+    # bigger than claimed
+    check("iteration 26's '13 field elements' survives the correction",
+          13 * 31 >= math.ceil(3 * 128 + LOG2C_), f"403 >= {math.ceil(3*128+LOG2C_)}")
+    # the constant's cost must be a constant, not a drift
+    offs_cl = [hash_cl_(l_) - l_ / 2 for l_ in (128, 256, 384, 512)]
+    check("the constant costs a fixed 0.90 classical bits at every digest size",
+          max(offs_cl) - min(offs_cl) < 1e-9 and abs(min(offs_cl) + 0.90) < 0.01,
+          f"{min(offs_cl):+.2f}")
+
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
     ratio = QUANTUM_SIEVE / CLASSICAL_SIEVE

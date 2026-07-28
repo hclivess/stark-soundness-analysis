@@ -477,3 +477,24 @@ configs); and the `t²/2^λ` shape is a **birthday** bound, so the hash family's
 classical security is `λ/2` and its quantum security is `λ/3` — BHT's algorithm
 above, Zhandry's `Ω(N^{1/3})` below. That is a QROM loss exponent of 3, strictly
 worse than the halving that applies to challenge search.
+
+## Merkle multi-extraction error (iteration 27)
+
+Same source, Lemma `mt-multi-configuration-multi-extractability`
+(`snargs-book.tex` line 13874), bound at line 13924, macro at line 1020:
+
+```
+eps_MT(lambda, lengths, t, n_c)
+    <=  (3/2) * t(t-1)/2^lambda              collisions among oracle queries
+      + (d_max + 1) * 2 * sum_l / 2^lambda   one pass over every tree node
+      + (n_c - 1) * t / 2^lambda             distinct commitments colliding
+```
+
+simplifying (line 1031) to `(3/2)t²/2^λ + (n_c−1)t/2^λ` under the condition
+(line 1030) `t >= 2(d_max+1)·sum_l`.
+
+BCS instantiates `n_c = t+1` (macro `BCSMTError`, line 1077), so
+`eps_MT <= 2.5 t²/2^λ`; adding the hash chain's `t²/2^λ` gives **3.5**, exactly
+the constant stated independently at line 1084 (`BCSSimplifiedLeadingConstant`).
+Three separately-read macros reproducing a fourth is the check that these terms
+were read correctly.

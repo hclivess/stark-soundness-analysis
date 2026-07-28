@@ -1,0 +1,67 @@
+
+============================================================================================
+1. DERIVING THE BOOK'S 3.5 FROM ITS COMPONENTS (a check on the reading)
+============================================================================================
+
+  eps_MT   (3/2) t^2 / 2^lambda            collisions among oracle queries   1.5
+           (n_c - 1) t / 2^lambda,  n_c=t+1  distinct commitments colliding   1.0
+  FS chain  t^2 / 2^lambda                  hash-chain of verifier randomness 1.0
+  ----------------------------------------------------------------------
+  total                                                                      3.5
+
+  The book states 3.5 independently at line 1084. Three separately-read macros
+  reproduce a fourth, so the terms are read correctly and not merely plausibly.
+
+============================================================================================
+2. IS THE SIMPLIFIED BOUND VALID AT DEPLOYED PARAMETERS?
+============================================================================================
+    proof len  depth   condition t >=  t at 100 bits   holds
+  ----------------------------------------------------------
+         2^20     18           2^25.2          2^100     yes
+         2^24     24           2^29.6          2^100     yes
+         2^25     25           2^30.7          2^100     yes
+         2^26     26           2^31.8          2^100     yes
+
+  The condition binds at ~2^30 while any adversary worth bounding runs to 2^100
+  or beyond, so the simplified form is the operative one everywhere. The
+  length-dependent term it drops is INDEPENDENT of t -- a fixed cost of about
+  2^-227 at lambda = 256 with a 2^24 proof -- so nothing of a worse shape than
+  birthday survives anywhere in the additive error.
+
+============================================================================================
+3. THE CONSTANT COSTS 0.90 CLASSICAL BITS AND 0.60 PQ BITS
+============================================================================================
+   lambda  classical  vs lambda/2  PQ (BHT)  vs lambda/3
+  ------------------------------------------------------
+      128      63.10        -0.90     42.06        -0.60
+      192      95.10        -0.90     63.40        -0.60
+      248     123.10        -0.90     82.06        -0.60
+      256     127.10        -0.90     84.73        -0.60
+      384     191.10        -0.90    127.40        -0.60
+      386     192.10        -0.90    128.06        -0.60
+      512     255.10        -0.90    170.06        -0.60
+
+  A 256-bit digest delivers 127.10 classical bits, not 128. Any system
+  claiming exactly 128 classical bits with a 256-bit hash is 0.9 bits short
+  by the book's own constant.
+
+============================================================================================
+4. CORRECTING ITERATION 26'S DIGEST REQUIREMENT
+============================================================================================
+
+  Iteration 26 said 128 PQ bits needs "a 384-bit digest", from lambda/3 >= 128.
+  Carrying the constant:
+
+      lambda = 384  ->  127.40 PQ bits   (misses 128 by 0.60)
+      lambda = 386  ->  128.06 PQ bits   (clears it)
+
+  So the requirement is lambda >= 386, not 384. The "13 field elements over a
+  31-bit base" figure survives unchanged -- 13 * 31 = 403 >= 386 -- it was the
+  round number 384 that was wrong, and only just.
+
+   target  classical needs   PQ needs  31-bit elements
+  ------------------------------------------------------
+       64              130        194                7
+      100              202        302               10
+      128              258        386               13
+      192              386        578               19
