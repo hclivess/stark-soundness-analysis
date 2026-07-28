@@ -1710,6 +1710,69 @@ def part_a():
               f"s* fell by {min(moved47):.0f} to {max(moved47):.0f} at every system")
     except ImportError:
         pass
+
+    # --- ITERATION 48: SP1's component breakdown, machine-verified.
+    #
+    # SoundcalcIO/ZkVM/SP1.lean asserts each component with native_decide. These
+    # checks compare this repo's model against those integers.
+    try:
+        import sp1_verified as _sv
+
+        # (a) HORIZONS thread 2: which component sets the 100?
+        binders = _sv.binding_components(_sv.SP1_VERIFIED)
+        check("SP1's 100 bits is set by BOTH the FRI query phase and the lookup",
+              set(binders) == {"fri_query", "lookup"},
+              f"binding at 100: {binders}")
+        check("every other verified component sits at least 3 bits above",
+              all(v_ >= 103 for k_, v_ in _sv.SP1_VERIFIED.items()
+                  if k_ not in ("total", "fri_query", "lookup")),
+              "103 to 116")
+        # a FRI-only model necessarily misses the lookup, which is why the repo
+        # upper-bounds published totals
+        check("a FRI-only model cannot see the lookup term that is equally tight",
+              _sv.SP1_VERIFIED["lookup"] == _sv.SP1_VERIFIED["total"],
+              "the repo's standing caveat is right, and tight here")
+
+        # (b) the ceiling equation against the formal round-0 value
+        mine_ = _sv.udr_ceiling(_sv.SP1_E, _sv.SP1_NU, _sv.SP1_RHO)
+        check("the UDR ceiling equation matches the verified round-0 commit term",
+              abs(mine_ - _sv.SP1_VERIFIED["fri_commit_round0"]) < 1.0,
+              f"{mine_:.2f} vs verified {_sv.SP1_VERIFIED['fri_commit_round0']}")
+        # it must be an UNDER-estimate or equal, never above -- the repo claims
+        # its model never undershoots the published figure
+        check("and it does not exceed the verified value",
+              mine_ <= _sv.SP1_VERIFIED["fri_commit_round0"] + 1e-9,
+              "consistent with secBits rounding up to an integer")
+
+        # (c) a = 1 verified round by round
+        steps_ = [_sv.SP1_COMMIT_ROUNDS[i + 1] - _sv.SP1_COMMIT_ROUNDS[i]
+                  for i in range(len(_sv.SP1_COMMIT_ROUNDS) - 1)]
+        check("the verified per-round commit step is 0 or 1, never 2",
+              set(steps_) <= {0, 1}, f"steps {sorted(set(steps_))}")
+        check("its mean is 1 to within integer rounding, confirming a = 1",
+              0.93 < sum(steps_) / len(steps_) <= 1.0,
+              f"mean {sum(steps_)/len(steps_):.3f} over {len(steps_)} fold-2 rounds")
+        check("a = 2 is excluded: 21 rounds would have spanned ~40 bits, not 19",
+              _sv.SP1_COMMIT_ROUNDS[-1] - _sv.SP1_COMMIT_ROUNDS[0] < 25,
+              f"span {_sv.SP1_COMMIT_ROUNDS[-1] - _sv.SP1_COMMIT_ROUNDS[0]} bits over 20 folds")
+
+        # (d) merkle dedup against the verified proof sizes
+        import merkle_dedup as _md
+        ver_ = _sv.dedup_saving_from_sizes(_sv.SP1_PROOF_KIB)
+        mine_d = 1 - (_md.expected_auth_nodes(_sv.SP1_QUERIES, 21)
+                      / _md.naive_auth_nodes(_sv.SP1_QUERIES, 21))
+        check("merkle_dedup lands within 2 points of the verified proof-size saving",
+              abs(ver_ - mine_d) < 0.02, f"{mine_d:.1%} vs verified {ver_:.1%}")
+        # and the error must be in the CONSERVATIVE direction: their figure is a
+        # total-proof saving, so their Merkle-only saving is at least that much
+        check("and the repo's model understates rather than overstates it",
+              mine_d < ver_,
+              "their 38.1% is on the total proof, so Merkle-only is >= that")
+        # the saving must be substantial, or the model is not being tested
+        check("the verified saving is large enough to be a real test",
+              ver_ > 0.30, f"{ver_:.1%} -- not a rounding-level effect")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

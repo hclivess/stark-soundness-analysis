@@ -1,0 +1,73 @@
+
+============================================================================================
+1. WHAT SETS SP1's 100 BITS -- BOTH THE PCS AND THE LOOKUP
+============================================================================================
+  component               secBits (verified)   at the total?
+  ------------------------------------------------------------
+  total                                  100           TOTAL
+  lookup                                 100             YES
+  fri_query                              100             YES
+  fri_commit_round0                      103                
+  fri_batching                           104                
+  zerocheck                              112                
+  reduce                                 116                
+
+  Binding at 100: fri_query, lookup.
+
+  The thread asked whether the figure comes from the PCS or the arithmetization.
+  Neither alone: the FRI query phase and the LogUp lookup are both exactly 100,
+  while everything else sits 3 to 22 bits above. A FRI-only model sees one of
+  them and not the other -- which is why this repo's standing caveat about
+  upper-bounding published totals is right, and why it happens to be tight here.
+
+============================================================================================
+2. THE CEILING EQUATION AGAINST A FORMAL STATEMENT
+============================================================================================
+
+  SP1 core: denseLen 2^21, rho = 1/4 so nu = 23; koalaBear4 gives E = 124.
+
+      this repo:  E - log2(gamma * 2^nu + 1)  =  102.42
+      verified :  commitErr (UDR) round 0      =  103
+      apart    :  0.58 bits, consistent with secBits rounding to an integer
+
+  The equation was derived here from soundcalc's Python. This is the first time
+  it has been checked against a machine-verified statement.
+
+============================================================================================
+3. a = 1, ROUND BY ROUND, OVER 21 VERIFIED ROUNDS
+============================================================================================
+  rounds 0..20: 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 121 122
+
+  steps taken: [0, 1]   mean 0.950 over 20 fold-2 rounds
+
+  Exactly a = 1 with one flat spot from integer rounding. This repo measured the
+  step from soundcalc's published per-round column and called `a` "separately
+  observable"; here every round is asserted individually and checked.
+
+============================================================================================
+4. MERKLE DEDUPLICATION AGAINST A VERIFIED PROOF SIZE
+============================================================================================
+
+      proofSizeExp   = 913 KiB      (paths deduplicated)
+      proofSizeWorst = 1474 KiB      (paths not shared)
+      verified saving on the TOTAL proof = 38.1%
+
+      merkle_dedup.py at s = 124, depth 21   = 37.4%
+
+  Not quite like-for-like, and the direction matters: 38.1% is a saving on the
+  whole proof, which includes size-invariant field elements, so their Merkle-only
+  saving is at least that. This repo's model therefore UNDERSTATES by at least
+  0.7% -- a small error in the conservative direction, against a number no
+  part of this repo had seen.
+
+============================================================================================
+5. WHAT THIS DOES NOT SHOW
+============================================================================================
+
+  Only SP1 and Airbender have reference configs in the tree, so this is a
+  two-system check rather than a seven-system one.
+
+  And `native_decide` verifies that the Lean DEFINITIONS evaluate to those
+  integers. It does not verify that those definitions faithfully model BCHKS25 --
+  that is what the repository's 79 theorems address, and reading them is a
+  separate exercise this file does not attempt.

@@ -213,6 +213,17 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the query phase still binds at soundcalc's m, so totals are unmoved   [5/5 JBR systems still query-bound]
   PASS  Theorem 7 still predicts 7/7 under soundcalc's own m   [7/7]
   PASS  every crossover moved, so 7/7 is robustness not insensitivity   [s* fell by 10 to 30 at every system]
+  PASS  SP1's 100 bits is set by BOTH the FRI query phase and the lookup   [binding at 100: ['fri_query', 'lookup']]
+  PASS  every other verified component sits at least 3 bits above   [103 to 116]
+  PASS  a FRI-only model cannot see the lookup term that is equally tight   [the repo's standing caveat is right, and tight here]
+  PASS  the UDR ceiling equation matches the verified round-0 commit term   [102.42 vs verified 103]
+  PASS  and it does not exceed the verified value   [consistent with secBits rounding up to an integer]
+  PASS  the verified per-round commit step is 0 or 1, never 2   [steps [0, 1]]
+  PASS  its mean is 1 to within integer rounding, confirming a = 1   [mean 0.950 over 20 fold-2 rounds]
+  PASS  a = 2 is excluded: 21 rounds would have spanned ~40 bits, not 19   [span 19 bits over 20 folds]
+  PASS  merkle_dedup lands within 2 points of the verified proof-size saving   [37.4% vs verified 38.1%]
+  PASS  and the repo's model understates rather than overstates it   [their 38.1% is on the total proof, so Merkle-only is >= that]
+  PASS  the verified saving is large enough to be a real test   [38.1% -- not a rounding-level effect]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -342,8 +353,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 334, suite has 334]
+  PASS  README's stated check count matches the suite   [README says 345, suite has 345]
 
 ========================================================================================
-334/334 PASS   no property broken
+345/345 PASS   no property broken
 ========================================================================================

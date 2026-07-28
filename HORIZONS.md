@@ -143,9 +143,14 @@ conjecture on resilience grounds should not then adopt M-SIS to go faster.
    commit ceilings computed at `m_eq` are 4–22 bits optimistic, the reported
    totals are unmoved because the query phase still binds, and **Theorem 7 still
    predicts 7/7** with every `s*` shifted by 10–27.
-2. **Jagged's concrete soundness** — `soundcalc/circuits/jagged.py` exists;
-   worth running against SP1's real parameters to see whether the 100-bit UDR
-   figure comes from the PCS or the arithmetization.
+2. ~~**Jagged's concrete soundness**~~ — **PULLED, iteration 48.** Answered from
+   soundcalc-lean's `native_decide`-checked breakdown: **both**. SP1's
+   `queryErr` (PCS) and `lookup.errUB` (arithmetization) are *each* exactly 100,
+   while every other component sits at 103–116. Neither alone explains the
+   figure. Three validations fell out (`sp1_verified.py`): the ceiling equation
+   matches the verified round-0 commit term to 0.58 bits; `a = 1` is confirmed
+   round-by-round across 21 verified rounds; and `merkle_dedup.py` predicts
+   37.4% against a verified 38.1%, understating in the conservative direction.
 3. **The quantum column, redone.** `frontier.py`'s Grover adjustment predates
    the UDR/JBR/T regime split. Grinding is still halved, but the *binding term*
    differs per regime, so the post-quantum ranking may reorder. This is directly
