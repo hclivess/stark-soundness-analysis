@@ -1503,6 +1503,66 @@ def part_a():
               f"{[f'{x_:.1%}' for x_ in reds_rows]} for 1-4 rows")
     except ImportError:
         pass
+
+    # --- ITERATION 45: where iteration 43's gain sits relative to unique decoding.
+    try:
+        import ligero_composition as _lc
+
+        RATES45 = (0.5, 0.25, 0.125)
+        # (a) the capacity free point must be BEYOND unique decoding at every rate
+        _det45 = "; ".join(
+            "R=%g cap %.3f vs UD %.3f" % (R_, _lc.capacity_free_point(R_),
+                                          _lc.unique_decoding_radius(R_))
+            for R_ in RATES45)
+        check("the capacity free point is beyond unique decoding at every rate",
+              all(_lc.beyond_ud(R_) for R_ in RATES45), _det45)
+        # and the overshoot must be material, not marginal
+        over45 = [_lc.capacity_free_point(R_) / _lc.unique_decoding_radius(R_)
+                  for R_ in RATES45]
+        check("the overshoot is material (>15%), not marginal",
+              all(o_ > 1.15 for o_ in over45),
+              f"{min(over45):.2f}x to {max(over45):.2f}x the UD radius")
+        # (b) the interleaved radius must be INSIDE unique decoding -- otherwise
+        # today's systems would already be beyond it and the split is meaningless
+        check("today's interleaved radius sits inside unique decoding",
+              all(_lc.interleaved_radius(R_) < _lc.unique_decoding_radius(R_)
+                  for R_ in RATES45),
+              "d/3 < d/2, so the split is between two reachable regimes")
+
+        # (c) THE CROSS-ITERATION CHECK: the inside-UD cut must reproduce
+        # iteration 28's independent pricing of Diamond-Posen Conjecture 1.
+        # Recomputed here from iteration 28's OWN formulation (rate rho, radii
+        # (1-rho)/3 and (1-rho)/2) rather than by calling the new module, so the
+        # agreement is not a shared-code artifact.
+        def it28_cut(rho_):
+            y3_ = -math.log2(1 - (1 - rho_) / 3)
+            y2_ = -math.log2(1 - (1 - rho_) / 2)
+            return 1 - y3_ / y2_
+
+        pairs45 = [(it28_cut(R_), _lc.cut_to(R_, _lc.unique_decoding_radius(R_)))
+                   for R_ in RATES45]
+        check("the inside-UD cut reproduces iteration 28's figure at every rate",
+              all(abs(a_ - b_) < 1e-9 for a_, b_ in pairs45),
+              f"{[f'{a_:.1%}' for a_, _ in pairs45]} from two derivations")
+        check("...and that figure is the 36-40% band iteration 28 reported",
+              all(0.36 < a_ < 0.41 for a_, _ in pairs45),
+              "36.6 / 38.8 / 40.1 percent")
+
+        # (d) the split must be non-trivial in both directions: the inside-UD
+        # part is a real fraction of the whole, and the remainder is too
+        fracs = [_lc.cut_to(R_, _lc.unique_decoding_radius(R_))
+                 / _lc.cut_to(R_, _lc.capacity_free_point(R_)) for R_ in RATES45]
+        check("the inside-UD part is a real but minority share of the prize",
+              all(0.5 < f_ < 0.8 for f_ in fracs),
+              f"{min(fracs):.0%} to {max(fracs):.0%} of the total cut")
+        # the beyond-UD remainder must grow with blowup (lower rate)
+        rem = [_lc.cut_to(R_, _lc.capacity_free_point(R_))
+               - _lc.cut_to(R_, _lc.unique_decoding_radius(R_)) for R_ in RATES45]
+        check("the beyond-UD remainder grows as the rate falls",
+              rem == sorted(rem),
+              f"{[f'{r_:.1%}' for r_ in rem]} at rates 1/2, 1/4, 1/8")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

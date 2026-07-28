@@ -186,6 +186,13 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  Merkle dedup makes the size reduction smaller, not larger   [['42.7%', '40.9%', '39.6%']]
   PASS  larger witnesses make the size reduction smaller   [['50.1%', '46.3%', '42.7%', '40.0%']]
   PASS  more combined rows lower the reduction (the upper-bound claim)   [['42.7%', '41.0%', '40.1%', '39.6%'] for 1-4 rows]
+  PASS  the capacity free point is beyond unique decoding at every rate   [R=0.5 cap 0.293 vs UD 0.250; R=0.25 cap 0.500 vs UD 0.375; R=0.125 cap 0.646 vs UD 0.438]
+  PASS  the overshoot is material (>15%), not marginal   [1.17x to 1.48x the UD radius]
+  PASS  today's interleaved radius sits inside unique decoding   [d/3 < d/2, so the split is between two reachable regimes]
+  PASS  the inside-UD cut reproduces iteration 28's figure at every rate   [['36.6%', '38.8%', '40.1%'] from two derivations]
+  PASS  ...and that figure is the 36-40% band iteration 28 reported   [36.6 / 38.8 / 40.1 percent]
+  PASS  the inside-UD part is a real but minority share of the prize   [60% to 77% of the total cut]
+  PASS  the beyond-UD remainder grows as the rate falls   [['10.8%', '19.7%', '26.8%'] at rates 1/2, 1/4, 1/8]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -315,8 +322,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 307, suite has 307]
+  PASS  README's stated check count matches the suite   [README says 314, suite has 314]
 
 ========================================================================================
-307/307 PASS   no property broken
+314/314 PASS   no property broken
 ========================================================================================

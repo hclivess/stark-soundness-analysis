@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 307 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 314 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -147,7 +147,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **307 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **314 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
@@ -161,6 +161,7 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 | `radius_staircase.py` | `a` is a staircase in the radius: 0 at UDR, 1 at Johnson, unbounded above |
 | `a_floor_scope.py` | what `a ≥ 1` is *proved* for; 20.6–37.3 bits of unclosed headroom (regime-corrected, it 40) |
 | `open_zone.py` | evidence tiers of the BOUNDS table; what room is left above Johnson |
+| `ligero_composition.py` | where the capacity gain sits vs unique decoding; splits the prize |
 | `ligero_proof_size.py` | Ligero/Brakedown size model: the field term scales as `√t` |
 | `linear_code_capacity.py` | pricing the one open capacity route: 2.4–4.6× yield for linear-code systems |
 | `capacity_routes.py` | all three capacity routes; closed by **structure**, not field size (it 42 corrects it 30) |
@@ -259,7 +260,9 @@ derivations would have found.
 - **Diamond–Posen Conjecture 1**: does the interleaved test reach the
   unique-decoding radius `(d−1)/2` while keeping the sharp `(e+1)/q`, instead of
   stopping at `(d−1)/3`? Worth a **37–40%** query cut, rising with blowup
-  (36.6% at rate ½, 40.1% at rate ⅛). Open in the literature.
+  (36.6% at rate ½, 40.1% at rate ⅛). Open in the literature. *(Iteration 45:
+  this is exactly the portion of the capacity prize reachable inside unique
+  decoding — two independent derivations agree to three significant figures.)*
 
 Both are genuinely open problems, not gaps in this analysis.
 
