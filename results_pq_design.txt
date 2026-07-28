@@ -4,20 +4,20 @@
 ================================================================================================
   base         deg     E  blowup     s  classical     PQ  proof KiB  prover x
   ----------------------------------------------------------------------------------
-  Goldilocks     5   320      16   113      257.2  128.0     1371.9     9.14x
-  M31           10   310      16   114      256.9  128.0     1383.1     9.14x
-  BabyBear      10   310      16   114      256.9  128.0     1383.1     9.14x
-  KoalaBear     10   310      16   114      256.9  128.0     1383.1     9.14x
-  M31           11   341      16   113      257.9  128.0     1388.7     9.14x
-  BabyBear      11   341      16   113      257.9  128.0     1388.7     9.14x
-  KoalaBear     11   341      16   113      257.9  128.0     1388.7     9.14x
-  M31           12   372      16   113      257.9  128.0     1406.3     9.14x
-  BabyBear      12   372      16   113      257.9  128.0     1406.3     9.14x
-  KoalaBear     12   372      16   113      257.9  128.0     1406.3     9.14x
-  Goldilocks     6   384      16   113      257.9  128.0     1407.2     9.14x
-  Goldilocks     7   448      16   113      257.9  128.0     1442.5     9.14x
+  Goldilocks     5   320      16   113      257.2  128.0      797.0     9.14x
+  M31           10   310      16   114      256.9  128.0      802.3     9.14x
+  BabyBear      10   310      16   114      256.9  128.0      802.3     9.14x
+  KoalaBear     10   310      16   114      256.9  128.0      802.3     9.14x
+  M31           11   341      16   113      257.9  128.0      813.7     9.14x
+  BabyBear      11   341      16   113      257.9  128.0      813.7     9.14x
+  KoalaBear     11   341      16   113      257.9  128.0      813.7     9.14x
+  M31           12   372      16   113      257.9  128.0      831.4     9.14x
+  BabyBear      12   372      16   113      257.9  128.0      831.4     9.14x
+  KoalaBear     12   372      16   113      257.9  128.0      831.4     9.14x
+  Goldilocks     6   384      16   113      257.9  128.0      832.3     9.14x
+  Goldilocks     7   448      16   113      257.9  128.0      867.6     9.14x
 
-  CHEAPEST BY PROOF SIZE: Goldilocks^5 (E=320), blowup 16, 113 queries -> 1372 KiB
+  CHEAPEST BY PROOF SIZE: Goldilocks^5 (E=320), blowup 16, 113 queries -> 797 KiB
 
 ================================================================================================
 2. THE STRUCTURAL POINT: extension degree is cheap, base field is not
@@ -62,12 +62,12 @@
    target |       --- smallest proof ---       |       --- fastest prover ---      
        PQ | config                  s      KiB | config                  s      KiB
   ----------------------------------------------------------------------------------------
-       32 | M31^4 bl16             17      190 | M31^4 bl2              65      594
-       50 | M31^5 bl16             35      397 | M31^5 bl2             139     1291
-       64 | M31^6 bl16             49      564 | Goldilocks^3 bl2      193     1824
-       80 | M31^7 bl16             65      758 | M31^7 bl2             259     2487
-      100 | Goldilocks^4 bl16      85     1005 | Goldilocks^4 bl2      341     3330
-      128 | Goldilocks^5 bl16     113     1372 | Goldilocks^5 bl2      450     4535
+       32 | M31^4 bl16             17      133 | M31^4 bl2              65      318
+       50 | M31^5 bl16             35      255 | M31^5 bl2             139      625
+       64 | M31^6 bl16             49      350 | Goldilocks^3 bl2      193      856
+       80 | M31^7 bl16             65      459 | M31^7 bl2             259     1136
+      100 | Goldilocks^4 bl16      85      594 | Goldilocks^4 bl2      341     1491
+      128 | Goldilocks^5 bl16     113      797 | Goldilocks^5 bl2      450     2030
 
   The prover-optimal column runs blowup 2 (1.00x, the EFFICIENCY.md choice) and
   pays for it in queries and proof size. The proof-optimal column runs blowup 16
@@ -99,15 +99,15 @@
 
   PROVER-BOUND (a phone, a light client, anything where proving time dominates):
       Goldilocks^5  (E = 320), blowup 2, 450 queries, grind 32
-      -> 256 classical / 128 PQ bits, 4535 KiB proof, 1.00x LDE
+      -> 256 classical / 128 PQ bits, 2030 KiB proof, 1.00x LDE
 
   BANDWIDTH-BOUND (on-chain verification, where every byte is paid for):
       Goldilocks^5  (E = 320), blowup 16, 113 queries, grind 32
-      -> 257 classical / 128 PQ bits, 1372 KiB proof, 9.14x LDE
+      -> 257 classical / 128 PQ bits, 797 KiB proof, 9.14x LDE
 
   BEST 31-BIT OPTION (keeps machine-word arithmetic in the base field):
       M31^10  (E = 310), blowup 16, 114 queries
-      -> 257 classical / 128 PQ bits, 1383 KiB proof
+      -> 257 classical / 128 PQ bits, 802 KiB proof
 
   In every case the extension degree is the load-bearing choice, and in every
   case it is far above the degree 4 that is deployed everywhere today.

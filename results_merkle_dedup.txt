@@ -1,0 +1,93 @@
+
+============================================================================================
+1. VALIDATION: model vs Monte Carlo
+============================================================================================
+      s  depth     naive      model   simulated   err %   saving
+  --------------------------------------------------------------
+     32     18       576        388         388    0.0%    32.7%
+     64     18      1152        711         709    0.3%    38.5%
+    113     21      2373       1502        1497    0.3%    36.9%
+    200     21      4200       2493        2490    0.1%    40.7%
+    320     18      5760       2813        2815    0.1%    51.1%
+    450     21      9450       5083        5073    0.2%    46.3%
+    450     24     10800       6433        6422    0.2%    40.5%
+   1000     21     21000      10145       10146    0.0%    51.7%
+
+  worst model error vs simulation: 0.3%  PASS
+
+  The saving is real and it GROWS with query count: at 450 queries into a 2^21
+  tree the naive model overcharges by more than a third.
+
+============================================================================================
+2. WHY: the top of the tree saturates
+============================================================================================
+  s = 450, depth = 21. Occupancy and auth nodes by level:
+
+   level      nodes     E|O_i|  occupancy     auth
+  --------------------------------------------------
+       0    2097152        450      0.0%      450
+       1    1048576        450      0.0%      450
+       2     524288        450      0.1%      449
+       3     262144        450      0.2%      449
+       4     131072        449      0.3%      448
+       5      65536        448      0.7%      445
+     ...
+      14        128        124     97.1%        4
+      15         64         64     99.9%        0
+      16         32         32    100.0%        0
+      17         16         16    100.0%        0
+      18          8          8    100.0%        0
+      19          4          4    100.0%        0
+      20          2          2    100.0%        0
+
+  Above the saturation level every sibling is already occupied, so auth(i) -> 0.
+  The naive model keeps charging s hashes per level all the way to the root; the
+  top log2(s) levels are free.
+
+============================================================================================
+3. RE-PRICING THE 128-BIT PQ CONFIGURATIONS
+============================================================================================
+  From pq_design.py, at 128 PQ provable bits (trace 2^20):
+
+  config                         s  naive KiB  dedup KiB   saving
+  ----------------------------------------------------------------
+  Goldilocks^5 blowup 16       113       1372        797    41.9%
+  M31^10 blowup 16             114       1383        802    42.0%
+  Goldilocks^5 blowup 2        450       4535       2030    55.2%
+
+  The saving is LARGER for the high-query configuration, which is exactly the
+  low-blowup, prover-optimal one. Deduplication therefore narrows the gap
+  between the two endpoints that pq_design.py presented as a hard tradeoff.
+  proof-size ratio (blowup 2 : blowup 16)
+      naive  3.31x   ->   dedup  2.55x
+
+  So the prover-optimal configuration is meaningfully less expensive in
+  bandwidth than the naive model implied, while still running the LDE at 1.00x
+  instead of 9.14x. For anything prover-bound, blowup 2 with deduplicated paths
+  is the better system.
+
+============================================================================================
+4. WHAT ELSE IS STILL OVERCHARGED
+============================================================================================
+
+  Three further reductions this repo has not modelled, all standard:
+
+  * MERKLE CAPS. Plonky2 ships cap_height = 4: stop the tree 4 levels early and
+    publish the 2^4 cap. Saves min(cap_height, remaining) hashes on every path,
+    and composes with deduplication (it removes exactly the levels that
+    deduplication has already made cheap, so the two overlap -- the joint saving
+    is less than the sum).
+
+  * BATCHED OPENINGS ACROSS TREES. The trace and composition commitments are
+    opened at the SAME query positions. Their paths are independent trees, so
+    they do not share nodes, but a single combined tree over interleaved leaves
+    would let them share -- at the cost of coupling the commitment schedule.
+
+  * FINAL-LAYER TRUNCATION. `final` is sent in the clear and is 2^(nu - rounds)
+    elements. Folding fewer times leaves a larger final layer but fewer Merkle
+    layers; there is an optimum, and NADO fixes it at blowup with
+    log_last_layer_degree_bound rather than optimising it.
+
+  None of these change SOUNDNESS -- they are all pure encoding wins, which is
+  what makes them the right place to look once the soundness parameters are
+  pinned by Theorem 2 and the PQ halving.

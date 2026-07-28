@@ -108,11 +108,26 @@ def base_bytes(bbits):
     return 4 if bbits <= 32 else 8
 
 
+def _auth_nodes(s, d):
+    """Expected DISTINCT authentication nodes for s queries in a depth-d tree.
+
+    Paths share prefixes, and the top log2(s) levels saturate entirely. Charging
+    s*d (as an earlier version of this file did) overcounts by 33-52% at the
+    query counts required here. Model derived and validated against Monte Carlo
+    to within 0.3% in merkle_dedup.py."""
+    total = 0.0
+    for i in range(d):
+        m = 2 ** (d - i)
+        q = 1.0 - (1.0 - 1.0 / m) ** s
+        total += (m / 2.0) * 2.0 * q * (1.0 - q)
+    return total
+
+
 def proof_kib(nu, R, s, ext_words, bbits, n_base_trees=2):
-    """Merkle paths dominate. Ext layers carry `ext_words` base elements per leaf,
-    which affects the opened VALUES, not the path length."""
+    """Merkle paths dominate, deduplicated across queries."""
     rounds = max(0, nu - R)
-    path_hashes = n_base_trees * s * nu + sum(s * max(nu - i, 1) for i in range(rounds))
+    path_hashes = (n_base_trees * _auth_nodes(s, nu)
+                   + sum(_auth_nodes(s, max(nu - i, 1)) for i in range(rounds)))
     w = base_bytes(bbits)
     value_bytes = s * (n_base_trees * w + rounds * 2 * ext_words * w)
     return (path_hashes * HASH_BYTES + value_bytes) / 1024
