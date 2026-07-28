@@ -10,11 +10,17 @@ ceiling = E − a·ν − log₂C + g_commit
 exponent on the domain size in the commit-phase error, `C` = the bound's constant
 factor, `g_commit` = commit-phase proof-of-work.
 
-| layer | exponent `a` | numerator | status |
+| layer / radius | exponent `a` | numerator | status |
 |---|---|---|---|
 | sumcheck / zerocheck / RLC / Jagged | **0** | `O(log n)` or `O(constraints)` | read off the formulas |
+| RS proximity, **unique-decoding** `δ/2` | **0** | `O_{ε*}(1)` | **proved**, all RS (ε\* > 0) |
+| RS proximity, **Johnson** `J(δ)` | **1** | `O(n)` | **proved**, all RS (ε\* = 0) |
+| RS proximity, **beyond Johnson** | **≥ 1.99, unbounded** | `Ω(n^1.99)`, `n^τ` ∀τ | **proved** floor, some RS codes |
 | Ligero / Brakedown (interleaved) | **≥ 1** | `e+1 = Θ(n)` | **proved** floor, sharp |
-| FRI / WHIR (RS proximity) | **≥ 1** | `O(n^a)` | *observed* — every bound so far, not a proved floor |
+
+`a` is a **staircase in the proximity radius**, not one number — see
+`radius_staircase.py`. All five rows are from BCHKS25's own result list, which
+this repo cited for 32 iterations without reading.
 
 The whole formula is reproduced **exactly** on published data. UDR has no
 proximity parameter, so its constant is fixed outright at `log₂C = −2`, leaving
@@ -35,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 210 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 221 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -136,11 +142,12 @@ counts 128-bit PQ requires. Model validated against Monte Carlo to 0.3%.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **210 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **221 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
 | `capacity_frs.py` | capacity moved to folded RS — and buys ~0%, not 50% |
+| `radius_staircase.py` | `a` is a staircase in the radius: 0 at UDR, 1 at Johnson, unbounded above |
 | `a_floor_scope.py` | what `a ≥ 1` is *proved* for; 25–37 bits of unclosed headroom |
 | `open_zone.py` | evidence tiers of the BOUNDS table; what room is left above Johnson |
 | `capacity_routes.py` | all three capacity routes; each closed, for two different reasons |

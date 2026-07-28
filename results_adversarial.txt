@@ -145,8 +145,19 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the strongest known lower bound does NOT forbid a = 0 for RS   [MCA floor numerator is 18, not Theta(n)]
   PASS  the modelled bound never exceeds the proved MCA floor   [min headroom 25.2 bits]
   PASS  headroom is 25-38 bits across the seven verified systems   [25.2-37.3]
-  PASS  headroom exceeds nu everywhere, so a = 0 is not ruled out   [the lower bound leaves room for a:1->0 plus its constant]
-  PASS  README distinguishes the proved floor from the observed one   [proved for interleaved; empirical for FRI/WHIR]
+  PASS  headroom exceeds nu at the Johnson radius (says nothing above it)   [MCA floor leaves room AT Johnson; beyond it, BCHKS25 rules a=0 out]
+  PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
+  PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
+  PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
+  PASS  a flat 'a >= 1' is also wrong at the top step   [a >= 1.99 beyond Johnson, and n^tau for any tau]
+  PASS  iteration 32's 'nothing forbids a = 0 above Johnson' is retracted   [a=0 vs proved Omega(n^1.99) differ by 43.8 bits at n=2^22]
+  PASS  no constant a bounds the beyond-Johnson regime   [ceiling at a=tau: [102, 80, 14, -96] -- unbounded below]
+  PASS  a=0 at UDR raises SP1's ceiling by about nu bits   [+21.6 bits (nu = 23)]
+  PASS  but SP1's query phase still binds, so proofs do not shrink   [query 100.1 < old ceiling 102.4]
+  PASS  a=0 at UDR raises OpenVM's ceiling by about nu bits   [+22.0 bits (nu = 24)]
+  PASS  but OpenVM's query phase still binds, so proofs do not shrink   [query 100.1 < old ceiling 102.0]
+  PASS  no deployed system sits above the Johnson radius   [the n^1.99 and n^tau counterexamples cannot touch a deployed config]
+  PASS  an O(1) bound beyond Johnson must beat a proved Omega(n^1.99) floor   [O(1) vs 1.51e+13 exceptions -- and result 5 makes improved RS list-decoding a prerequisite]
   PASS  quantum sieving retains far more than Grover-on-Fiat-Shamir   [M-SIS retains 0.908 vs FS 0.500]
   PASS  sieving ratio is a genuine degradation (0.5 < ratio < 1)   [0.9075]
   PASS  Thm 2 PQ ceiling for NADO = (E-nu)/2   [23.0]
@@ -218,8 +229,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 210, suite has 210]
+  PASS  README's stated check count matches the suite   [README says 221, suite has 221]
 
 ========================================================================================
-210/210 PASS   no property broken
+221/221 PASS   no property broken
 ========================================================================================

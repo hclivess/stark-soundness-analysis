@@ -1235,17 +1235,87 @@ def part_a():
           25.0 < min(h for _, h, _ in heads) and max(h for _, h, _ in heads) < 38.0,
           f"{min(h for _,h,_ in heads):.1f}-{max(h for _,h,_ in heads):.1f}")
     # and it must EXCEED nu, or an a: 1 -> 0 improvement would be ruled out
-    check("headroom exceeds nu everywhere, so a = 0 is not ruled out",
+    # SCOPED IN ITERATION 33: this says the MCA floor leaves room at the JOHNSON
+    # radius. It does NOT license a = 0 above Johnson -- BCHKS25 results 3-4
+    # forbid that for some RS codes. See radius_staircase.py.
+    check("headroom exceeds nu at the Johnson radius (says nothing above it)",
           all(h > nu_ for _, h, nu_ in heads),
-          "the lower bound leaves room for a:1->0 plus its constant")
+          "MCA floor leaves room AT Johnson; beyond it, BCHKS25 rules a=0 out")
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()
-        check("README distinguishes the proved floor from the observed one",
-              "observed" in _rd2 or "track record" in _rd2,
-              "proved for interleaved; empirical for FRI/WHIR")
+        check("README's a-table is radius-dependent, not a flat 'a >= 1'",
+              "staircase" in _rd2 and "unique-decoding" in _rd2,
+              "iteration 33 replaced the flat row with the proved staircase")
     except OSError:
         pass
+
+    # --- ITERATION 33: `a` is a STAIRCASE in the radius, and both the flat
+    # a >= 1 table and iteration 32's conclusion are wrong at different steps.
+    #
+    # BCHKS25 (eprint 2025/2055) abstract, five results. #exceptional z's IS the
+    # numerator of the commit error, so each reads directly as a value of `a`:
+    #   1. UDR delta/2 : O_{eps*}(1) exceptions, eps* > 0   -> a = 0, ALL RS
+    #   2. Johnson     : O(n) exceptions, eps* = 0          -> a = 1, ALL RS
+    #   3. >= Johnson  : Omega(n^1.99), eps* -> 0           -> a >= 1.99, SOME RS
+    #   4. delta-Om(1) : n^tau for every constant tau       -> a unbounded, SOME RS
+    #   5. improved proximity gaps => improved list-decodability
+    STAIR = [("UDR", 0.0), ("Johnson", 1.0), ("beyond-J", 1.99)]
+
+    # (a) the staircase must be monotone in the radius -- a rises as the radius
+    # grows. A flat "a >= 1" cannot represent it.
+    check("`a` is monotone non-decreasing in the proximity radius",
+          [v for _, v in STAIR] == sorted(v for _, v in STAIR),
+          f"{[(k, v) for k, v in STAIR]}")
+    check("a flat 'a >= 1' is wrong at the bottom step",
+          STAIR[0][1] < 1.0, "a = 0 is PROVED at the unique-decoding radius")
+    check("a flat 'a >= 1' is also wrong at the top step",
+          STAIR[2][1] > 1.0, "a >= 1.99 beyond Johnson, and n^tau for any tau")
+
+    # (b) ITERATION 32 RETRACTION. It concluded nothing known forbids a = 0 for
+    # RS above the Johnson radius. BCHKS25 result 3 forbids it for some codes.
+    # An O(1) numerator (a=0) and a proved Omega(n^1.99) lower bound cannot both
+    # hold. Measure the size of the contradiction at deployed n.
+    n_dep = 2.0 ** 22
+    gap_bits = 1.99 * math.log2(n_dep) - 0.0
+    check("iteration 32's 'nothing forbids a = 0 above Johnson' is retracted",
+          gap_bits > 40.0,
+          f"a=0 vs proved Omega(n^1.99) differ by {gap_bits:.1f} bits at n=2^22")
+    # result 4: no CONSTANT a bounds the regime -- the ceiling falls without limit
+    ceils = [124 - tau_ * 22 for tau_ in (1.0, 2.0, 5.0, 10.0)]
+    check("no constant a bounds the beyond-Johnson regime",
+          ceils == sorted(ceils, reverse=True) and ceils[-1] < 0,
+          f"ceiling at a=tau: {[round(c) for c in ceils]} -- unbounded below")
+
+    # (c) what a = 0 at UDR is worth, and why it does NOT shrink proofs today:
+    # the query phase binds below the raised ceiling for both UDR systems.
+    def udr_y_(rho_):
+        return -math.log2((1 + rho_) / 2.0)
+
+    for nm_, E_, R_, T_, s_, g_ in (("SP1", 124, 2, 21, 124, 16),
+                                    ("OpenVM", 124, 1, 23, 193, 20)):
+        nu_ = T_ + R_
+        rho_ = 2.0 ** -R_
+        c1_ = E_ - nu_ - math.log2((1 - rho_) / 2)
+        c0_ = E_
+        q_ = s_ * udr_y_(rho_) + g_
+        check(f"a=0 at UDR raises {nm_}'s ceiling by about nu bits",
+              20.0 < (c0_ - c1_) < 23.0, f"+{c0_-c1_:.1f} bits (nu = {nu_})")
+        check(f"but {nm_}'s query phase still binds, so proofs do not shrink",
+              q_ < c1_ < c0_, f"query {q_:.1f} < old ceiling {c1_:.1f}")
+
+    # (d) every deployed system sits at or below Johnson, where only the
+    # POSITIVE results apply -- the counterexamples are at/beyond Johnson
+    DEPLOYED_REGIMES = ["UDR", "UDR", "JBR", "JBR", "JBR", "JBR", "JBR"]
+    check("no deployed system sits above the Johnson radius",
+          all(r_ in ("UDR", "JBR") for r_ in DEPLOYED_REGIMES),
+          "the n^1.99 and n^tau counterexamples cannot touch a deployed config")
+    # (e) result 5 constrains the 2026/861 route. Quantify the claim it would
+    # have to beat: an O(1) numerator against a proved Omega(n^1.99) one.
+    check("an O(1) bound beyond Johnson must beat a proved Omega(n^1.99) floor",
+          1.0 < n_dep ** 1.99,
+          f"O(1) vs {n_dep**1.99:.3g} exceptions -- and result 5 makes improved "
+          f"RS list-decoding a prerequisite")
 
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265

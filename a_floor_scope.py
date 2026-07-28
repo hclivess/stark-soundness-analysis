@@ -2,6 +2,17 @@
 The a >= 1 floor is proved for interleaved codes and NOT for FRI -- and there
 are 25-37 bits of room between what is proved possible and proved impossible.
 
+*** PARTIALLY RETRACTED IN ITERATION 33 -- READ THIS FIRST ***
+This file concludes below that "nothing known forbids a = 0 for RS at the
+Johnson radius". That is correct about the MCA floor and WRONG as a general
+statement: BCHKS25's own result list (eprint 2025/2055, read for the first time
+in iteration 33) proves that at or beyond the Johnson radius some RS codes need
+Omega(n^1.99) exceptional z's, and n^tau for every constant tau. So a = 0 above
+Johnson IS obstructed by published counterexamples -- the MCA floor simply is
+not the binding constraint. Everything below about mutual correlated agreement,
+the list-size numerator, and the headroom AT the Johnson radius stands.
+See radius_staircase.py for the corrected picture.
+
 Iteration 31 graded eprint 2026/861's O(1)/|F| claim (a = 0 above the Johnson
 radius, conditional on Q2) down to tier 3 on PROVENANCE: unreviewed, one group,
 uncited by the subsequent literature. That grading stands. But provenance is not
@@ -183,7 +194,16 @@ def report():
   Note it exceeds nu at every system. An a: 1 -> 0 improvement is worth exactly
   nu bits, so the strongest known lower bound leaves room for it AND for the
   constant. The action-orbit claim is not in tension with anything proved -- the
-  objection to it is provenance (iteration 31), not impossibility.""")
+  objection to it is provenance (iteration 31), not impossibility.
+
+  RETRACTED IN PART, ITERATION 33. The sentence above is right about the MCA
+  floor and WRONG as a general statement. BCHKS25's own result list (never read
+  until iteration 33) proves that at or beyond the Johnson radius some RS codes
+  need Omega(n^1.99) exceptional z's, and n^tau for every constant tau. So a = 0
+  above Johnson IS obstructed by published counterexamples; the MCA floor simply
+  is not the binding constraint. This file's headroom figures remain correct as
+  a statement about mutual correlated agreement at the Johnson radius.
+  See radius_staircase.py.""")
 
 
 if __name__ == "__main__":

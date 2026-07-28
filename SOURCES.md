@@ -650,3 +650,33 @@ Note `Θ_ρ` — the constant is **rate-dependent**, which `open_zone.py` (itera
 Agreement"** — eprint 2026/680, the survey behind the Ethereum Foundation's
 **Proximity Prize**; July 2026 revision adds a "concrete estimate of attacks".
 Abstract read; PDF unreachable (Cloudflare) and no open mirror found.
+
+## BCHKS25's five results — the radius staircase (iteration 33)
+
+**Ben-Sasson, Carmon, Haböck, Kopparty, Saraf, "On Proximity Gaps for
+Reed–Solomon Codes"** — eprint 2025/2055. Abstract page fetched (PDF
+Cloudflare-walled). This is the paper the whole model rests on; its result list
+had never been read. The count of *exceptional z's* **is** the numerator of the
+commit error, so each result reads directly as a value of `a`:
+
+> 1. "For proximity gaps up to the unique decoding radius `δ/2`, we show that
+>    arbitrarily small proximity loss `ε* > 0` can be achieved with only
+>    `O_{ε*}(1)` exceptional z's (improving the previous bound of `O(n)`)."
+> 2. "For proximity gaps up to the Johnson radius `J(δ)`, we show that proximity
+>    loss `ε* = 0` can be achieved with only `O(n)` exceptional z's (improving
+>    the previous bound of `O(n²)`)."
+> 3. "…for some Reed–Solomon codes and some `δ`, proximity gaps at or beyond the
+>    Johnson radius `J(δ)` with arbitrarily small proximity loss `ε*` needs to
+>    have at least `Ω(n^1.99)` exceptional z's."
+> 4. "More generally, for all constants `τ`, we show that for some Reed–Solomon
+>    codes and some `δ = δ(τ)`, proximity gaps at radius `δ − Ω_τ(1)` with
+>    arbitrarily small proximity loss `ε*` needs to have `n^τ` exceptional z's."
+> 5. "Finally, for all Reed–Solomon codes, we show that improved proximity gaps
+>    imply improved bounds for their list-decodability. This shows that improved
+>    bounds on the list-decoding radius of Reed–Solomon codes is a prerequisite
+>    for any new proximity gaps results beyond the Johnson radius."
+
+So `a = 0` is **proved** at the unique-decoding radius (result 1) — soundcalc
+still implements the superseded `O(n)` bound there — and `a` is **unbounded**
+beyond Johnson (results 3–4), which retracts iteration 32's "nothing forbids
+`a = 0` above the Johnson radius".

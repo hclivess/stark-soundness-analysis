@@ -64,3 +64,12 @@
   nu bits, so the strongest known lower bound leaves room for it AND for the
   constant. The action-orbit claim is not in tension with anything proved -- the
   objection to it is provenance (iteration 31), not impossibility.
+
+  RETRACTED IN PART, ITERATION 33. The sentence above is right about the MCA
+  floor and WRONG as a general statement. BCHKS25's own result list (never read
+  until iteration 33) proves that at or beyond the Johnson radius some RS codes
+  need Omega(n^1.99) exceptional z's, and n^tau for every constant tau. So a = 0
+  above Johnson IS obstructed by published counterexamples; the MCA floor simply
+  is not the binding constraint. This file's headroom figures remain correct as
+  a statement about mutual correlated agreement at the Johnson radius.
+  See radius_staircase.py.

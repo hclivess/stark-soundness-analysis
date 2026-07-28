@@ -1,0 +1,77 @@
+
+============================================================================================
+1. THE STAIRCASE: `a` IS A FUNCTION OF THE RADIUS
+============================================================================================
+  radius           exceptions            a  proximity loss scope
+  ------------------------------------------------------------------------------
+  delta/2 (UDR)    O_{eps*}(1)           0  eps* > 0     ALL RS codes
+  J(delta)         O(n)                  1  eps* = 0     ALL RS codes
+  >= J(delta)      Omega(n^1.99)    >=1.99  eps* -> 0    some RS codes
+  delta - Om_t(1)  n^tau               tau  eps* -> 0    some RS codes
+
+  The repo's table said "code proximity: a >= 1" flat. That is wrong at the
+  bottom step (a = 0 is proved at UDR) and wrong at the top (a is unbounded
+  above Johnson, not merely >= 1).
+
+============================================================================================
+2. WHAT a = 0 AT THE UNIQUE-DECODING RADIUS IS WORTH
+============================================================================================
+  soundcalc implements the OLD UDR bound, (gamma*n+1)/|F|, i.e. a = 1.
+
+  system              E   nu  a=1 ceiling  a=0 ceiling    gain  query term   binds?
+  --------------------------------------------------------------------------------
+  SP1 6.1.0         124   23        102.4        124.0    21.6       100.1    query
+  OpenVM 1.5.0      124   24        102.0        124.0    22.0       100.1    query
+
+  The ceiling rises by about nu bits -- but for both deployed UDR systems the
+  QUERY phase binds first, at ~100 bits. So a = 0 at UDR does not shrink proofs
+  at today's targets; it raises the reachable maximum. It matters for a system
+  that wants more than ~102 bits, or one that is commit-bound.
+
+  It is also not free: the O_{eps*}(1) constant depends on the proximity loss
+  eps*, and a positive eps* shrinks the radius, costing query-phase yield. The
+  abstract does not give the dependence, so the trade cannot be priced here.
+
+============================================================================================
+3. WHAT THIS DOES TO THE CLAIMED a = 0 PRIZE ABOVE JOHNSON
+============================================================================================
+
+  ceiling_anatomy.py calls a = 0 above Johnson "the single largest unclaimed
+  win in this whole repository", worth ~nu bits, conditional on Q2. Three
+  corrections stack up:
+
+  (a) a = 0 is ALREADY unconditional at the unique-decoding radius. The prize is
+      not a = 0; it is a = 0 at a LARGER radius, which buys query-phase yield on
+      top of the ceiling.
+
+  (b) BCHKS25 result 3 proves some RS codes need Omega(n^1.99) exceptions at or
+      beyond Johnson. An unqualified O(1) bound there would contradict it.
+
+  (c) BCHKS25 result 5: "improved bounds on the list-decoding radius of
+      Reed-Solomon codes is a prerequisite for any new proximity gaps results
+      beyond the Johnson radius." So the 2026/861 route implies progress on RS
+      list decoding -- a much stronger claim than its abstract advertises.
+
+  Iteration 31 graded that paper down on provenance. Iteration 32 said nothing
+  known forbade it. This is the accurate statement: something known constrains
+  it sharply, and any correct version of it must thread between published
+  counterexamples.
+
+============================================================================================
+4. WHERE THE DEPLOYED SYSTEMS SIT ON THE STAIRCASE
+============================================================================================
+  system           regime               step  a in force
+  --------------------------------------------------------
+  SP1 6.1.0           UDR            delta/2 1 (soundcalc)
+  OpenVM 1.5.0        UDR            delta/2 1 (soundcalc)
+  Airbender           JBR           J(delta)           1
+  Pico                JBR           J(delta)           1
+  ZisK 0.16.1         JBR           J(delta)           1
+  RISC Zero           JBR           J(delta)           1
+  Miden               JBR           J(delta)           1
+
+  Every deployed system sits at or below the Johnson radius, where BCHKS25's
+  POSITIVE results apply and the negative ones do not. The n^1.99 and n^tau
+  counterexamples live at or beyond Johnson, for adversarially chosen code
+  families. Nothing here threatens a deployed parameter set -- the same
+  conclusion this repo reached about the capacity disproof, for the same reason.
