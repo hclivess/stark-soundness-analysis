@@ -37,9 +37,16 @@ sqrt(rho) + eta = sqrt(rho)(1 + 1/2m). Same object, and worth recording in the
 form the source uses.
 
 Also: eta's default switches on FIELD SIZE. Above 2^150 it is sqrt(rho)/100;
-below, max(rho/20, sqrt(rho)/100). This repo only ever had the second branch.
-OpenVM2 is BabyBear^4 = 2^124, so the second branch applies -- but the first
-would matter for Goldilocks^3 (2^192) systems like ZisK and Venus.
+below, max(rho/20, sqrt(rho)/100). OpenVM2 is BabyBear^4 = 2^124, so the second
+branch applies; the first matters for Goldilocks^3 (2^192) systems like ZisK.
+
+    RETRACTED IN ITERATION 65. This paragraph originally added "This repo only
+    ever had the second branch." That is false -- soundcalc_lean.py:99-103 has
+    had both since iteration 47, and ZisK's published figure depends on it: on
+    the wrong branch its model value would be 119.7 against a reported 128
+    (error -8.3) instead of 127.2 (error -0.8). What iteration 64 actually did
+    was write a SECOND copy of the function here and mistake its own novelty for
+    a gap in the repo. See definition_guard.py.
 
 ALL SIX CIRCUITS, ONE SCHEDULE
 --------------------------------
@@ -112,7 +119,8 @@ FIELD_ETA_SWITCH = 2 ** 150   # johnson_bound.py:84
 
 
 def eta_default(rho, field_size=2 ** 124):
-    """johnson_bound.py:82-87. The branch on field size was missing from this repo."""
+    """johnson_bound.py:82-87. Duplicates soundcalc_lean.eta_soundcalc, which has
+    had both branches since iteration 47; definition_guard.py pins them together."""
     return (math.sqrt(rho) / 100 if field_size > FIELD_ETA_SWITCH
             else max(rho / 20, math.sqrt(rho) / 100))
 
@@ -180,8 +188,9 @@ def report():
 
   johnson_bound.py:84   eta's default BRANCHES ON FIELD SIZE -- sqrt(rho)/100
                    above 2^150, max(rho/20, sqrt(rho)/100) below. This repo only
-                   ever had the second. OpenVM2 is 2^124 so the second applies,
-                   but Goldilocks^3 systems (2^192) take the first:
+                   RETRACTED it 65: the repo HAS had both since it 47
+                   (soundcalc_lean.py:99). OpenVM2 is 2^124 so the second
+                   applies; Goldilocks^3 systems (2^192) take the first:
 
                        eta at rho=1/8, F=2^124: {eta_default(rho, 2**124):.6f}  (m = {m_default(rho, 2**124):.1f})
                        eta at rho=1/8, F=2^192: {eta_default(rho, 2**192):.6f}  (m = {m_default(rho, 2**192):.1f})""")

@@ -3381,7 +3381,10 @@ def part_a():
                   - math.sqrt(2.0 ** -r) * (1 + 0.5 / mm)) < 1e-12
               for r in (1, 3, 6, 9) for mm in (1, 2, 20)),
           "1 - delta == sqrt(rho)(1 + 1/2m) to 1e-12")
-    check("eta's default branches on field size, which this repo had missed",
+    # RELABELLED IN ITERATION 65. This originally read "...which this repo had
+    # missed". False: soundcalc_lean.eta_soundcalc has had both branches since
+    # iteration 47. The computation was right, the claim in the name was not.
+    check("eta's default branches on field size",
           eta_default(0.125, 2 ** 192) != eta_default(0.125, 2 ** 124),
           f"F=2^192 gives {eta_default(0.125, 2**192):.6f}, "
           f"F=2^124 gives {eta_default(0.125, 2**124):.6f}")
@@ -3389,6 +3392,39 @@ def part_a():
           2 ** 192 > FIELD_ETA_SWITCH > 2 ** 124,
           "ZisK/Venus (Goldilocks^3, 2^192) are above the switch; "
           "OpenVM2 (BabyBear^4, 2^124) is below")
+
+    # --- ITERATION 65: duplicated definitions, pinned. The episode above was a
+    # false alarm about a missing branch; what it really exposed was 9 copies of
+    # 3 quantities, agreeing only by luck.
+    from definition_guard import (disagreements, self_test as _dg_self_test,
+                                  FAMILIES, branch_is_load_bearing,
+                                  ZISK_CORRECT, ZISK_WRONG_BRANCH, ZISK_REPORTED)
+    from soundcalc_lean import jbr_m, eta_soundcalc
+
+    check("the repo HAS had eta's field-size branch since iteration 47",
+          eta_soundcalc(0.5, 192) != eta_soundcalc(0.5, 124),
+          f"soundcalc_lean.eta_soundcalc: 2^192 -> {eta_soundcalc(0.5, 192):.6f}, "
+          f"2^124 -> {eta_soundcalc(0.5, 124):.6f} -- iteration 64 claimed it did not")
+    check("ZisK takes the high-field branch, giving m = 50 not 15",
+          jbr_m(0.5, 192) == 50 and jbr_m(0.5, 124) == 15,
+          f"m(2^192) = {jbr_m(0.5, 192)}, m(2^124) = {jbr_m(0.5, 124)}")
+    check("and that branch is load-bearing, worth several bits on ZisK",
+          branch_is_load_bearing() > 5.0,
+          f"correct {ZISK_CORRECT} vs wrong-branch {ZISK_WRONG_BRANCH} against "
+          f"reported {ZISK_REPORTED} -- {branch_is_load_bearing():.1f} bits")
+
+    check("every duplicated definition agrees across all sampled arguments",
+          not disagreements(),
+          f"{len(disagreements())} disagreements over "
+          f"{sum(len(v) for _, v, _ in FAMILIES)} implementations of "
+          f"{len(FAMILIES)} quantities")
+    check("the definition guard FAILS when a duplicate is perturbed",
+          _dg_self_test(),
+          "perturbing whir_jbr.eta_default by 1% is detected")
+    check("the guard covers field sizes on both sides of the 2^150 switch",
+          any(a[1] > 150 for a, _ in __import__("definition_guard").eta_calls())
+          and any(a[1] <= 150 for a, _ in __import__("definition_guard").eta_calls()),
+          "sampled field bits straddle the branch point")
 
 
 # ==================================================================== PART B
