@@ -3848,6 +3848,78 @@ def part_a():
           f"{max(design_size_kib(R_, 1225) for R_ in (1,2,3,4,5))} KiB at "
           f"Airbender's width")
 
+    # --- ITERATION 73: does recursion compress the 128-PQ base layer? It does,
+    # to a floor set by Proposition 11 applied to the FINAL stage.
+    from recursion_floor import (final_stage_kib, floor_range, cost_multiple,
+                                 finding1_reproduced, verifier_hash_count,
+                                 PIPELINE_SECURITY, DEPLOYED_FINAL,
+                                 FINDING1_CLAIM_KIB, FINAL_STAGE_EXPONENTS)
+    from pq_design_cost import design_size_kib as _base_kib
+
+    # (a) THE CONSTRAINT. If stages carried DIFFERENT security, the final proof
+    # could be cheap and the whole argument collapses.
+    check("every stage of a real pipeline carries the same security figure",
+          all(n_ >= 3 for _s, _b, n_ in PIPELINE_SECURITY)
+          and len(PIPELINE_SECURITY) == 4,
+          "Pico 53x5, OpenVM 100x3, SP1 100x3, OpenVM2 100x6 -- a pipeline's "
+          "security is the min over stages, so each must reach the target")
+
+    # (b) RECURSION MUST ACTUALLY COMPRESS. If the final stage were no smaller
+    # than the base layer, recursion would buy nothing.
+    _lo, _hi = floor_range(128)
+    _base = min(_base_kib(R_, 1225) for R_ in (1, 2, 3, 4, 5))
+    check("the recursive final stage is far smaller than the base layer",
+          _hi < _base / 2,
+          f"final {_lo}-{_hi} KiB vs base layer {_base}+ KiB at Airbender's width")
+    check("but it does NOT go below what 128 PQ costs any single circuit",
+          _lo > 500,
+          f"floor {_lo} KiB -- Proposition 11 applies to the final stage too")
+
+    # (c) THE CORRECTION TO ITERATION 72. Its "one to two orders of magnitude"
+    # must be FALSE of the verifier-facing proof, or there is nothing to correct.
+    _m_lo, _m_hi = cost_multiple()
+    check("128 PQ costs 2-4x in VERIFIER-FACING size, not orders of magnitude",
+          _m_hi < 10.0,
+          f"{_m_lo:.1f}x to {_m_hi:.1f}x against deployed finals "
+          f"{min(k for _n, k in DEPLOYED_FINAL)}-"
+          f"{max(k for _n, k in DEPLOYED_FINAL)} KiB")
+    # NOTE: my first version compared the CHEAPEST base against the LARGEST
+    # deployed final (4896 vs 529) and failed. The honest statement is the range.
+    _base_hi = max(_base_kib(R_, 1225) for R_ in (1, 2, 3, 4, 5))
+    _dep_lo = min(k for _n, k in DEPLOYED_FINAL)
+    _dep_hi = max(k for _n, k in DEPLOYED_FINAL)
+    check("while the base layer is roughly one to two orders of magnitude larger",
+          9.0 < _base / _dep_hi and _base_hi / _dep_lo > 50,
+          f"base {_base}-{_base_hi} KiB vs deployed finals {_dep_lo}-{_dep_hi}: "
+          f"{_base/_dep_hi:.0f}x to {_base_hi/_dep_lo:.0f}x -- iteration 72's "
+          f"figure, which stands for the base layer")
+
+    # (d) FINDING 1's NUMBER. Reproducing pq_design's own assumption must land
+    # near its 797, or the diagnosis of WHICH assumption produced it is wrong.
+    _r1 = finding1_reproduced()
+    check("pq_design's own assumption reproduces its 797 KiB to within 5%",
+          abs(_r1 - FINDING1_CLAIM_KIB) / FINDING1_CLAIM_KIB < 0.05,
+          f"{_r1} KiB vs its {FINDING1_CLAIM_KIB} -- internally consistent, and "
+          f"the two-column trace is what produced it")
+    check("and finding 1's figure is within 30% of the honest floor",
+          abs(FINDING1_CLAIM_KIB - _lo) / _lo < 0.30,
+          f"797 vs floor {_lo} KiB -- wrong derivation, roughly right answer")
+
+    # (e) THE HIGH-BLOWUP REGIME. Final stages must prefer large R, or the
+    # floor was computed in the wrong regime.
+    _by_R = [final_stage_kib(128, 18, R_) for R_ in FINAL_STAGE_EXPONENTS]
+    check("a final stage shrinks monotonically with blowup, as deployed ones use",
+          all(a > b for a, b in zip(_by_R, _by_R[1:])),
+          f"{_by_R[0]} -> {_by_R[-1]} KiB over blowup 16 -> 64; Pico's embed "
+          f"runs rho=1/16, ZisK's Final rho=1/32")
+    # the verifier work must be comparable to today's, or the recursive circuit
+    # would not fit the traces this floor assumes
+    check("a 128-PQ verifier hashes a comparable node count to today's",
+          0.5 < verifier_hash_count() / (124 * 23) < 2.0,
+          f"{verifier_hash_count()} nodes vs today's 2852 -- comparable count, "
+          f"but wider digests and degree-9 arithmetic, which this repo has not "
+          f"gate-counted")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")

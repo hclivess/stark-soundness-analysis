@@ -41,7 +41,7 @@ binds**. That single fact explains the rest of this repo. (Strictly the BCS
 theorem composes by *sum*; the min-model overstates by at most `log₂(#terms)`,
 measured at ≤0.34 bits on every deployed config — `bcs_composition.py`.)
 
-Run `python3 adversarial.py` — 569 checks written to falsify these claims, not
+Run `python3 adversarial.py` — 578 checks written to falsify these claims, not
 confirm them. It has caught two real errors in my own work.
 
 ---
@@ -63,8 +63,17 @@ elements per query — **a two-column trace**. Real zkVM traces are 18–80,000
 columns, where leaf data is 60–99.6% of the proof. Priced in the model verified
 against all 122 published figures, the same configuration is **1,188 KiB at one
 column and 6,591 KiB at Airbender's width**; a realistic 128-PQ single circuit
-is **4–19 MiB** depending on blowup. "No conjecture, no lattice" stands;
-"nearly free" does not.)*
+is **4–19 MiB** depending on blowup.)*
+
+*(Iteration 73 refines that: recursion **does** compress it. Every stage of a
+real pipeline carries the full target — Pico 53×5, OpenVM 100×3, SP1 100×3,
+OpenVM2 100×6 — so Proposition 11 applies to the final stage too and sets a
+floor of **~0.9–1.5 MiB** for a 128-PQ verifier-facing proof, against 200–529
+KiB shipping today. That is **2–4×**, not the orders of magnitude iteration 72
+implied — that figure was the base layer, which the verifier never sees. And
+reproducing pq_design's own two-column assumption gives 778 KiB against its 797,
+so finding 1's number is within ~30% of the honest floor: **wrong derivation,
+roughly right answer**. "No conjecture, no lattice" stands.)*
 → `pq_design.py`, `quantum.py`, `pq_design_cost.py`
 
 **2. Under a quantum adversary, everything halves — not just grinding, and
@@ -191,7 +200,7 @@ circuit, not an aggregate, and that Venus differs from ZisK in one circuit.
 
 | file | what |
 |---|---|
-| `adversarial.py` | **569 falsification checks + 26 forgery attacks.** Start here. |
+| `adversarial.py` | **578 falsification checks + 26 forgery attacks.** Start here. |
 | `ceiling_anatomy.py` | the five-term ceiling; historical movement of `a` |
 | `quantum.py` | the PQ halving; no system clears 100 provable PQ bits |
 | `qrom_bracket.py` | `k/c ≤ PQ ≤ k/2`; which PQ claims survive the unpinned constant |
