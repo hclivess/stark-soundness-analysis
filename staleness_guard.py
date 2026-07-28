@@ -64,6 +64,9 @@ RETRACTED = [
     ("floor binds for exactly one deployed system",
      "it costs zero -- m is Johnson-regime and SP1 is reported in UDR",
      39),
+    ("headroom exceeds nu everywhere",
+     "it fails for the two UDR systems once the right regime is used",
+     40),
 ]
 
 # Extended in iteration 35 after its own first run produced a FALSE POSITIVE:

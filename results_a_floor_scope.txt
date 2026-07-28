@@ -73,3 +73,25 @@
   is not the binding constraint. This file's headroom figures remain correct as
   a statement about mutual correlated agreement at the Johnson radius.
   See radius_staircase.py.
+
+============================================================================================
+4. CORRECTED: SECTION 3 APPLIED THE JBR MODEL TO TWO UDR SYSTEMS
+============================================================================================
+  system           regime  K published  K correct  head pub  head corr   nu  > nu?
+  ------------------------------------------------------------------------------
+  SP1 6.1.0           UDR         92.0      102.4      29.4       20.6   23     NO
+  OpenVM 1.5.0        UDR         83.4      102.0      36.3       21.0   24     NO
+  Airbender           JBR         82.4       82.4      37.3       37.3   25    yes
+  Pico                JBR         84.4       84.4      35.3       35.3   23    yes
+  ZisK 0.16.1         JBR        153.4      153.4      34.3       34.3   22    yes
+  RISC Zero           JBR         92.0       92.0      29.4       29.4   23    yes
+  Miden               JBR        100.9      100.9      25.2       25.2   21    yes
+
+  Headroom is 20.6 to 37.3 bits, not 25.2 to 37.3. And FINDING 3's
+  claim that headroom exceeds nu at EVERY system fails for 2 of them
+  (SP1 6.1.0, OpenVM 1.5.0) -- exactly the two reported in UDR.
+  It holds for the five that actually run the Johnson regime.
+
+  Note the UDR list size is 1: unique decoding means at most one codeword lies
+  within the radius, so the MCA floor there is E - log2(2) = E - 1, and the
+  headroom is the gap between the UDR commit bound and that.

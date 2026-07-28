@@ -2,7 +2,27 @@
 The a >= 1 floor is proved for interleaved codes and NOT for FRI -- and there
 are 25-37 bits of room between what is proved possible and proved impossible.
 
-*** PARTIALLY RETRACTED IN ITERATION 33 -- READ THIS FIRST ***
+*** CORRECTED TWICE -- READ BOTH NOTES BEFORE THE NUMBERS ***
+
+*** ITERATION 40: THE HEADROOM TABLE MIXES REGIMES ***
+Section 3 computes headroom for all seven zkVMs using commit_jbr and the
+Johnson list size 2m+1. Two of the seven -- SP1 and OpenVM -- are reported in
+UDR, whose bound (gamma*n+1)/|F| is a different formula and whose list size is
+1 by the definition of unique decoding. Corrected:
+
+    system     headroom as published    corrected    nu
+    SP1                        29.4         20.6    23
+    OpenVM                     36.3         21.0    24
+    (the five JBR systems are unchanged)
+
+So the range is 20.6 to 37.3 bits, not 25.2 to 37.3 -- and FINDING 3's claim
+that headroom "exceeds nu at every system" is FALSE for the two UDR systems.
+It holds for the five that actually run the Johnson regime. This is the same
+regime-scope error iteration 39 found in m_star.py, in a file written eight
+iterations earlier; iteration 40 audited the repo for it after finding the
+first instance.
+
+*** PARTIALLY RETRACTED IN ITERATION 33 -- READ THIS TOO ***
 This file concludes below that "nothing known forbids a = 0 for RS at the
 Johnson radius". That is correct about the MCA floor and WRONG as a general
 statement: BCHKS25's own result list (eprint 2025/2055, read for the first time
@@ -206,5 +226,64 @@ def report():
   See radius_staircase.py.""")
 
 
+REGIMES = {"SP1 6.1.0": "UDR", "OpenVM 1.5.0": "UDR", "Airbender": "JBR",
+           "Pico": "JBR", "ZisK 0.16.1": "JBR", "RISC Zero": "JBR",
+           "Miden": "JBR"}
+
+
+def commit_udr(R, nu, E):
+    """The UDR bound (gamma*n + 1)/|F|, gamma = (1-rho)/2. No m, no list size."""
+    gamma = (1 - 2.0 ** -R) / 2
+    return E - math.log2(gamma * 2.0 ** nu + 1)
+
+
+def headroom_regime_correct(nm, E, R, T):
+    """(commit bound, list size, headroom) under the system's REPORTED regime."""
+    from regime_crossover import commit_jbr, m_eq
+    nu = T + R
+    if REGIMES[nm] == "UDR":
+        # unique decoding: at most one codeword within the radius, so L = 1
+        return commit_udr(R, nu, E), 1.0, mca_floor_bits(E, 1.0) - commit_udr(R, nu, E)
+    m = m_eq(R)
+    K = commit_jbr(R, nu, E, m)
+    L = johnson_list_size(m)
+    return K, L, mca_floor_bits(E, L) - K
+
+
+def report_regime_corrected():
+    """Iteration 40: section 3 recomputed in each system's own regime."""
+    from regime_crossover import commit_jbr, m_eq
+    sec("4. CORRECTED: SECTION 3 APPLIED THE JBR MODEL TO TWO UDR SYSTEMS")
+    ZK = [("SP1 6.1.0", 124, 2, 21), ("OpenVM 1.5.0", 124, 1, 23),
+          ("Airbender", 124, 1, 24), ("Pico", 124, 1, 22),
+          ("ZisK 0.16.1", 192, 1, 21), ("RISC Zero", 124, 2, 21),
+          ("Miden", 128, 3, 18)]
+    print(f"  {'system':<15} {'regime':>7} {'K published':>12} {'K correct':>10} "
+          f"{'head pub':>9} {'head corr':>10} {'nu':>4} {'> nu?':>6}")
+    print("  " + "-" * 78)
+    corrected = []
+    for nm, E, R, T in ZK:
+        nu = T + R
+        m = m_eq(R)
+        Kj = commit_jbr(R, nu, E, m)
+        pub = mca_floor_bits(E, johnson_list_size(m)) - Kj
+        Kc, Lc, hc = headroom_regime_correct(nm, E, R, T)
+        corrected.append((nm, hc, nu))
+        print(f"  {nm:<15} {REGIMES[nm]:>7} {Kj:>12.1f} {Kc:>10.1f} "
+              f"{pub:>9.1f} {hc:>10.1f} {nu:>4} "
+              f"{'yes' if hc > nu else 'NO':>6}")
+    fails = [(n, h, v) for n, h, v in corrected if h <= v]
+    print(f"""
+  Headroom is {min(h for _, h, _ in corrected):.1f} to {max(h for _, h, _ in corrected):.1f} bits, not 25.2 to 37.3. And FINDING 3's
+  claim that headroom exceeds nu at EVERY system fails for {len(fails)} of them
+  ({', '.join(n for n, _, _ in fails)}) -- exactly the two reported in UDR.
+  It holds for the five that actually run the Johnson regime.
+
+  Note the UDR list size is 1: unique decoding means at most one codeword lies
+  within the radius, so the MCA floor there is E - log2(2) = E - 1, and the
+  headroom is the gap between the UDR commit bound and that.""")
+
+
 if __name__ == "__main__":
     report()
+    report_regime_corrected()

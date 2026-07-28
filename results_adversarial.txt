@@ -145,7 +145,10 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the strongest known lower bound does NOT forbid a = 0 for RS   [MCA floor numerator is 18, not Theta(n)]
   PASS  the modelled bound never exceeds the proved MCA floor   [min headroom 25.2 bits]
   PASS  headroom is 25-38 bits across the seven verified systems   [25.2-37.3]
-  PASS  headroom exceeds nu at the Johnson radius (says nothing above it)   [MCA floor leaves room AT Johnson; beyond it, BCHKS25 rules a=0 out]
+  PASS  headroom exceeds nu for every JOHNSON-regime system   [5/5, min margin 4.2 bits]
+  PASS  but NOT for the two UDR systems -- iteration 32 overstated it   [[('SP1 6.1.0', 20.6, 23), ('OpenVM 1.5.0', 21.0, 24)]]
+  PASS  the UDR list size is 1, not the Johnson 2m+1   [unique decoding admits at most one codeword in the radius]
+  PASS  the regime error was material, not cosmetic, for exactly two systems   [[('SP1 6.1.0', 8.9), ('OpenVM 1.5.0', 15.3)]]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -170,8 +173,8 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  polynomial C(eps*) is harmless at every useful eps*   [1/eps*^2 stays far below the threshold]
   PASS  an exponential C(eps*) FAILS at small eps*, inverting the intuition   [exp(1/eps*) fails below eps* ~ 0.07 -- useful range bounded BELOW]
   PASS  the staleness guard can actually fail (teeth self-test)   [flags a bare stale assertion, clears a marked one]
-  PASS  no file asserts a claim this repo has retracted   [7 retracted claims registered]
-  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39]]
+  PASS  no file asserts a claim this repo has retracted   [8 retracted claims registered]
+  PASS  the retraction registry covers several iterations   [iterations [7, 9, 24, 33, 39, 40]]
   PASS  a distant marker does not exempt a stale assertion   [proximity window, not file-wide matching]
   PASS  BCIKS20 gives blowup 4 exactly   [R* = 2.000000]
   PASS  BCHKS25 gives blowup 4 exactly   [R* = 2.000000]
@@ -275,8 +278,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 267, suite has 267]
+  PASS  README's stated check count matches the suite   [README says 270, suite has 270]
 
 ========================================================================================
-267/267 PASS   no property broken
+270/270 PASS   no property broken
 ========================================================================================

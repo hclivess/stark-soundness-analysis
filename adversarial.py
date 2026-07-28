@@ -1240,9 +1240,49 @@ def part_a():
     # SCOPED IN ITERATION 33: this says the MCA floor leaves room at the JOHNSON
     # radius. It does NOT license a = 0 above Johnson -- BCHKS25 results 3-4
     # forbid that for some RS codes. See radius_staircase.py.
-    check("headroom exceeds nu at the Johnson radius (says nothing above it)",
-          all(h > nu_ for _, h, nu_ in heads),
-          "MCA floor leaves room AT Johnson; beyond it, BCHKS25 rules a=0 out")
+    # CORRECTED IN ITERATION 40: `heads` above applies the JBR commit bound and
+    # the Johnson list size to ALL SEVEN systems, but SP1 and OpenVM are reported
+    # in UDR -- different formula, and list size 1 by definition of unique
+    # decoding. Under the correct regime their headroom is 20.6 and 21.0, BELOW
+    # their nu of 23 and 24. Same regime-scope error iteration 39 found in
+    # m_star.py, in a file written eight iterations earlier.
+    try:
+        import a_floor_scope as _afs
+        ZKR = [("SP1 6.1.0", 124, 2, 21), ("OpenVM 1.5.0", 124, 1, 23),
+               ("Airbender", 124, 1, 24), ("Pico", 124, 1, 22),
+               ("ZisK 0.16.1", 192, 1, 21), ("RISC Zero", 124, 2, 21),
+               ("Miden", 128, 3, 18)]
+        corr = [(nm_, _afs.headroom_regime_correct(nm_, E_, R_, T_)[2], T_ + R_)
+                for nm_, E_, R_, T_ in ZKR]
+        jbr_c = [(n_, h_, v_) for n_, h_, v_ in corr
+                 if _afs.REGIMES[n_] == "JBR"]
+        udr_c = [(n_, h_, v_) for n_, h_, v_ in corr
+                 if _afs.REGIMES[n_] == "UDR"]
+        check("headroom exceeds nu for every JOHNSON-regime system",
+              all(h_ > v_ for _, h_, v_ in jbr_c),
+              f"{len(jbr_c)}/5, min margin "
+              f"{min(h_ - v_ for _, h_, v_ in jbr_c):.1f} bits")
+        check("but NOT for the two UDR systems -- iteration 32 overstated it",
+              all(h_ <= v_ for _, h_, v_ in udr_c),
+              f"{[(n_, round(h_,1), v_) for n_, h_, v_ in udr_c]}")
+        check("the UDR list size is 1, not the Johnson 2m+1",
+              _afs.headroom_regime_correct("SP1 6.1.0", 124, 2, 21)[1] == 1.0,
+              "unique decoding admits at most one codeword in the radius")
+        # the regime-correct headroom must differ MATERIALLY for the UDR pair,
+        # or the correction would be cosmetic
+        from regime_crossover import commit_jbr as _cj, m_eq as _me
+        deltas = []
+        for nm_, E_, R_, T_ in ZKR:
+            nu_ = T_ + R_
+            pub_ = (E_ - math.log2(_afs.johnson_list_size(_me(R_)) + 1)
+                    - _cj(R_, nu_, E_, _me(R_)))
+            deltas.append((nm_, pub_ - _afs.headroom_regime_correct(nm_, E_, R_, T_)[2]))
+        big = [(n_, d_) for n_, d_ in deltas if abs(d_) > 1.0]
+        check("the regime error was material, not cosmetic, for exactly two systems",
+              len(big) == 2 and all(_afs.REGIMES[n_] == "UDR" for n_, _ in big),
+              f"{[(n_, round(d_,1)) for n_, d_ in big]}")
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()
