@@ -45,7 +45,8 @@ Measured today, on GPU-accelerated backends:
   > **ordering** — `T_encode` and `T_commit` dominate, `T_open` is small — which
   > is all this document's argument uses. Where a specific share is needed, quote
   > the sweep in `ntt_share_scope.py`, not a point estimate.
-- **Front-end trace generation is already 20–30% of end-to-end time**, and if the backend gets even 5× faster, front-end overhead rises "to over 90%" ([ZK-Tracer, arXiv 2605.25493](https://arxiv.org/abs/2605.25493)).
+- **Front-end trace generation is rapidly becoming the bottleneck** ([ZK-Tracer, arXiv 2605.25493](https://arxiv.org/abs/2605.25493)), which states verbatim: *"current hardware acceleration research has exclusively focused on backend proving, [but] we identify that the frontend execution and trace generation phase is rapidly emerging as the new system bottleneck."*
+  > **Sourcing correction, iteration 53** (`efficiency_sources.py`): earlier revisions of this line quoted "20–30% of end-to-end time" and *"to over 90%"*. **Neither figure is locatable in the cited paper** — it extracts cleanly at 5,612 words and contains no percent sign at all — and the abstract's own speedups (1829× trace-gen, 963× end-to-end) cannot reconstruct them, being consistent with any front-end fraction from 50% up. The qualitative claim above is verified; the percentages are withdrawn.
 - Hashing and MSM are minimal *after* optimisation.
 
 So the honest picture is: **`T_encode` dominates now, and `T_witness` is about
@@ -103,8 +104,8 @@ improving a bound; it removes most of the constraint system.
 This is the finding I'd flag hardest, because it reframes the whole field.
 
 Backend acceleration has been so successful that **the front end is becoming
-dominant**. Trace/witness generation is 20–30% today; at 5× backend speedup it
-exceeds 90%. That is Amdahl's law arriving on schedule.
+dominant**. Trace/witness generation is rising toward dominance (see the
+sourcing correction in section 1; the specific percentages are withdrawn).
 
 Witness generation is **not a cryptography problem**. It is emulation,
 memory layout, and data movement — closer to a JIT or a database engine than to

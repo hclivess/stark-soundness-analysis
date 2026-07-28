@@ -1959,6 +1959,46 @@ def part_a():
             pass
     except ImportError:
         pass
+
+    # --- ITERATION 53: EFFICIENCY.md's front-end figures are not locatable.
+    try:
+        import efficiency_sources as _es
+
+        # (a) the Amdahl upper bound must be a bound, not a determination --
+        # if it pinned p, the figures WOULD be reconstructible
+        p_up = _es.frontend_fraction_if_alone()
+        check("Amdahl on the abstract gives only an upper bound on the front-end share",
+              0.99 < p_up < 1.0, f"p <= {p_up:.4f} if the front end acted alone")
+        # (b) and a wide range of p must be consistent with plausible backends,
+        # which is why the bound is useless for reconstruction
+        needs = [(p_, _es.backend_speedup_needed(p_))
+                 for p_ in (0.50, 0.70, 0.90, 0.95, 0.99)]
+        check("any front-end share from 50% up implies a plausible backend speedup",
+              all(10 < b_ < 1000 for _, b_ in needs),
+              f"{min(b_ for _, b_ in needs):.0f}x to {max(b_ for _, b_ in needs):.0f}x")
+        check("so the abstract cannot confirm or refute the quoted percentages",
+              needs[0][1] > needs[-1][1],
+              "the implied backend factor falls monotonically as p rises")
+
+        # (c) the withdrawn figures must no longer be ASSERTED anywhere -- only
+        # quoted inside their own retraction
+        try:
+            _eff2 = open("EFFICIENCY.md").read()
+            _rd3 = open("README.md").read()
+            check("the withdrawn percentages are gone from README's prose",
+                  "20–30% today" not in _rd3 and "exceed 90%" not in _rd3,
+                  "replaced by the sourced qualitative claim")
+            check("EFFICIENCY.md mentions them only inside the retraction",
+                  _eff2.count("20–30") == 1
+                  and "Sourcing correction, iteration 53" in _eff2,
+                  "one occurrence, and it is the correction itself")
+            check("the verified verbatim quote replaced them",
+                  "rapidly emerging as the new system bottleneck" in _eff2,
+                  "the qualitative claim IS sourced and stands")
+        except OSError:
+            pass
+    except ImportError:
+        pass
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()

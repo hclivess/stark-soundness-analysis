@@ -1,0 +1,66 @@
+
+============================================================================================
+1. WHAT THE SOURCE SUPPORTS, AND WHAT IT DOES NOT
+============================================================================================
+
+  VERIFIED, verbatim from the abstract:
+
+    "While current hardware acceleration research has exclusively focused on
+     backend proving, we identify that the frontend execution and trace
+     generation phase is rapidly emerging as the new system bottleneck."
+
+  That is the qualitative claim EFFICIENCY.md's argument uses. It stands.
+
+  NOT VERIFIED: "20-30% of end-to-end time" and "to over 90%". The PDF extracts
+  cleanly -- 5,612 words -- and contains NO PERCENT SIGN ANYWHERE. They may live
+  in figures or tables, which do not extract. But EFFICIENCY.md presents "to over
+  90%" in quotation marks, and a direct quote should be locatable.
+
+============================================================================================
+2. THE ABSTRACT'S OWN NUMBERS CANNOT RECONSTRUCT THEM
+============================================================================================
+
+  The abstract gives 1829x on trace generation and 963x end-to-end "when
+  integrated with existing backend proving accelerators".
+
+  If the front end ALONE accounted for the end-to-end figure, Amdahl gives
+
+      p = (1 - 1/963) / (1 - 1/1829) = 99.95%
+
+  But the backend was also accelerated, so part of that came from there and the
+  true p is lower. 99.95% is only an upper bound. Solving for the backend
+  acceleration each candidate p would require:
+
+   front-end p   backend accel needed
+  --------------------------------------
+          50%                   654x
+          70%                   458x
+          90%                   183x
+          95%                    96x
+          99%                    20x
+
+  Every one is a plausible ASIC figure, so the abstract is consistent with
+  essentially any front-end fraction from 50% up. It neither confirms nor
+  refutes the quoted percentages.
+
+============================================================================================
+3. WHAT IT COSTS, AND THE PATTERN
+============================================================================================
+
+  Nothing computes with these two numbers. They appear only in prose, at
+  README.md:133, EFFICIENCY.md:48 and EFFICIENCY.md:106. That is unlike
+  iteration 52's NTT share, which fed a 20x prover penalty and a capacity-route
+  verdict. So this correction is presentational.
+
+  The pattern is the finding. Two of EFFICIENCY.md's three headline figures now
+  have sourcing problems:
+
+      NTT share 90-91%         measured on MSM-paired systems  (iteration 52)
+      front-end 20-30% / 90%   not locatable in the cited paper (this one)
+      lookup singularity       Jolt/Lasso, not audited here
+
+  Both survived because the arguments they support rest on ORDERINGS rather than
+  magnitudes -- T_encode and T_commit dominate, T_open is small, the front end is
+  rising. Reassuring about the argument; unflattering about the citation
+  discipline, which was looser in EFFICIENCY.md than in SOURCES.md, where every
+  parameter carries a verbatim quote.

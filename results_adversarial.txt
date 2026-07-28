@@ -254,6 +254,12 @@ PART A -- ATTEMPTS TO FALSIFY THE THEOREMS
   PASS  the trade would flip only below a ~5% NTT share   [flip at 4.8% -- no FFT prover is there]
   PASS  the penalty rises monotonically with the NTT share   [so the 90% figure is the WORST case for the route, not the best]
   PASS  the scope correction is recorded at both the claim and its use   [EFFICIENCY.md section 1 and capacity_routes.py section 6]
+  PASS  Amdahl on the abstract gives only an upper bound on the front-end share   [p <= 0.9995 if the front end acted alone]
+  PASS  any front-end share from 50% up implies a plausible backend speedup   [20x to 654x]
+  PASS  so the abstract cannot confirm or refute the quoted percentages   [the implied backend factor falls monotonically as p rises]
+  PASS  the withdrawn percentages are gone from README's prose   [replaced by the sourced qualitative claim]
+  PASS  EFFICIENCY.md mentions them only inside the retraction   [one occurrence, and it is the correction itself]
+  PASS  the verified verbatim quote replaced them   [the qualitative claim IS sourced and stands]
   PASS  README's a-table is radius-dependent, not a flat 'a >= 1'   [iteration 33 replaced the flat row with the proved staircase]
   PASS  `a` is monotone non-decreasing in the proximity radius   [[('UDR', 0.0), ('Johnson', 1.0), ('beyond-J', 1.99)]]
   PASS  a flat 'a >= 1' is wrong at the bottom step   [a = 0 is PROVED at the unique-decoding radius]
@@ -383,8 +389,8 @@ PART B -- FORGERY ATTEMPTS AGAINST THE GF(p^2) FRI PROTOTYPE
   PASS  exhaustive single-value tampering across all queries/layers   [0 forgeries accepted]
   PASS  high-degree polynomial (2x the bound)   [final layer is not low-degree]
   PASS  degree exceeding the bound by exactly one   [final layer is not low-degree]
-  PASS  README's stated check count matches the suite   [README says 375, suite has 375]
+  PASS  README's stated check count matches the suite   [README says 381, suite has 381]
 
 ========================================================================================
-375/375 PASS   no property broken
+381/381 PASS   no property broken
 ========================================================================================
