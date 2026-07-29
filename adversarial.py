@@ -4339,6 +4339,43 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 83: iteration 82's own caveat, tested. It claimed fold arity
+    # is "not free" because it reshapes the recursion AIR; the direction is the
+    # opposite of what that implies.
+    from folding_recursion_cost import (verifier_work, total_work, best_fold,
+                                        work_change, leaves_rise_nodes_fall,
+                                        DOMINATED as _D83, FOLD_CHOICES)
+
+    # (a) THE TRADE MUST BE REAL: leaves up, auth nodes down. If both moved the
+    # same way there would be no optimum to find.
+    _dl, _dn = leaves_rise_nodes_fall(23, 124)
+    check("wider folding raises leaf cost and lowers auth-node cost",
+          _dl > 0 and _dn < 0,
+          f"leaves {_dl:+.0%}, auth nodes {_dn:+.0%} from f=2 to f=8")
+    check("so verifier work has an interior optimum, not a monotone one",
+          best_fold(23, 124) not in (min(FOLD_CHOICES), max(FOLD_CHOICES)),
+          f"argmin f = {best_fold(23, 124)} over {FOLD_CHOICES}")
+
+    # (b) THE CORRECTION. Iteration 82 implied the recursion circuit grows.
+    # Every dominated system must get CHEAPER, or the caveat stood.
+    _ch83 = {nm: work_change(nu, s, fs, 8) for nm, nu, s, fs in _D83}
+    check("folding by 8 makes the recursion circuit smaller, not larger",
+          all(v < 0 for v in _ch83.values()),
+          f"{ {k: f'{v:+.0%}' for k, v in _ch83.items()} }")
+    check("and it is smaller by a material margin, not a rounding error",
+          min(abs(v) for v in _ch83.values()) > 0.10,
+          f"11% to {max(abs(v) for v in _ch83.values()):.0%} less verifier work")
+
+    # (c) THE OBJECTIVES AGREE. Iteration 82's proof-size argmin was 8; if the
+    # verifier's argmin differed, there would be a genuine trade to weigh.
+    check("proof size and verifier work are minimised by the SAME arity",
+          all(best_fold(nu, s) == 8 for _n, nu, s, _f in _D83),
+          "argmin f = 8 for all four, matching iteration 82's proof-size argmin")
+    # the shipped arity must NOT be optimal, or there is nothing to report
+    check("and none of the four ships that arity",
+          all(fs != 8 for _n, _nu, _s, fs in _D83),
+          f"shipped folds {sorted({fs for _n, _nu, _s, fs in _D83})}")
+
     # --- ITERATION 82: are the deployed configs Pareto-optimal in (proof size,
     # prover cost)? Four are not, and the gap is entirely the folding factor.
     from pareto_folding import (dominating, shipped_kib, shipped_fold,
