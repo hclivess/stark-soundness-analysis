@@ -4339,6 +4339,39 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 81: the degree handshake. Verifies a NADO guard rather than
+    # reporting a hazard -- the mismatch is real and is deliberately gated.
+    try:
+        from nado_degree_handshake import (native_degree, python_degree,
+                                           ext_capable as _cap81,
+                                           handshake_blocks_mismatch,
+                                           fold_ext_raises, COMPOSE_SLOWDOWN)
+        if python_degree() is not None and native_degree() is not None:
+            # (a) THE MISMATCH IS REAL. If the degrees agreed there would be
+            # nothing gated and nothing to verify.
+            check("the native arena and the Python side are at different degrees",
+                  native_degree() != python_degree(),
+                  f"arena compiled for {native_degree()}, Python at "
+                  f"{python_degree()}")
+            # (b) AND THE HANDSHAKE CATCHES IT -- refusing exactly when they
+            # differ, not always and not never.
+            check("ext_capable() refuses exactly when the degrees differ",
+                  handshake_blocks_mismatch() is True and _cap81() is False,
+                  f"ext_capable() = {_cap81()} at {native_degree()} vs "
+                  f"{python_degree()}")
+            # (c) THE GATED CODE FAILS LOUDLY IF REACHED -- a silent wrong-field
+            # composition is the hazard the handshake exists to prevent.
+            check("the degree-2 native fold raises rather than miscomputing",
+                  fold_ext_raises() is True,
+                  "ValueError on a 3-limb alpha, not a well-formed proof over "
+                  "the wrong field")
+            check("so the cost is speed, not soundness",
+                  COMPOSE_SLOWDOWN > 1.0,
+                  f"the GF(p^2) arena is unreachable, so ext proofs compose in "
+                  f"Python at {COMPOSE_SLOWDOWN}x (stark.py: 17.4s vs 6.2s)")
+    except ImportError as _e:
+        _note_skip(_e)
+
     # --- ITERATION 80: iteration 79's caveat resolved, and a certifying test
     # that does not run. Probes the live tree; records a skip if absent.
     try:
