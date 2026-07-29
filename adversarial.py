@@ -4339,6 +4339,66 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 79: NADO's accounting drifted from its own prover. Every
+    # check here probes the LIVE tree, and skips (recorded) if it is absent.
+    try:
+        from nado_degree_drift import (live_degree, declared_degree,
+                                       accounting_E, accounting_follows_degree,
+                                       terms_at, provable_at, understatement,
+                                       binding_term, REPORTED, BASE_BITS)
+        _ld79 = live_degree()
+        if _ld79 is not None:
+            # (a) THE DRIFT. If the transcript emitted 2 limbs there is nothing
+            # to report; if the accounting tracked the degree, likewise.
+            check("the transcript emits as many limbs as extf declares",
+                  _ld79 == declared_degree(),
+                  f"challenge_ext() -> {_ld79} limbs, extf.DEGREE = "
+                  f"{declared_degree()}")
+            check("but soundness.py's E does NOT follow that degree",
+                  accounting_follows_degree() is False,
+                  f"E_EXT2 = {accounting_E()} against a live "
+                  f"{BASE_BITS} * {declared_degree()} = "
+                  f"{BASE_BITS*declared_degree()}")
+            check("so the module prices a field the system no longer uses",
+                  accounting_E() < BASE_BITS * _ld79,
+                  f"prices {accounting_E()}-bit challenges, emits "
+                  f"{BASE_BITS*_ld79}-bit ones")
+
+            # (b) THE MAGNITUDE, and its direction: the report must be LOW, not
+            # high -- an accounting error the other way would be dangerous.
+            _c79, _q79 = understatement()
+            check("the reported figure understates rather than overstates",
+                  _c79 > 0,
+                  f"reported {REPORTED['provable']}, actual "
+                  f"{provable_at(BASE_BITS*_ld79):.1f} -- conservative, so not "
+                  f"a security bug, but wrong")
+            check("and it understates by over 20 post-quantum bits",
+                  _q79 > 20.0,
+                  f"+{_c79:.1f} classical, +{_q79:.1f} PQ")
+
+            # (c) THE BINDING TERM MOVED. This is the substantive consequence:
+            # NADO stops being finding 2's exception.
+            check("the binding term moves from the LogUp bus to the query phase",
+                  binding_term(REPORTED["E"]) == "logup"
+                  and binding_term(BASE_BITS * _ld79) == "query",
+                  f"{binding_term(REPORTED['E'])} at E={REPORTED['E']}, "
+                  f"{binding_term(BASE_BITS*_ld79)} at E={BASE_BITS*_ld79}")
+            check("so NADO is no longer the exception to finding 2",
+                  terms_at(BASE_BITS * _ld79)["query"]
+                  < terms_at(BASE_BITS * _ld79)["logup"],
+                  "query-bound like the seven verified zkVMs, so Proposition "
+                  "11's cap now applies to it")
+            # the query term must be the one thing E does not move
+            check("the query phase is the only term unchanged by the degree",
+                  terms_at(REPORTED["E"])["query"]
+                  == terms_at(BASE_BITS * _ld79)["query"]
+                  and all(terms_at(REPORTED["E"])[k]
+                          != terms_at(BASE_BITS * _ld79)[k]
+                          for k in ("logup", "commit", "alphas")),
+                  "s*y+g carries no field term; the other three are all E - x")
+    except ImportError as _e:
+        _note_skip(_e)
+
     # --- ITERATION 78: the same silent-skip class, everywhere else in the suite.
     from check_integrity import (swallowing_handlers, checks_behind_handlers,
                                  total_check_sites as _tcs78)
