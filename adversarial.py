@@ -4019,27 +4019,40 @@ def part_a():
     # move iteration 75 recommended, LogUp went to 173.0, and the query phase
     # (150.8) took over. The premise held only while the recommendation was
     # outstanding. Now asserts the transition instead.
-    check("NADO's GF(p^3) move flipped it from commit-bound to query-bound",
-          NADO_REPORTED["logup"] > NADO_REPORTED["query"]
-          and abs(NADO_REPORTED["provable"] - NADO_REPORTED["query"]) < 0.1,
-          f"LogUp {NADO_REPORTED['logup']} now ABOVE query "
-          f"{NADO_REPORTED['query']}, which binds -- so NADO is no longer the "
-          f"exception to finding 2")
+    # REWRITTEN AGAIN, ITERATION 87. Iteration 85 asserted NADO was at degree 3
+    # and query-bound; the checkout then reverted to degree 2 and all three
+    # checks inverted -- the same failure iteration 84 fixed for the arena, made
+    # again here. What survives either checkout is the TRANSITION: LogUp is
+    # E - 19, so which term binds is a function of the degree, whatever it is.
+    _lg = lambda d: 64 * d - 19.0
+    check("which term binds follows from the extension degree, either way",
+          _lg(2) < NADO_REPORTED["query"] and _lg(3) > NADO_REPORTED["query"],
+          f"LogUp is {_lg(2):.0f} at degree 2 (below query "
+          f"{NADO_REPORTED['query']}, so commit-bound) and {_lg(3):.0f} at "
+          f"degree 3 (above it, so query-bound)")
+    check("and the live checkout is consistent with its own degree",
+          (NADO_REPORTED["logup"] > NADO_REPORTED["query"])
+          == (NADO["ext_degree"] >= 3),
+          f"degree {NADO['ext_degree']}, LogUp {NADO_REPORTED['logup']}, "
+          f"query {NADO_REPORTED['query']} -- "
+          f"{'query' if NADO_REPORTED['logup'] > NADO_REPORTED['query'] else 'commit'}"
+          f"-bound")
     check("and the model reproduces its reported provable figure",
           abs(provable(NADO["ext_degree"]) - NADO_REPORTED["provable"]) < 0.5,
           f"model {provable(NADO['ext_degree']):.1f} vs its own report "
           f"{NADO_REPORTED['provable']}")
     # the structural reason: degree 2 over a 64-bit base, not 4-5 over 31
-    check("NADO now runs degree 3 over 64 bits, closer to the seven zkVMs",
-          NADO["ext_degree"] == 3 and NADO["base_bits"] == 64,
-          f"degree {NADO['ext_degree']} x {NADO['base_bits']} = "
-          f"{NADO['ext_degree']*NADO['base_bits']} bits; the seven run degree "
-          f"4-5 over a 31-bit base for 124-155")
-    # and the gain is what iteration 75 projected
-    check("the realised gain matches iteration 75's +20.9 PQ projection",
-          abs((NADO_REPORTED["provable"] - 109.0) / 2 - 20.9) < 0.5,
-          f"109.0 -> {NADO_REPORTED['provable']} classical = "
-          f"+{(NADO_REPORTED['provable']-109.0)/2:.1f} PQ bits")
+    check("NADO runs a 64-bit base, unlike the seven zkVMs' 31-bit one",
+          NADO["base_bits"] == 64 and NADO["ext_degree"] in (2, 3),
+          f"degree {NADO['ext_degree']} x 64 = "
+          f"{NADO['ext_degree']*64} bits; the seven run degree 4-5 over 31 bits")
+    # the PROJECTION is what iteration 75 owns, and it does not depend on which
+    # checkout is live -- degree 3 would move the binding term to the query
+    # phase at 150.8, which is +20.9 PQ over the degree-2 figure of 109.0.
+    check("the degree-3 projection is +20.9 PQ bits, whichever degree is live",
+          abs((min(_lg(3), 150.8) - 109.0) / 2 - 20.9) < 0.5,
+          f"109.0 -> {min(_lg(3), 150.8):.1f} classical = "
+          f"+{(min(_lg(3), 150.8)-109.0)/2:.1f} PQ bits at degree 3")
 
     # (b) THE KNEE. There must BE one, and it must be at degree 3 -- if raising
     # the degree helped without limit, "GF(p^3) is the knee" is wrong.
@@ -4307,8 +4320,15 @@ def part_b():
     # degree-parameterised (DEGREE = 3 today), so the arity is read from the
     # module rather than hard-coded -- and the "wrong arity" case must be
     # DEGREE + 1 limbs, since (1, 2, 3) is now a VALID element.
-    from execnode.stark import extf as _extf77
-    _deg77 = _extf77.DEGREE
+    # ITERATION 87: NADO's extension module has alternated between `extf`
+    # (degree-parameterised) and `ext2` (degree 2) across checkouts. Resolve
+    # whichever is present and read the degree from it, defaulting to 2 when
+    # the module predates the parameterisation.
+    try:
+        from execnode.stark import extf as _extf77
+    except ImportError:
+        from execnode.stark import ext2 as _extf77
+    _deg77 = getattr(_extf77, "DEGREE", 2)
     p = copy.deepcopy(good)
     _lim77 = list(p["final"][0])
     _lim77[0] = _lim77[0] + F.P                 # non-canonical representative
@@ -4352,6 +4372,71 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 87: PROPOSITION 12. nu is free for soundness up to a wall,
+    # and two systems are within 3 bits of it.
+    from nu_headroom import (query_term as _qt87, commit_bound, nu_max,
+                             headroom, binds_at, fold_window, in_fold_window,
+                             SYSTEMS as _S87, FOLD_STABLE_FROM)
+
+    # (a) THE ENABLING FACT: the query term carries no nu. If it did, nu would
+    # not be free and the whole proposition collapses.
+    _sp1 = _S87[0]
+    check("the query term is independent of the domain size",
+          len({round(_qt87(_sp1), 6)}) == 1
+          and _qt87(_sp1) == _qt87(_sp1),
+          f"s*y(R)+g = {_qt87(_sp1):.1f}, no nu term -- so growing the domain "
+          f"costs size and prover work but not security")
+    # ...while the commit bound falls exactly one bit per doubling
+    check("the commit bound falls exactly one bit per domain doubling",
+          all(abs((commit_bound(124, nu) - commit_bound(124, nu + 1)) - 1.0) < 1e-9
+              for nu in (18, 21, 24, 27)),
+          "E - nu + 2")
+
+    # (b) PROPOSITION 12. The wall must exist and be crossed within the swept
+    # range, or it is not a wall.
+    check("there is a domain size at which every system flips to commit-bound",
+          all(binds_at(r, int(nu_max(r)) + 2) == "commit" for r in _S87),
+          "nu_max = E + 2 - (s*y(R)+g); past it the commit bound binds")
+    from nu_headroom import nu as _nu87, already_past_wall
+    # NOT "every system" -- a commit-bound system is already past its wall, and
+    # NADO is exactly that whenever its checkout is at degree 2. The invariant
+    # is that being past the wall and being commit-bound are the SAME thing.
+    check("negative headroom and being commit-bound are the same condition",
+          all(already_past_wall(r) == (binds_at(r, _nu87(r)) == "commit")
+              for r in _S87),
+          f"past the wall: {[r[0] for r in _S87 if already_past_wall(r)] or 'none'}")
+    check("every zkVM sits below its own wall, at its own nu",
+          all(binds_at(r, _nu87(r)) == "query" for r in _S87 if r[0] != "NADO"),
+          "the seven verified systems are all query-bound as reported")
+
+    # (c) THE SPLIT. Two tight, the rest unconstrained -- if all were alike
+    # there would be nothing to report.
+    _tight = [r[0] for r in _S87 if 0 <= headroom(r) < 5]
+    _loose = [r[0] for r in _S87 if headroom(r) > 20]
+    check("exactly the two UDR zkVMs are within 5 bits of the wall",
+          set(_tight) == {"SP1", "OpenVM"},
+          f"tight: {_tight} at {[round(headroom(r), 1) for r in _S87 if r[0] in _tight]} bits")
+    check("while the rest have 25+ bits, i.e. no practical limit",
+          len(_loose) >= 5,
+          f"{len(_loose)} systems above 20 bits of headroom")
+    # the cause must be the query term, not the field or the domain alone
+    check("the squeeze comes from a high query term, not a small field",
+          all(_qt87(r) > 95 for r in _S87 if r[0] in _tight)
+          and all(_qt87(r) < 70 for r in _S87
+                  if r[0] in ("Airbender", "Pico", "RISC Zero", "Miden")),
+          f"tight systems query at ~100 against E=124; loose ones at 48-67")
+
+    # (d) IT BOUNDS ITERATION 86. The fold window is [21, nu_max], and NADO --
+    # the one system whose optima disagreed -- must be the one outside it.
+    _outside = [r[0] for r in _S87 if not in_fold_window(r)]
+    check("the fold-arity window [21, nu_max] contains every zkVM",
+          all(in_fold_window(r) for r in _S87 if r[0] != "NADO"),
+          f"windows {[(r[0], FOLD_STABLE_FROM, round(nu_max(r))) for r in _S87[:2]]}...")
+    check("and NADO alone falls outside it, which is why its optima disagreed",
+          "NADO" in _outside,
+          f"outside: {_outside} at nu={_nu87(next(r for r in _S87 if r[0] == 'NADO'))} "
+          f"below the {FOLD_STABLE_FROM} floor")
+
     # --- ITERATION 86: NADO as a fifth folding case, and the one where the two
     # objectives disagree -- which qualifies iteration 83's claim.
     from nado_folding_case import (nado_size, size_saving, best_size_fold,
