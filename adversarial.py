@@ -4431,28 +4431,27 @@ def main():
                                            handshake_blocks_mismatch,
                                            fold_ext_raises, COMPOSE_SLOWDOWN)
         if python_degree() is not None and native_degree() is not None:
-            # (a) THE MISMATCH IS REAL. If the degrees agreed there would be
-            # nothing gated and nothing to verify.
-            check("the native arena and the Python side are at different degrees",
-                  native_degree() != python_degree(),
-                  f"arena compiled for {native_degree()}, Python at "
-                  f"{python_degree()}")
-            # (b) AND THE HANDSHAKE CATCHES IT -- refusing exactly when they
-            # differ, not always and not never.
-            check("ext_capable() refuses exactly when the degrees differ",
-                  handshake_blocks_mismatch() is True and _cap81() is False,
-                  f"ext_capable() = {_cap81()} at {native_degree()} vs "
-                  f"{python_degree()}")
-            # (c) THE GATED CODE FAILS LOUDLY IF REACHED -- a silent wrong-field
-            # composition is the hazard the handshake exists to prevent.
-            check("the degree-2 native fold raises rather than miscomputing",
-                  fold_ext_raises() is True,
-                  "ValueError on a 3-limb alpha, not a well-formed proof over "
-                  "the wrong field")
-            check("so the cost is speed, not soundness",
-                  COMPOSE_SLOWDOWN > 1.0,
-                  f"the GF(p^2) arena is unreachable, so ext proofs compose in "
-                  f"Python at {COMPOSE_SLOWDOWN}x (stark.py: 17.4s vs 6.2s)")
+            # REWRITTEN IN ITERATION 84. These asserted a SNAPSHOT -- that the
+            # arena was degree 2 while Python was 3, that ext_capable() was
+            # False, that fold_ext raised. NADO rebuilt the arena for degree 3
+            # roughly thirty minutes later and all three inverted. A check
+            # pinned to a moving tree fails for the wrong reason. What survives
+            # any state is the INVARIANT: the handshake must agree with the
+            # degrees, whatever they are.
+            check("ext_capable() agrees with the degrees, in whichever state",
+                  handshake_blocks_mismatch() is True,
+                  f"arena {native_degree()}, Python {python_degree()}, "
+                  f"ext_capable() = {_cap81()}")
+            check("and the native path is enabled exactly when they match",
+                  _cap81() == (native_degree() == python_degree()),
+                  f"{'enabled' if _cap81() else 'gated off'} at "
+                  f"{native_degree()} vs {python_degree()}")
+            # the gated path must never MISCOMPUTE: either it is reachable and
+            # degree-correct, or it is unreachable. Never reachable and wrong.
+            check("the native fold never runs at a degree it cannot handle",
+                  _cap81() is False or fold_ext_raises() is False,
+                  "reachable and degree-correct" if _cap81() else
+                  "unreachable, so its arity cannot matter")
     except ImportError as _e:
         _note_skip(_e)
 

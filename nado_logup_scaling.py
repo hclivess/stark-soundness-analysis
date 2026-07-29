@@ -115,14 +115,36 @@ def _nado_module():
         return None
 
 
-def aux_bits(log_rows, E=E_EXT2, num_buses=DEFAULT_BUSES):
-    """soundness.py:137-149, transcribed: E - log2(buses * rows)."""
+def live_E():
+    """The challenge-space size NADO is ACTUALLY using, read from its tree.
+
+    ITERATION 84: this was E_EXT2 = 128, a frozen literal. NADO's soundness.py
+    changed three times in twenty minutes during the GF(p^3) migration (128 ->
+    96 -> 192), so a frozen transcription fails against a moving tree for the
+    wrong reason -- it reports a mismatch when the tree moves, not when the
+    transcription is wrong. Read the degree instead, which is the thing this
+    file argued should never be hard-coded.
+    """
+    mod = _nado_module()
+    if mod is None:
+        return E_EXT2
+    try:
+        from execnode.stark import extf
+        return E_BASE * extf.DEGREE
+    except Exception:
+        return E_EXT2
+
+
+def aux_bits(log_rows, E=None, num_buses=DEFAULT_BUSES):
+    """soundness.py, transcribed: E - log2(buses * rows), at the LIVE degree."""
+    E = live_E() if E is None else E
     return E - math.log2(max(num_buses * (2.0 ** log_rows), 1.0))
 
 
-def alphas_bits(num_constraints, E=E_EXT2, l_plus=4.0):
+def alphas_bits(num_constraints, E=None, l_plus=4.0):
     """soundness.py:170ff: E - log2(L+ * num_constraints). L+ = 4 reproduces
-    the module's own 126.0 at nc = 1."""
+    the module's own 126.0 at nc = 1. E defaults to the LIVE degree."""
+    E = live_E() if E is None else E
     return E - math.log2(max(l_plus * num_constraints, 1.0))
 
 
@@ -131,7 +153,7 @@ def logup_offset(log_rows=NADO_LOG_ROWS, num_buses=DEFAULT_BUSES):
     return math.log2(num_buses) + log_rows
 
 
-def rows_where_alphas_overtakes(log_rows=NADO_LOG_ROWS, E=E_EXT2):
+def rows_where_alphas_overtakes(log_rows=NADO_LOG_ROWS, E=None):
     """Constraint count at which the alphas term falls below the LogUp term."""
     target = aux_bits(log_rows, E)
     nc = 1
@@ -140,7 +162,7 @@ def rows_where_alphas_overtakes(log_rows=NADO_LOG_ROWS, E=E_EXT2):
     return nc
 
 
-def bits_lost_per_doubling(E=E_EXT2):
+def bits_lost_per_doubling(E=None):
     return aux_bits(17, E) - aux_bits(18, E)
 
 

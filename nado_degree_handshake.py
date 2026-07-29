@@ -1,6 +1,19 @@
 """
-Sweeping NADO for the remaining degree-2 literals: one matters, it is dead
-code, and NADO built a handshake for it before I looked.
+Sweeping NADO for the remaining degree-2 literals: one matters, it was dead
+code, and NADO built a handshake for it before I looked -- then closed it.
+
+*** SUPERSEDED IN ITERATION 84, ABOUT THIRTY MINUTES LATER. ***
+Everything below described a real state: the arena was compiled for degree 2,
+ext_capable() returned False, fold_ext raised on a 3-limb alpha, and extension
+proofs composed in Python at 2.8x. NADO then rebuilt the arena for degree 3 and
+generalised the entry point -- fold_ext(cols, offset, alpha) now takes a COLUMN
+LIST rather than a lo/hi pair, and ext_capable() returns True. The native
+GF(p^3) path is live and the 2.8x penalty is gone.
+
+The analysis is kept because the handshake's behaviour is the finding, and it
+was verified in BOTH states: it refused when the degrees differed and permits
+now that they match. The checks in adversarial.py were rewritten to pin that
+invariant rather than the snapshot.
 
 Iteration 80 found four stale degree-2 literals in four files and framed them as
 a pattern of things NADO's degree parameterisation had not reached. This
