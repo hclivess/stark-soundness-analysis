@@ -1229,17 +1229,31 @@ def part_a():
     def jl_(m_):
         return 2.0 * m_ + 1.0
 
+    # ITERATION 77: was `jl_(8.24) == jl_(8.24)`, which tests nothing. The claim
+    # is invariance in n, so evaluate the real list-size function across four
+    # orders of magnitude of n and check the spread is zero.
+    import inspect as _isp77
+    from a_floor_scope import johnson_list_size as _jls77
+    _across_n = [_jls77(8.24, 0.25) for _n77 in (2 ** 16, 2 ** 20, 2 ** 24, 2 ** 28)]
     check("the Johnson-regime list size is independent of n",
-          jl_(8.24) == jl_(8.24) and all(
-              jl_(m_) < 250 for m_ in (0.85, 2.0, 8.24, 100.0)),
-          "2m+1 depends on the proximity parameter only")
+          max(_across_n) - min(_across_n) == 0.0
+          and not ({"n", "nu", "domain"} & set(_isp77.signature(_jls77).parameters))
+          and all(jl_(m_) < 250 for m_ in (0.85, 2.0, 8.24, 100.0)),
+          f"constant at {_across_n[0]:.2f} over n = 2^16..2^28, and the function "
+          f"takes {tuple(_isp77.signature(_jls77).parameters)} -- no n")
     # contrast: the interleaved numerator IS Theta(n) -- doubling n doubles it
     def il_(n_, rho_):
         return (1.0 - rho_) * n_ / 3.0 + 1.0
+    # ITERATION 77: second conjunct was `jl_(8.24) == jl_(8.24)`. Replaced with
+    # the contrast the check is actually about: over the same n range the
+    # interleaved numerator grows 256x while the RS list size grows 1x.
+    _il_ratio = il_(2 ** 28, 0.25) / il_(2 ** 20, 0.25)
+    _jl_ratio = _across_n[-1] / _across_n[0]
     check("the interleaved numerator scales with n but the RS list size does not",
           abs(il_(2 ** 21, 0.25) / il_(2 ** 20, 0.25) - 2.0) < 1e-3
-          and jl_(8.24) == jl_(8.24),
-          "Theta(n) vs Theta(1) -- proved floor vs observed track record")
+          and _il_ratio > 200 and _jl_ratio == 1.0,
+          f"over n = 2^20..2^28 the interleaved numerator grows {_il_ratio:.0f}x, "
+          f"the RS list size {_jl_ratio:.0f}x -- Theta(n) vs Theta(1)")
     # so the MCA floor does not forbid a = 0 for RS at the Johnson radius.
     # SCOPED IN ITERATION 33: this says nothing about ABOVE Johnson, where
     # BCHKS25 results 3-4 do forbid it for some RS codes.
@@ -3504,12 +3518,13 @@ def part_a():
     check("pinning m small raises the MCA ceiling by several bits",
           all(small_m_gain(2.0 ** -r) > 3.0 for r in (3, 6, 9)),
           f"gains {[round(small_m_gain(2.0**-r), 1) for r in (3, 6, 9)]}")
+    # ITERATION 77: the first conjunct compared an expression to itself and was
+    # dropped. The claim is that the gain is zero AT the default and non-zero
+    # away from it, which is what is now tested across three rates.
     check("and the gain vanishes when m IS the default, so it tracks m",
-          all(abs(mca_ceiling(list_pinned(2.0 ** -r, _md(2.0 ** -r)))
-                  - mca_ceiling(list_pinned(2.0 ** -r, _md(2.0 ** -r)))) < 1e-12
-              for r in (3, 6, 9))
-          and small_m_gain(0.125, m=_md(0.125)) == 0.0,
-          "gain(m=default) = 0 exactly")
+          all(small_m_gain(2.0 ** -r, m=_md(2.0 ** -r)) == 0.0 for r in (3, 6, 9))
+          and all(small_m_gain(2.0 ** -r, m=2) > 0.0 for r in (3, 6, 9)),
+          "gain(m=default) = 0 exactly at rates 1/8, 1/64, 1/512; positive at m=2")
 
     # (c) THE CONVENTION. 2m+1 must equal (m+0.5)/sqrt(rho) at rho=1/4 and
     # nowhere else, for EVERY m -- the ratio is m-independent or the claim is wrong.
@@ -4171,6 +4186,9 @@ def part_a():
 
 # ==================================================================== PART B
 
+SKIPPED = []          # blocks that did not run; main() fails if non-empty
+
+
 def part_b():
     print()
     print("=" * 88)
@@ -4180,6 +4198,12 @@ def part_b():
         import nado_ext_fri_prototype as P
         from execnode.stark import field as F
     except Exception as e:
+        # ITERATION 77: a bare `return` here hid the loss of all 26 forgery
+        # attacks when NADO renamed ext2 -> extf. The suite kept printing
+        # "N/N PASS" with the entire block absent, and nothing noticed for an
+        # unknown number of iterations. A skip is now RECORDED, and main()
+        # fails the suite on any recorded skip.
+        SKIPPED.append(("PART B forgery attempts", f"{type(e).__name__}: {e}"))
         print(f"  SKIP (prototype/NADO modules unavailable: {e})")
         return
 
@@ -4246,15 +4270,22 @@ def part_b():
     rejects(p, "emptied authentication path")
 
     # --- field-encoding abuse specific to the extension
+    # ITERATION 77: both sites assumed a 2-limb element. NADO's extf is
+    # degree-parameterised (DEGREE = 3 today), so the arity is read from the
+    # module rather than hard-coded -- and the "wrong arity" case must be
+    # DEGREE + 1 limbs, since (1, 2, 3) is now a VALID element.
+    from execnode.stark import extf as _extf77
+    _deg77 = _extf77.DEGREE
     p = copy.deepcopy(good)
-    a, b = p["final"][0]
-    p["final"][0] = (a + F.P, b)                # non-canonical representative
+    _lim77 = list(p["final"][0])
+    _lim77[0] = _lim77[0] + F.P                 # non-canonical representative
+    p["final"][0] = tuple(_lim77)
     o, why = P.verify_ext(p, NQ, B, G)
     check("non-canonical ext encoding does not change acceptance",
           o is True, "reduced mod P as expected" if o else why[:40])
     p = copy.deepcopy(good)
-    p["final"][0] = (1, 2, 3)                   # wrong arity
-    rejects(p, "malformed ext element (3 components)")
+    p["final"][0] = tuple(range(1, _deg77 + 2))  # DEGREE + 1 limbs: wrong arity
+    rejects(p, f"malformed ext element ({_deg77 + 1} components)")
     p = copy.deepcopy(good)
     p["final"][0] = 12345                       # base int where a pair is expected
     rejects(p, "base int substituted for an ext final value")
@@ -4286,6 +4317,12 @@ def part_b():
 def main():
     part_a()
     part_b()
+    # ITERATION 77: a block that silently skips is worse than one that fails --
+    # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    check("no test block was skipped for a missing dependency",
+          not SKIPPED,
+          "; ".join(f"{w}: {why}" for w, why in SKIPPED) or
+          "part_b ran against NADO's live extf module")
     # README count check runs LAST, when len(RESULTS) is final. An earlier
     # version ran it mid-suite and compared against a partial count.
     try:

@@ -14,7 +14,18 @@ Every function below mirrors, line for line, what the patch puts in fri.py.
 import sys
 sys.path.insert(0, "/root/nado")
 
-from execnode.stark import field as F, merkle, ext2          # noqa: E402
+# ITERATION 77: NADO removed `ext2` in favour of `extf`, a degree-parameterised
+# extension field whose docstring is titled "WHY IT IS DEGREE-PARAMETERISED, NOT
+# ext2 + ext3". The rename silently disabled all 26 forgery attacks in
+# adversarial.py's PART B for an unknown number of iterations -- the suite kept
+# printing "N/N PASS" with the whole block absent. Aliased rather than renamed
+# throughout because the API surface is identical (lift/add/sub/mul/scalar_mul);
+# the two places that assumed a 2-tuple are now degree-agnostic.
+from execnode.stark import field as F, merkle                 # noqa: E402
+try:                                                          # noqa: E402
+    from execnode.stark import extf as ext2                   # noqa: E402
+except ImportError:                                           # pragma: no cover
+    from execnode.stark import ext2                           # noqa: E402
 from execnode.stark.transcript import Transcript             # noqa: E402
 from execnode.stark import backend as _backend               # noqa: E402
 
@@ -47,8 +58,11 @@ def ext_leaf(b, v):
     Uses only existing backend primitives, so BLAKE2b / alghash2 / recursion all
     support ext layers with no new hash opcode.
     """
-    a0, a1 = ext2.lift(v)
-    return b.node(b.leaf(a0), b.leaf(a1))
+    limbs = ext2.lift(v)
+    h = b.leaf(limbs[0])
+    for _x in limbs[1:]:
+        h = b.node(h, b.leaf(_x))
+    return h
 
 
 def commit_ext(values, b):
@@ -254,8 +268,9 @@ def run():
 
     # tamper with the final layer
     bad2 = copy.deepcopy(pr)
-    a0, a1 = bad2["final"][0]
-    bad2["final"][0] = ((a0 + 1) % F.P, a1)
+    _lim = list(bad2["final"][0])
+    _lim[0] = (_lim[0] + 1) % F.P
+    bad2["final"][0] = tuple(_lim)
     ok4, why4 = verify_ext(bad2, NQ, B, G)
     check(f"tampered final layer rejected ({why4})", not ok4)
 
