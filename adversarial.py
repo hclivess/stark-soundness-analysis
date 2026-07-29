@@ -4352,6 +4352,61 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 86: NADO as a fifth folding case, and the one where the two
+    # objectives disagree -- which qualifies iteration 83's claim.
+    from nado_folding_case import (nado_size, size_saving, best_size_fold,
+                                   objectives_agree, nu_threshold,
+                                   NADO_NU, NADO_S, ZKVMS as _Z86, BATCHES)
+    from folding_recursion_cost import best_fold as _bf86, total_work as _tw86
+
+    # (a) NADO is dominated too, and the saving must dilute with trace width.
+    check("NADO's proof shrinks by folding, as the four zkVMs' did",
+          all(size_saving(b) > 0.02 for b in BATCHES) and best_size_fold(50) == 8,
+          f"savings {[f'{size_saving(b):.0%}' for b in BATCHES]} at batches "
+          f"{list(BATCHES)}")
+    check("and the saving dilutes as the trace widens",
+          size_saving(BATCHES[0]) > size_saving(BATCHES[-1]),
+          f"{size_saving(BATCHES[0]):.0%} at batch {BATCHES[0]} down to "
+          f"{size_saving(BATCHES[-1]):.0%} at {BATCHES[-1]} -- leaf data is "
+          f"width-proportional and fold-independent")
+
+    # (b) THE QUALIFICATION. Iteration 83 said the objectives agree. It must
+    # hold for the systems it checked and FAIL for NADO, or there is nothing
+    # to qualify.
+    check("iteration 83's agreement holds at every zkVM it examined",
+          all(objectives_agree(nu, s) for _n, nu, s in _Z86),
+          "argmin 8 for both objectives at SP1, OpenVM, Pico, Miden")
+    check("but NOT for NADO -- the objectives choose different arities",
+          not objectives_agree(NADO_NU, NADO_S),
+          f"proof size wants {best_size_fold(50)}, verifier work wants "
+          f"{_bf86(NADO_NU, NADO_S)} at nu={NADO_NU}, s={NADO_S}")
+
+    # (c) THE CAUSE. It must be nu rather than s, or the explanation is wrong:
+    # NADO's s is the highest in the set, which is the tempting answer.
+    check("the divergence is driven by nu, not by the query count",
+          all(_bf86(24, s_) == 8 for s_ in (100, 200, 320, 500))
+          and _bf86(16, 100) == 4,
+          f"at nu=24 the argmin is 8 for every s tried; at nu=16 it is 4 even "
+          f"at s=100 -- so a high s alone does not move it")
+    check("and there is a nu above which the objectives always agree",
+          nu_threshold() is not None and nu_threshold() <= 21,
+          f"argmin is 8 for all sampled s once nu >= {nu_threshold()}")
+    check("every dominated zkVM sits above that threshold, NADO below it",
+          all(nu >= nu_threshold() for _n, nu, _s in _Z86)
+          and NADO_NU < nu_threshold(),
+          f"zkVMs at nu {sorted({nu for _n, nu, _s in _Z86})}, NADO at {NADO_NU}")
+
+    # (d) THE RECOMMENDATION. 4 must beat 2 on the verifier by a real margin,
+    # and 8 must not be worth taking over 4.
+    _w2, _w4, _w8 = (_tw86(NADO_NU, NADO_S, f) for f in (2, 4, 8))
+    check("folding 4 shrinks NADO's recursion circuit by a real margin",
+          _w4 < 0.8 * _w2,
+          f"{_w4:.0f} against {_w2:.0f} at f=2 -- {1-_w4/_w2:.0%} smaller")
+    check("and 8 is not worth taking over 4 for NADO",
+          _w8 > _w4 and abs(nado_size(50, 8) - nado_size(50, 4)) / nado_size(50, 8) < 0.02,
+          f"f=8 costs {_w8/_w4-1:.0%} more verifier work for "
+          f"{abs(nado_size(50,8)-nado_size(50,4))/nado_size(50,8):.1%} less proof")
+
     # --- ITERATION 85: the sixth guard. The other five look inward; this one
     # asks whether numbers transcribed from a LIVE tree are still true.
     from freshness_guard import (audit as _fa85, stale_live_constants,
