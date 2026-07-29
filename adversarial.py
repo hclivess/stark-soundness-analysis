@@ -4339,6 +4339,45 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 80: iteration 79's caveat resolved, and a certifying test
+    # that does not run. Probes the live tree; records a skip if absent.
+    try:
+        from nado_degree_literals import (degree as _d80, correct_ext_width,
+                                          literal_implied_degree, builds_at,
+                                          module_width_follows_degree,
+                                          TEST_LITERAL_WIDTH, DEGREE_LITERALS)
+        if _d80() is not None:
+            # (a) THE LITERAL. It must encode a degree DIFFERENT from the live
+            # one, or there is nothing wrong with it.
+            check("the test's trace width encodes a stale extension degree",
+                  literal_implied_degree() == 2 and _d80() == 3,
+                  f"width {TEST_LITERAL_WIDTH} implies degree "
+                  f"{literal_implied_degree()}, extf.DEGREE = {_d80()}")
+            check("and that literal is what breaks the build, not the module",
+                  builds_at(TEST_LITERAL_WIDTH) is False
+                  and builds_at(correct_ext_width()) is True,
+                  f"build_program fails at {TEST_LITERAL_WIDTH}, succeeds at "
+                  f"{correct_ext_width()}")
+            check("logup_bind itself already follows the degree",
+                  module_width_follows_degree() is True,
+                  "NUM_AUX_EXT == NUM_AUX_BASE * extf.DEGREE -- the module is "
+                  "correct, the test is not")
+            # the correct width must be the degree-parameterised one, not a
+            # second literal
+            check("the correct width is computed from the degree, not guessed",
+                  correct_ext_width() == 6 + 3 * _d80(),
+                  f"W_MAIN + NUM_AUX_BASE * DEGREE = {correct_ext_width()}")
+
+            # (b) THE PATTERN. Four instances is a class, not a coincidence --
+            # and they must span more than one file to be one.
+            _sites = {s_ for _i, s_, _l, _w in DEGREE_LITERALS}
+            check("stale-degree literals span four sites in four iterations",
+                  len(DEGREE_LITERALS) == 4 and len(_sites) == 4,
+                  f"iterations {[i for i, *_ in DEGREE_LITERALS]}: "
+                  f"{sorted(_sites)}")
+    except ImportError as _e:
+        _note_skip(_e)
+
     # --- ITERATION 79: NADO's accounting drifted from its own prover. Every
     # check here probes the LIVE tree, and skips (recorded) if it is absent.
     try:
