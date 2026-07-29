@@ -4339,6 +4339,53 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 82: are the deployed configs Pareto-optimal in (proof size,
+    # prover cost)? Four are not, and the gap is entirely the folding factor.
+    from pareto_folding import (dominating, shipped_kib, shipped_fold,
+                                queries_for, size_kib, schedule,
+                                dominated_by_fold, SYSTEMS as _S82)
+
+    _dom82 = {r[0]: dominating(r) for r in _S82}
+    _nd82 = sum(1 for v in _dom82.values() if v)
+    check("four of the seven deployed configs are Pareto-dominated",
+          _nd82 == 4,
+          f"{_nd82}/7 admit a smaller proof at equal security and equal-or-lower "
+          f"blowup: {sorted(k for k, v in _dom82.items() if v)}")
+    # domination must respect BOTH constraints, or it is not domination
+    for _r82 in _S82:
+        _d = _dom82[_r82[0]]
+        if _d:
+            check(f"{_r82[0]}'s dominator costs the prover no more",
+                  2 ** _d[0] <= 2 ** _r82[6],
+                  f"blowup {2**_d[0]} vs shipped {2**_r82[6]}")
+            check(f"{_r82[0]}'s dominator holds its security target",
+                  _d[1] == queries_for(_r82, _d[0]),
+                  f"s={_d[1]} is exactly what {_r82[10]} bits needs at R={_d[0]}")
+
+    # THE SUBSTANCE: the gain is folding, not blowup or queries.
+    _same = [k for k, v in _dom82.items() if v
+             and v[0] == next(r[6] for r in _S82 if r[0] == k)]
+    check("every dominator keeps the shipped blowup -- the gain is not the rate",
+          len(_same) == _nd82,
+          f"{len(_same)}/{_nd82} dominators use the shipped R")
+    check("and every dominator folds by 8, where the shipped ones fold 2 or 4",
+          all(v[2] == 8 for v in _dom82.values() if v),
+          f"folds {sorted({v[2] for v in _dom82.values() if v})}")
+
+    # THE CORRELATION: it must be perfect, or folding is not the explanation.
+    _c82 = dominated_by_fold()
+    check("folding <= 4 predicts domination and folding >= 8 predicts not",
+          _c82["<=4"][0] == _c82["<=4"][1] and _c82[">=8"][0] == 0,
+          f"fold<=4: {_c82['<=4'][0]}/{_c82['<=4'][1]} dominated; "
+          f"fold>=8: {_c82['>=8'][0]}/{_c82['>=8'][1]}")
+    # and the effect must have an interior optimum, not be monotone in f
+    _r = next(r for r in _S82 if r[0] == "SP1")
+    _by_f = {f: size_kib(_r, 2, 124, schedule(23, f)) for f in (2, 4, 8, 16)}
+    check("proof size in the folding factor has an interior optimum",
+          min(_by_f, key=_by_f.get) not in (2, 16),
+          f"SP1 at R=2: {dict(sorted(_by_f.items()))} -- best at "
+          f"f={min(_by_f, key=_by_f.get)}")
+
     # --- ITERATION 81: the degree handshake. Verifies a NADO guard rather than
     # reporting a hazard -- the mismatch is real and is deliberately gated.
     try:
