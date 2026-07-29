@@ -116,15 +116,40 @@ from proof_size_exact import fri_proof_bits
 
 KIB = 8 * 1024
 
-# NADO live config, read from /root/nado and its own soundness module
-NADO = dict(base_bits=64, ext_degree=2, queries=320, blowup_exp=1, grinding=18,
+def _live(name, default):
+    """Read a value from the live NADO tree, falling back if it is absent.
+
+    ITERATION 85: ext_degree was frozen at 2 and logup/provable at 109.0. NADO
+    migrated to GF(p^3) and this file went on describing the system it had left
+    -- still recommending the upgrade NADO had already made. Anything this
+    file's ladder is COMPUTED FROM is now derived; the frozen values that
+    RECORD what was measured stay frozen, and freshness_guard.py holds the
+    distinction.
+    """
+    import sys as _sys
+    if "/root/nado" not in _sys.path:
+        _sys.path.insert(0, "/root/nado")
+    try:
+        from execnode.stark import extf, soundness as _S
+        return {"ext_degree": extf.DEGREE,
+                "logup": round(_S.aux_bits(17, ext=True), 1)}.get(name, default)
+    except Exception:
+        return default
+
+
+# NADO live config, derived from /root/nado where it moves, frozen where it does not
+_D = _live("ext_degree", 2)
+NADO = dict(base_bits=64, ext_degree=_D, queries=320, blowup_exp=1, grinding=18,
             trace_log=17, hash_bits=256)
-NADO_REPORTED = dict(query=150.8, commit=112.0, logup=109.0, provable=109.0)
+_LOGUP = _live("logup", 109.0)
+NADO_REPORTED = dict(query=150.8, commit=64 * _D - 18 + 2, logup=_LOGUP,
+                     provable=round(min(_LOGUP, 64 * _D - 16, 150.8), 1))
 
 # LogUp aux bus term = E - log2(num_buses * rows), soundness.py:137.
 # DERIVED in iteration 76; previously hard-coded as 128 - 109.0 from the printout.
 NADO_BUSES = 4
 LOGUP_OFFSET = math.log2(NADO_BUSES) + 17          # = 19.0 at NADO's 2^17 rows
+E_LIVE = 64 * _D                                   # challenge space, at the live degree
 
 SATURATION_QUERIES = 227          # soundness.py: 93 of 320 buy nothing
 TARGET_CLASSICAL = 256            # 128 PQ

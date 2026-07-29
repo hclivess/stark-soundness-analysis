@@ -4014,19 +4014,32 @@ def part_a():
 
     # (a) NADO MUST BE THE EXCEPTION. If its query phase bound like the seven
     # zkVMs', the whole "field is the lever" argument collapses.
-    check("NADO is bound by a commit-side term, not the query phase",
-          NADO_REPORTED["logup"] < NADO_REPORTED["query"]
-          and NADO_REPORTED["provable"] == NADO_REPORTED["logup"],
-          f"LogUp {NADO_REPORTED['logup']} binds below query "
-          f"{NADO_REPORTED['query']} -- the exception to finding 2")
+    # OVERTURNED BY EVENTS, ITERATION 85. This asserted NADO was commit-bound
+    # at LogUp 109.0 -- the exception to finding 2. NADO then made the GF(p^3)
+    # move iteration 75 recommended, LogUp went to 173.0, and the query phase
+    # (150.8) took over. The premise held only while the recommendation was
+    # outstanding. Now asserts the transition instead.
+    check("NADO's GF(p^3) move flipped it from commit-bound to query-bound",
+          NADO_REPORTED["logup"] > NADO_REPORTED["query"]
+          and abs(NADO_REPORTED["provable"] - NADO_REPORTED["query"]) < 0.1,
+          f"LogUp {NADO_REPORTED['logup']} now ABOVE query "
+          f"{NADO_REPORTED['query']}, which binds -- so NADO is no longer the "
+          f"exception to finding 2")
     check("and the model reproduces its reported provable figure",
           abs(provable(NADO["ext_degree"]) - NADO_REPORTED["provable"]) < 0.5,
           f"model {provable(NADO['ext_degree']):.1f} vs its own report "
           f"{NADO_REPORTED['provable']}")
     # the structural reason: degree 2 over a 64-bit base, not 4-5 over 31
-    check("NADO's split is degree 2 over 64 bits, unlike the seven zkVMs",
-          NADO["ext_degree"] == 2 and NADO["base_bits"] == 64,
-          "the seven run degree 4-5 over a 31-bit base at the same field size")
+    check("NADO now runs degree 3 over 64 bits, closer to the seven zkVMs",
+          NADO["ext_degree"] == 3 and NADO["base_bits"] == 64,
+          f"degree {NADO['ext_degree']} x {NADO['base_bits']} = "
+          f"{NADO['ext_degree']*NADO['base_bits']} bits; the seven run degree "
+          f"4-5 over a 31-bit base for 124-155")
+    # and the gain is what iteration 75 projected
+    check("the realised gain matches iteration 75's +20.9 PQ projection",
+          abs((NADO_REPORTED["provable"] - 109.0) / 2 - 20.9) < 0.5,
+          f"109.0 -> {NADO_REPORTED['provable']} classical = "
+          f"+{(NADO_REPORTED['provable']-109.0)/2:.1f} PQ bits")
 
     # (b) THE KNEE. There must BE one, and it must be at degree 3 -- if raising
     # the degree helped without limit, "GF(p^3) is the knee" is wrong.
@@ -4339,6 +4352,36 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 85: the sixth guard. The other five look inward; this one
+    # asks whether numbers transcribed from a LIVE tree are still true.
+    from freshness_guard import (audit as _fa85, stale_live_constants,
+                                 snapshots_declared, self_test as _fg_self,
+                                 REGISTRY as _REG85)
+
+    _rows85 = _fa85()
+    check("no LIVE constant transcribed from NADO has gone stale",
+          not stale_live_constants(),
+          f"{len(stale_live_constants())} stale of "
+          f"{sum(1 for r in _rows85 if r[2] == 'LIVE')} LIVE entries"
+          + (f": {[(r[0], r[1]) for r in stale_live_constants()]}"
+             if stale_live_constants() else ""))
+    check("every frozen SNAPSHOT names the iteration that took it",
+          snapshots_declared(),
+          f"{sum(1 for _m, _p, k, _d in _REG85 if k == 'SNAPSHOT')} snapshots, "
+          f"each carrying its iteration number")
+    check("the registry distinguishes LIVE from SNAPSHOT rather than one rule",
+          len({k for _m, _p, k, _d in _REG85}) == 2,
+          "re-deriving everything would destroy the snapshots; re-deriving "
+          "nothing would miss the drift")
+    check("the freshness guard FLAGS a perturbed LIVE constant",
+          _fg_self(),
+          "ext_degree bumped by one is detected, then restored")
+    # it must cover the file whose ladder is computed from the tree
+    check("the load-bearing constant is registered LIVE, not frozen",
+          any(m == "nado_pq_path" and "ext_degree" in p and k == "LIVE"
+              for m, p, k, _d in _REG85),
+          "nado_pq_path's whole GF(p^2) -> GF(p^3) ladder derives from it")
+
     # --- ITERATION 83: iteration 82's own caveat, tested. It claimed fold arity
     # is "not free" because it reshapes the recursion AIR; the direction is the
     # opposite of what that implies.
