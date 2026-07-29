@@ -4061,6 +4061,104 @@ def part_a():
           f"{[queries_for(TARGET_CLASSICAL, R_) for R_ in (1,2,3,4)]} at "
           f"blowups 2/4/8/16")
 
+    # --- ITERATION 76: NADO's binding term derived from source, not a printout.
+    from nado_logup_scaling import (aux_bits as _aux, alphas_bits as _alph,
+                                    logup_offset, rows_where_alphas_overtakes,
+                                    bits_lost_per_doubling,
+                                    rows_where_logup_returns,
+                                    bus_consolidation_gain,
+                                    cross_check_against_source, NADO_LOG_ROWS,
+                                    DEFAULT_BUSES, NADO_QUERY_TERM)
+    from nado_pq_path import LOGUP_OFFSET as _OFF
+
+    # (a) THE DERIVATION. The transcription must match NADO's own function, and
+    # the offset must be derived rather than the hard-coded 19.
+    _xc = cross_check_against_source()
+    if _xc is not None:
+        check("the transcribed aux_bits matches NADO's own function exactly",
+              abs(_xc[0] - _xc[1]) < 1e-9,
+              f"transcribed {_xc[0]:.4f} vs NADO's {_xc[1]:.4f}")
+    check("the LogUp offset is log2(buses) + log_rows, not a magic 19",
+          abs(logup_offset() - 19.0) < 1e-9
+          and abs(logup_offset(20, 4) - 22.0) < 1e-9,
+          f"log2({DEFAULT_BUSES}) + {NADO_LOG_ROWS} = {logup_offset():.0f}; at 2^20 rows it is "
+          f"{logup_offset(20, 4):.0f}, so it is not constant")
+    check("and nado_pq_path now derives it rather than hard-coding it",
+          abs(_OFF - logup_offset()) < 1e-9,
+          f"nado_pq_path.LOGUP_OFFSET = {_OFF} = log2(buses) + log_rows")
+
+    # (b) THE CONFLATION. The two terms must genuinely differ in what they
+    # depend on -- if constraints moved the LogUp term, iteration 75 was right.
+    # These three were first written as f(x) == f(x) tautologies -- the class
+    # caught by hand in iterations 24, 26, 30, 37 and 43, which check_integrity
+    # misses because its conditions are not LITERAL-only. Rewritten to inspect
+    # the signatures and to vary the argument that is supposed to matter.
+    import inspect as _isp76
+    check("the LogUp term takes no constraint-count argument at all",
+          "num_constraints" not in _isp76.signature(_aux).parameters
+          and set(_isp76.signature(_aux).parameters) >= {"log_rows", "num_buses"},
+          f"aux_bits{_isp76.signature(_aux)}")
+    check("and the alphas term takes no trace-size argument",
+          "log_rows" not in _isp76.signature(_alph).parameters
+          and "num_constraints" in _isp76.signature(_alph).parameters,
+          f"alphas_bits{_isp76.signature(_alph)}")
+    check("each term moves only with its own parameter",
+          _aux(17) != _aux(24) and _alph(1) != _alph(3412),
+          f"aux 2^17->2^24: {_aux(17):.1f}->{_aux(24):.1f}; "
+          f"alphas nc 1->3412: {_alph(1):.1f}->{_alph(3412):.1f}")
+    _ov76 = rows_where_alphas_overtakes()
+    check("the two terms cross only far beyond NADO's largest circuit",
+          _ov76 > 50 * 3412,
+          f"alphas overtakes LogUp at ~{_ov76:,} constraints, {_ov76/3412:.0f}x "
+          f"NADO's largest at 3,412")
+    check("so LogUp still binds, and iteration 75's conclusion survives",
+          _alph(3412) > _aux(NADO_LOG_ROWS),
+          f"alphas {_alph(3412):.1f} above LogUp {_aux(NADO_LOG_ROWS):.1f} by "
+          f"{_alph(3412)-_aux(NADO_LOG_ROWS):.1f} bits -- right answer, wrong reason")
+
+    # (c) THE SCALING PROPERTY. One bit per doubling, and it must be a real
+    # dependence -- a query-bound system would show zero.
+    check("NADO's ceiling falls exactly one bit per trace doubling",
+          abs(bits_lost_per_doubling() - 1.0) < 1e-9,
+          f"{_aux(17):.1f} at 2^17 down to {_aux(28):.1f} at 2^28")
+    check("which a query-bound system does not do",
+          "T" not in _isp76.signature(query_udr).parameters
+          and _aux(17) - _aux(24) == 7.0,
+          "s*y+g takes (s, R, g) only; aux_bits loses 7 bits over the same span")
+
+    # (d) THE STRENGTHENED RECOMMENDATION. GF(p^3) must push the LogUp term out
+    # of reach for any executable trace.
+    _r3 = rows_where_logup_returns(192)
+    check("at GF(p^3) the LogUp term only rebinds beyond 2^39 rows",
+          _r3 > 35,
+          f"log_rows > {_r3:.1f}, i.e. {2**_r3:.2e} rows -- so the extension "
+          f"degree removes the trace dependence, not just 21 bits")
+    check("whereas at GF(p^2) it binds at NADO's actual trace already",
+          rows_where_logup_returns(128) < NADO_LOG_ROWS,
+          f"rebinds above 2^{rows_where_logup_returns(128):.1f} rows, and NADO runs 2^{NADO_LOG_ROWS}")
+    # bus consolidation, recorded not recommended
+    # (e) DO THE TWO OPEN RECOMMENDATIONS COMPOSE? They do not: the 93 surplus
+    # queries are surplus only while LogUp binds at 109.
+    from nado_logup_scaling import composition_table, both_is_dominated
+    _comp = composition_table()
+    check("cutting queries is free ONLY while the LogUp term binds",
+          _comp[0][4] == _comp[1][4] and _comp[1][5] < _comp[0][5],
+          f"GF(p^2): 320 -> 227 queries keeps {_comp[1][4]} PQ and saves "
+          f"{100*(1-_comp[1][5]/_comp[0][5]):.0f}% proof size")
+    check("but after the field upgrade the query phase binds, so it is not",
+          _comp[3][4] < _comp[2][4] - 15,
+          f"GF(p^3) at 320 gives {_comp[2][4]} PQ; cutting to 227 drops it to "
+          f"{_comp[3][4]} PQ -- {_comp[2][4]-_comp[3][4]:.1f} bits thrown away")
+    check("so doing BOTH is strictly dominated by doing either",
+          both_is_dominated(),
+          f"both: {_comp[3][4]} PQ at {_comp[3][5]} KiB vs today's "
+          f"{_comp[0][4]} PQ at {_comp[0][5]} KiB -- today's size, +1.6 PQ bits")
+
+    check("consolidating 4 LogUp buses to 1 would buy exactly 2 bits",
+          abs(bus_consolidation_gain() - 2.0) < 1e-9,
+          f"{_aux(NADO_LOG_ROWS, num_buses=4):.1f} -> "
+          f"{_aux(NADO_LOG_ROWS, num_buses=1):.1f} at 2^{NADO_LOG_ROWS} rows")
+
     check("the auditor parses the whole suite, not a fragment",
           total_check_sites() > 400,
           f"{total_check_sites()} check() call sites parsed from adversarial.py")

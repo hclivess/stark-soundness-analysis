@@ -117,6 +117,34 @@ def literal_only_checks(path=SUITE):
             if not _identifiers(cond)]
 
 
+def self_comparison_checks(path=SUITE):
+    """Conditions comparing a subexpression to a STRUCTURALLY IDENTICAL one:
+    f(x) == f(x), abs(g(y) - g(y)) < eps, and so on. These reference
+    identifiers, so literal_only_checks cannot see them, but they are just as
+    incapable of failing.
+
+    ADDED IN ITERATION 76, after I wrote three of them in a single block --
+    the same tautology class caught by hand in iterations 24, 26, 30, 37 and 43.
+    The literal-only auditor missed them precisely because they call real
+    functions.
+    """
+    found = []
+    for ln, _name, cond in _check_calls(path):
+        for node in ast.walk(cond):
+            if isinstance(node, ast.Compare) and len(node.comparators) == 1:
+                left, right = node.left, node.comparators[0]
+                if ast.dump(left) == ast.dump(right) and _identifiers(left):
+                    found.append((ln, ast.unparse(node)))
+                    break
+            # abs(A - A) < eps
+            if (isinstance(node, ast.BinOp) and isinstance(node.op, ast.Sub)
+                    and ast.dump(node.left) == ast.dump(node.right)
+                    and _identifiers(node.left)):
+                found.append((ln, ast.unparse(node)))
+                break
+    return found
+
+
 def always_true_checks(path=SUITE):
     """The worst case: conditions that are the literal `True`."""
     return [(ln, ast.unparse(cond))
@@ -129,17 +157,23 @@ def total_check_sites(path=SUITE):
 
 
 def self_test():
-    """The auditor must FLAG a literal-only check. Otherwise it is inert."""
+    """The auditor must FLAG a literal-only check AND a self-comparison, and
+    must spare a real one. Otherwise it is inert."""
     import tempfile
     src = ("def check(a, b, c=''): pass\n"
            "check('real', some_fn(1) > 0)\n"
-           "check('fake', 2 + 2 == 4)\n")
+           "check('fake', 2 + 2 == 4)\n"
+           "check('taut', some_fn(3) == some_fn(3))\n"
+           "check('taut2', abs(g(y) - g(y)) < 1e-9)\n")
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
         f.write(src)
         tmp = f.name
     try:
-        found = literal_only_checks(tmp)
-        return len(found) == 1 and "2 + 2" in found[0][1]
+        lit = literal_only_checks(tmp)
+        selfcmp = self_comparison_checks(tmp)
+        return (len(lit) == 1 and "2 + 2" in lit[0][1]
+                and len(selfcmp) == 2
+                and not any("some_fn(1)" in srcline for _l, srcline in selfcmp))
     finally:
         os.unlink(tmp)
 

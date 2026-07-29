@@ -90,11 +90,24 @@ adequate is a question about NADO's threat model, not about the arithmetic, and
 this repo has no view on it. What the arithmetic says is that the first 21 PQ
 bits are unusually cheap for this system and the next 53 are not.
 
-It also assumes the LogUp term scales as log2(q) - 19, read off NADO's own
-report at nc = 1. The report notes the offset grows with constraint count -- a
-circuit with 3412 constraints sits at 114.3 rather than 109.0 -- so the ladder
-above is the nc = 1 case and the real margin is circuit-dependent. The DIRECTION
-is unaffected: every entry moves with E one-for-one.
+*** CORRECTED IN ITERATION 76 ***
+This paragraph originally said the LogUp offset "grows with constraint count --
+a circuit with 3412 constraints sits at 114.3 rather than 109.0". That conflated
+two of NADO's terms. soundness.py:137 defines
+
+    aux_bits(log_rows, num_buses) = E - log2(num_buses * rows)
+
+so the offset is log2(4) + 17 = 19 and scales with ROWS and BUSES, not
+constraints. The constraint-count scaling belongs to alphas_bits, which sits at
+126.0 at nc = 1 and only falls below the LogUp term above ~262,144 constraints,
+far beyond NADO's largest circuit at 3,412. The value 19 was right; the reason
+was not, and it was read off a printout rather than derived -- the pattern
+output_guard.py exists to catch.
+
+The consequence the wrong reading hid: because the offset carries log_rows,
+NADO's ceiling FALLS ONE BIT PER TRACE DOUBLING (109.0 at 2^17, 102.0 at 2^24).
+The ladder above holds rows at 2^17 and is correct there. See
+nado_logup_scaling.py.
 """
 
 import math
@@ -108,8 +121,10 @@ NADO = dict(base_bits=64, ext_degree=2, queries=320, blowup_exp=1, grinding=18,
             trace_log=17, hash_bits=256)
 NADO_REPORTED = dict(query=150.8, commit=112.0, logup=109.0, provable=109.0)
 
-# LogUp aux bus term = log2(q) - LOGUP_OFFSET, at nc = 1 (NADO's own report)
-LOGUP_OFFSET = 128 - 109.0
+# LogUp aux bus term = E - log2(num_buses * rows), soundness.py:137.
+# DERIVED in iteration 76; previously hard-coded as 128 - 109.0 from the printout.
+NADO_BUSES = 4
+LOGUP_OFFSET = math.log2(NADO_BUSES) + 17          # = 19.0 at NADO's 2^17 rows
 
 SATURATION_QUERIES = 227          # soundness.py: 93 of 320 buy nothing
 TARGET_CLASSICAL = 256            # 128 PQ
@@ -270,11 +285,18 @@ def report():
   this repo has no view on it. What the arithmetic says is that the first {gain/2:.0f} PQ
   bits are unusually cheap for this system and the next {TARGET_CLASSICAL/2 - provable(3)/2:.0f} are not.
 
-  It also assumes the LogUp term is log2(q) - {LOGUP_OFFSET:.0f}, read off NADO's own report at
-  nc = 1. That report notes the offset grows with constraint count -- 3412
-  constraints sit at 114.3 rather than 109.0 -- so this is the nc = 1 case and
-  the real margin is circuit-dependent. The DIRECTION is unaffected: every entry
-  moves with E one-for-one.""")
+  CORRECTED IN ITERATION 76. The paragraph that stood here said the LogUp
+  offset "grows with constraint count -- 3412 constraints sit at 114.3". That
+  conflated two of NADO's terms. soundness.py:137 defines
+
+      aux_bits(log_rows, num_buses) = E - log2(buses * rows)
+
+  so the offset is log2(4) + 17 = 19: it scales with ROWS and BUSES, not
+  constraints. The constraint-count scaling belongs to alphas_bits, which sits
+  at 126.0 at nc = 1 and only falls below the LogUp term above ~262,144
+  constraints -- far beyond NADO's largest circuit at 3,412. The value 19 was
+  right and the reason was not. See nado_logup_scaling.py, which also finds
+  that the ceiling loses 1 bit per trace doubling.""")
 
 
 if __name__ == "__main__":
