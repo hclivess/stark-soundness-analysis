@@ -152,6 +152,52 @@ def always_true_checks(path=SUITE):
             if isinstance(cond, ast.Constant) and cond.value is True]
 
 
+def swallowing_handlers(path=SUITE):
+    """except-clauses that discard the error while guarding check() calls.
+
+    ADDED IN ITERATION 78. Iteration 77 lost 26 forgery attacks to a single
+    `except ImportError: pass`; an AST audit found 110 more checks behind the
+    same shape. A handler is UNGUARDED if it swallows (pass/return/continue)
+    without routing through _note_skip. Returns [(lineno, exc, n_checks)].
+    """
+    tree = ast.parse(open(path).read())
+
+    def n_checks(node):
+        return sum(1 for x in ast.walk(node)
+                   if isinstance(x, ast.Call) and isinstance(x.func, ast.Name)
+                   and x.func.id == "check")
+
+    out = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Try):
+            continue
+        guarded = sum(n_checks(b) for b in node.body)
+        if not guarded:
+            continue
+        for h in node.handlers:
+            records = any(isinstance(x, ast.Call) and isinstance(x.func, ast.Name)
+                          and x.func.id == "_note_skip"
+                          for st in h.body for x in ast.walk(st))
+            swallows = all(isinstance(st, (ast.Pass, ast.Return, ast.Continue))
+                           for st in h.body)
+            if swallows and not records:
+                exc = ast.unparse(h.type) if h.type else "bare"
+                out.append((h.lineno, exc, guarded))
+    return out
+
+
+def checks_behind_handlers(path=SUITE):
+    """How many check() sites sit behind an except-clause of any kind."""
+    tree = ast.parse(open(path).read())
+    total = 0
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Try):
+            total += sum(1 for b in node.body for x in ast.walk(b)
+                         if isinstance(x, ast.Call)
+                         and isinstance(x.func, ast.Name) and x.func.id == "check")
+    return total
+
+
 def total_check_sites(path=SUITE):
     return len(_check_calls(path))
 

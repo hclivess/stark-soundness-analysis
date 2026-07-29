@@ -615,8 +615,8 @@ def part_a():
         check("DEEP is off the main STARK path (deep_eval is a separate subsystem)",
               "deep_eval" not in _stark_src,
               f"{_stark_src.count('deep_eval')} references to deep_eval in stark.py")
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
     # and moving the alphas would let the FRI commit term bind instead
     check("migrating the alphas would lift NADO to the 112-bit FRI commit term",
           min(112.0, 150.8, 128.0) == 112.0, "112 classical / 56 PQ")
@@ -879,8 +879,8 @@ def part_a():
         check("pq_design.py's hash floor still uses the classical exponent",
               "min(c / 2.0, 128.0)" in _src,
               "line 83: 256-bit hash floor stated as 128 PQ bits")
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 27: expanding eps_MT, and the leading constant costs bits.
     #
@@ -995,8 +995,8 @@ def part_a():
         check("ceiling_anatomy.py no longer carries the UNRESOLVED case",
               "UNRESOLVED -- Brakedown / Ligero" not in _ca
               and "RESOLVED IN ITERATION 28" in _ca)
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 29: capacity is not dead, it moved to folded RS -- and it
     # buys almost nothing (capacity_frs.py).
@@ -1067,8 +1067,8 @@ def part_a():
         check("README no longer states the capacity route is closed outright",
               "folded" in _rd.lower() or "FRS" in _rd,
               "disproof is specific to plain RS over prime fields")
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 30: the UNFOLDED capacity routes, and why they are worse.
     #
@@ -1202,8 +1202,8 @@ def part_a():
         check("ceiling_anatomy.py now declares the evidence tier of its rows",
               "EVIDENCE TIER" in _ca2 and "tier 3" in _ca2,
               "the largest claimed win is tier 3 and now says so")
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 32: what the a >= 1 floor is actually PROVED for.
     #
@@ -1325,8 +1325,8 @@ def part_a():
         check("the regime error was material, not cosmetic, for exactly two systems",
               len(big) == 2 and all(_afs.REGIMES[n_] == "UDR" for n_, _ in big),
               f"{[(n_, round(d_,1)) for n_, d_ in big]}")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 41: eliminate the regime-error class by construction.
     #
@@ -1375,8 +1375,8 @@ def part_a():
         check("the canonical table splits 2 UDR / 5 JBR as Theorem 7 predicts",
               len(_sys.by_regime("UDR")) == 2 and len(_sys.by_regime("JBR")) == 5,
               "regime field matches what soundcalc reports")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 42: iteration 30's field-size objection was overstated.
     #
@@ -1430,8 +1430,8 @@ def part_a():
         check("iteration 30's 'blocked by field size' verdict is retracted",
               _cr.yz_linear_bits(_cr.eps_to_beat_johnson(0.25)) < 64,
               "blocked by structure instead: no x->x^2 map, and ~20x prover")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 43: pricing the one capacity route that is open.
     #
@@ -1482,8 +1482,8 @@ def part_a():
         check("returns on field size diminish monotonically",
               gains == sorted(gains, reverse=True),
               "each extra bit buys less query reduction than the last")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 44: converting iteration 43's query cut into bytes.
     #
@@ -1545,8 +1545,8 @@ def part_a():
         check("more combined rows lower the reduction (the upper-bound claim)",
               reds_rows == sorted(reds_rows, reverse=True),
               f"{[f'{x_:.1%}' for x_ in reds_rows]} for 1-4 rows")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 45: where iteration 43's gain sits relative to unique decoding.
     try:
@@ -1605,8 +1605,8 @@ def part_a():
         check("the beyond-UD remainder grows as the rate falls",
               rem == sorted(rem),
               f"{[f'{r_:.1%}' for r_ in rem]} at rates 1/2, 1/4, 1/8")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 46: obstacles 2 and 3 dissolve.
     try:
@@ -1668,8 +1668,8 @@ def part_a():
         check("iteration 44's 42.7% is the 4-byte case, between the two extremes",
               reds_F[0] > reds_F[1] > reds_F[2] and abs(reds_F[1] - 0.427) < 0.01,
               f"{reds_F[1]:.1%}")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 47: soundcalc-lean says m is DERIVED, not free.
     #
@@ -1752,8 +1752,8 @@ def part_a():
         check("every crossover moved, so 7/7 is robustness not insensitivity",
               all(m_ > 5 for m_ in moved47),
               f"s* fell by {min(moved47):.0f} to {max(moved47):.0f} at every system")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 48: SP1's component breakdown, machine-verified.
     #
@@ -1815,8 +1815,8 @@ def part_a():
         # the saving must be substantial, or the model is not being tested
         check("the verified saving is large enough to be a real test",
               ver_ > 0.30, f"{ver_:.1%} -- not a rounding-level effect")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 49: HORIZONS thread 3 -- does the PQ ranking reorder?
     try:
@@ -1867,8 +1867,8 @@ def part_a():
         check("and explains iteration 27's 85-bit cap at a 256-bit digest",
               abs(_pr.hash_pq(256) - 84.7) < 0.5,
               f"{_pr.hash_pq(256):.1f} PQ bits")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 50: what to backport to NADO after iterations 24-50.
     try:
@@ -1918,8 +1918,8 @@ def part_a():
         check("NADO's digest requirement is ~170 bits, met by a 256-bit hash",
               160 < _nb.digest_needed(pq_) < 180 < 256,
               f"needs {_nb.digest_needed(pq_):.0f}, a 256-bit digest clears it")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 51: HORIZONS thread 4, priced on the field-size axis.
     try:
@@ -1966,8 +1966,8 @@ def part_a():
         check("...and gives a different degree at a different target",
               _lfe.degree_over(31, _lfe.field_needed(128, 22)) == 5,
               "128 CLASSICAL bits is degree 5, not 10")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 52: EFFICIENCY.md's NTT share is sourced from MSM-paired
     # systems, which STARKs are not. The conclusion it supports survives anyway.
@@ -1999,10 +1999,10 @@ def part_a():
                   "Scope correction, iteration 52" in _eff
                   and "MSM-paired systems" in _cap,
                   "EFFICIENCY.md section 1 and capacity_routes.py section 6")
-        except OSError:
-            pass
-    except ImportError:
-        pass
+        except OSError as _e:
+            _note_skip(_e)
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 53: EFFICIENCY.md's front-end figures are not locatable.
     try:
@@ -2053,10 +2053,10 @@ def part_a():
             check("the verified verbatim quote replaced them",
                   "rapidly emerging as the new system bottleneck" in _eff2,
                   "the qualitative claim IS sourced and stands")
-        except OSError:
-            pass
-    except ImportError:
-        pass
+        except OSError as _e:
+            _note_skip(_e)
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 54: the third claim is clean, and a stale NADO figure.
     try:
@@ -2081,8 +2081,8 @@ def part_a():
         check("...and records why it changed",
               "predating NADO's GF(p" in _eff3 or "before the GF(p" in _eff3,
               "the GF(p^2) migration raised the ceiling and absorbed the rest")
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 55: two Lean theorems prove the direction of this repo's error.
     #
@@ -2130,8 +2130,8 @@ def part_a():
               all(_lt.sqrt_lb(2.0 ** -R_, g_) <= math.sqrt(2.0 ** -R_) + 1e-15
                   for R_ in (1, 2, 3) for g_ in (10, 10 ** 3, 10 ** 6)),
               "floor(sqrt(g^2 rho))/g <= sqrt(rho)")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 56: Airbender's full table, and the m_eq/jbrM distinction.
     try:
@@ -2178,8 +2178,8 @@ def part_a():
         check("at m_eq the JBR yield equals the UDR yield, by definition",
               abs(_av.yield_jbr(1, m_eq(1)) - _av.yield_udr(1)) < 1e-9,
               "so a JBR figure at m_eq just reproduces the UDR figure")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 57: propagating the m_eq -> jbrM correction.
     try:
@@ -2252,8 +2252,8 @@ def part_a():
         check("the sum-vs-min bias is unaffected by the m convention",
               abs(max(biases) - 0.343) < 0.01,
               f"max {max(biases):.3f} at jbrM, same as at m_eq -- it is a UDR effect")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 58: auditing SOURCES.md's own provenance claim.
     try:
@@ -2289,10 +2289,10 @@ def part_a():
             check("README no longer claims uniform verbatim parameter coverage",
                   "verbatim upstream quotes for every parameter" not in _rd58,
                   "graded instead, as the BOUNDS table was in iteration 31")
-        except OSError:
-            pass
-    except ImportError:
-        pass
+        except OSError as _e:
+            _note_skip(_e)
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 59: cloning soundcalc itself closes the provenance gap.
     try:
@@ -2321,16 +2321,16 @@ def part_a():
         check("Airbender's blowup is now read from the toml, not inferred",
               _pg2.SOUNDCALC_TOML["Airbender"][1] == 1,
               "rho = 0.5 stated directly; iteration 56's reproduction was right")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
     # (d) the README must not claim a >= 1 is PROVED for FRI/WHIR
     try:
         _rd2 = open("README.md").read()
         check("README's a-table is radius-dependent, not a flat 'a >= 1'",
               "staircase" in _rd2 and "unique-decoding" in _rd2,
               "iteration 33 replaced the flat row with the proved staircase")
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 33: `a` is a STAIRCASE in the radius, and both the flat
     # a >= 1 table and iteration 32's conclusion are wrong at different steps.
@@ -2518,8 +2518,8 @@ def part_a():
         check("a distant marker does not exempt a stale assertion",
               bool(_sg.scan_text(_far)),
               "proximity window, not file-wide matching")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- ITERATION 36: Theorem 8 -- why blowup 4 survived the bound update.
     #
@@ -2762,8 +2762,8 @@ def part_a():
         check("the JBR fleet's m* spans about an order of magnitude",
               10 < max(jbr_ms) / min(jbr_ms) < 30,
               f"{min(jbr_ms):.1f} to {max(jbr_ms):.1f} = {max(jbr_ms)/min(jbr_ms):.1f}x")
-    except ImportError:
-        pass
+    except ImportError as _e:
+        _note_skip(_e)
 
     # --- LATTICE vs HASH degradation asymmetry (lattice_compare.py).
     CLASSICAL_SIEVE, QUANTUM_SIEVE = 0.292, 0.265
@@ -4189,6 +4189,26 @@ def part_a():
 SKIPPED = []          # blocks that did not run; main() fails if non-empty
 
 
+def _note_skip(exc):
+    """Record a swallowed dependency error instead of losing it.
+
+    ITERATION 78. Iteration 77 found 26 forgery attacks silently absent because
+    a single `except ImportError: pass` swallowed NADO's ext2 -> extf rename.
+    An AST audit then found 110 more checks -- 18% of the suite -- sitting
+    inside try blocks with the same two handler shapes:
+
+        except ImportError: pass    guarding 144 check() sites
+        except OSError:     pass    guarding  16
+
+    Every one of them can subtract coverage while the summary line still reads
+    "no property broken". They now all route through here, and main() fails the
+    suite if anything was recorded.
+    """
+    import inspect as _i
+    ln = _i.currentframe().f_back.f_lineno
+    SKIPPED.append((f"adversarial.py:{ln}", f"{type(exc).__name__}: {exc}"))
+
+
 def part_b():
     print()
     print("=" * 88)
@@ -4319,6 +4339,32 @@ def main():
     part_b()
     # ITERATION 77: a block that silently skips is worse than one that fails --
     # the suite reported "591/591 PASS" while 26 forgery attacks were absent.
+    # --- ITERATION 78: the same silent-skip class, everywhere else in the suite.
+    from check_integrity import (swallowing_handlers, checks_behind_handlers,
+                                 total_check_sites as _tcs78)
+    _unguarded = swallowing_handlers()
+    check("every swallowing except-clause records its skip",
+          not _unguarded,
+          f"{len(_unguarded)} unguarded handlers"
+          + (f" at lines {[l for l, _e, _c in _unguarded]}" if _unguarded else
+             f"; all 32 route through _note_skip, covering "
+             f"{checks_behind_handlers()} check sites"))
+    check("a material share of the suite sits behind a dependency guard",
+          checks_behind_handlers() > 100,
+          f"{checks_behind_handlers()} of {_tcs78()} check sites -- "
+          f"{100*checks_behind_handlers()/_tcs78():.0f}% could vanish silently "
+          f"before iteration 78")
+    # the guard must FAIL when something is skipped, or it is decorative
+    _saved78 = list(SKIPPED)
+    try:
+        SKIPPED.append(("planted", "simulated missing dependency"))
+        _fires = not (not SKIPPED)
+    finally:
+        SKIPPED[:] = _saved78
+    check("and the skip guard itself fails when a block is skipped",
+          _fires and not SKIPPED,
+          "planted a skip, confirmed the guard condition goes false, restored")
+
     check("no test block was skipped for a missing dependency",
           not SKIPPED,
           "; ".join(f"{w}: {why}" for w, why in SKIPPED) or
@@ -4334,8 +4380,8 @@ def main():
             check("README's stated check count matches the suite",
                   claimed == len(RESULTS) + 1,
                   f"README says {claimed}, suite has {len(RESULTS)+1}")
-    except OSError:
-        pass
+    except OSError as _e:
+        _note_skip(_e)
     print()
     print("=" * 88)
     n_fail = sum(1 for _, ok, _ in RESULTS if not ok)
